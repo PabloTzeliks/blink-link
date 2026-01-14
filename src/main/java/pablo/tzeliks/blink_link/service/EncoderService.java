@@ -3,7 +3,6 @@ package pablo.tzeliks.blink_link.service;
 import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.logic.BaseEncoder;
 
-import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
