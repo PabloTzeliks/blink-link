@@ -1,17 +1,32 @@
 spring:
   application:
     name: Blink Link
-    datasource:
-      url: jdbc:h2:mem:blinklinkdb
-      driver-class-name: org.h2.Driver
-      username: sa
-      password:
-    jpa:
-        hibernate:
-            ddl-auto: update
-        show-sql: true
-        properties:
-            hibernate:
-                format_sql: true
+
+  # Configuração do PostgreSQL
+  datasource:
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
+    driver-class-name: org.postgresql.Driver
+
+  # Configuração do JPA + Hibernate
+  jpa:
+    database: POSTGRESQL
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      # Usando o Flyway
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Configuração do Flyway (Migração de Banco)
+  flyway:
+    enabled: true
+
 server:
-    port: 8080
+  port: 8080
+
+blink-link:
+  secret-key: ${APP_SECRET_KEY:minha-chave-secreta}

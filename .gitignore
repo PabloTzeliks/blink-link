@@ -1,8 +1,18 @@
 HELP.md
 target/
+*.class
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+### Ignorar Segredos ###
+.env
+.env.local
+.env.*
+
+# Ignorar arquivos de sistema
+.DS_Store
+Thumbs.db
 
 ### STS ###
 .apt_generated
