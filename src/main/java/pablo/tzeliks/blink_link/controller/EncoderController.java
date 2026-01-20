@@ -8,19 +8,19 @@ public class EncoderController {
 
     private EncoderService encoderService;
 
-    public EncoderController(EncoderService encoderService) {
-        this.encoderService = encoderService;
-    }
-
-    @PostMapping("/encode")
-    public String encode(@RequestBody String urlInput) {
-
-        return encoderService.encode(urlInput);
-    }
-
-    @GetMapping("/access/{encodedUrl}")
-    public String access(@PathVariable(name = "encodedUrl") String encodedUrl) {
-
-        return encoderService.decode(encodedUrl);
-    }
+//    public EncoderController(EncoderService encoderService) {
+//        this.encoderService = encoderService;
+//    }
+//
+//    @PostMapping("/encode")
+//    public String encode(@RequestBody String urlInput) {
+//
+//        return encoderService.shorten(urlInput);
+//    }
+//
+//    @GetMapping("/access/{encodedUrl}")
+//    public String access(@PathVariable(name = "encodedUrl") String encodedUrl) {
+//
+//        return encoderService.resolve(encodedUrl);
+//    }
 }

@@ -1,42 +1,40 @@
 package pablo.tzeliks.blink_link.service;
 
 import org.springframework.stereotype.Service;
-import pablo.tzeliks.blink_link.logic.Base62Encoder;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import pablo.tzeliks.blink_link.logic.ShortenLogic;
+import pablo.tzeliks.blink_link.model.UrlEntity;
+import pablo.tzeliks.blink_link.repository.UrlRepository;
 
 @Service
 public class EncoderService {
 
-    private final ConcurrentHashMap urlList = new ConcurrentHashMap<Long, String>();
-    private final AtomicLong IdGenerator = new AtomicLong(1000);
+    private UrlRepository urlRepository;
+    private ShortenLogic encoder;
 
-    private Base62Encoder encoder;
-
-    public EncoderService(Base62Encoder encoder) {
+    public EncoderService(UrlRepository urlRepository, ShortenLogic encoder) {
+        this.urlRepository = urlRepository;
         this.encoder = encoder;
     }
 
-    public String encode(String urlInput) {
+    @Transactional
+    public UrlEntity shorten(String longUrl) {
 
-        long id = IdGenerator.incrementAndGet();
+        if (longUrl == null || longUrl.isEmpty()) { throw new IllegalArgumentException("The URL cannot be empty."); }
 
-        urlList.put(id, urlInput);
+        UrlEntity rawUrl = new UrlEntity(longUrl);
 
-        return encoder.encode(id);
+        UrlEntity savedUrl = urlRepository.save(rawUrl);
+
+        String shortCode = encoder.encode(savedUrl.getId());
+        savedUrl.setShortCode(shortCode);
+
+        return savedUrl;
     }
 
-    public String decode(String urlInput) {
+    public UrlEntity resolve(String shortCode) {
 
-        long decodedId = encoder.decode(urlInput);
-
-        System.out.println("decoded id: " + decodedId);
-
-        String url = (String) urlList.get(decodedId);
-
-        System.out.println("url decoded: " + url);
-
-        return url;
+        return urlRepository.findByShortCode(shortCode).orElse(null);
     }
 }
