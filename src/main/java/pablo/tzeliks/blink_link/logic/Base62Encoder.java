@@ -1,9 +1,11 @@
 package pablo.tzeliks.blink_link.logic;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 @Component
+@Primary
 public class Base62Encoder implements ShortenLogic {
 
     @Value(value = "${blink-link.secret-key}")
