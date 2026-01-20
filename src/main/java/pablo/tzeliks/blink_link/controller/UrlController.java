@@ -67,7 +67,7 @@ public class UrlController {
 
         UrlEntity url = urlService.shorten(request.url());
 
-        // Construct a Domain Dinamic Redirect URL
+        // Construct a Domain Dynamic Redirect URL
         // http://localhost:8080/ + short code
         String redirectUrl = servletRequest.getRequestURL().toString().replace("url/v1/shorten", url.getShortCode());
 
