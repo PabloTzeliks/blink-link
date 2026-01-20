@@ -1,7 +1,7 @@
 package pablo.tzeliks.blink_link.service;
 
 import org.springframework.stereotype.Service;
-import pablo.tzeliks.blink_link.logic.BaseEncoder;
+import pablo.tzeliks.blink_link.logic.Base62Encoder;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,9 +12,9 @@ public class EncoderService {
     private final ConcurrentHashMap urlList = new ConcurrentHashMap<Long, String>();
     private final AtomicLong IdGenerator = new AtomicLong(1000);
 
-    private BaseEncoder encoder;
+    private Base62Encoder encoder;
 
-    public EncoderService(BaseEncoder encoder) {
+    public EncoderService(Base62Encoder encoder) {
         this.encoder = encoder;
     }
 

@@ -29,4 +29,4 @@ server:
   port: 8080
 
 blink-link:
-  secret-key: ${APP_SECRET_KEY:minha-chave-secreta}
+  secret-key: ${APP_SECRET_KEY}
