@@ -108,7 +108,7 @@ sequenceDiagram
 
 **Foco na robustez técnica e preparação para escala.**
 
-- [ ] **Refatoração Arquitetural:** Implementação de DTOs (Data Transfer Objects) para desacoplar a API do Banco de Dados.
+- [ ] **Refatoração Arquitetural:** Evolução dos DTOs existentes (por exemplo, `UrlRequest` e `UrlResponse`) e maior desacoplamento entre API e Banco de Dados.
 - [ ] **Tratamento de Erros Profissional:** GlobalExceptionHandler seguindo a RFC 7807 (Problem Details).
 - [ ] **Testes Automatizados:** Implementação de testes unitários (JUnit + Mockito) e de integração para garantir a estabilidade.
 - [ ] **Feature: Expiração de Links (TTL):** Implementação de jobs agendados para desativar/limpar links antigos automaticamente.
