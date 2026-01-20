@@ -5,13 +5,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pablo.tzeliks.blink_link.dto.UrlRequest;
+import pablo.tzeliks.blink_link.dto.UrlResponse;
 import pablo.tzeliks.blink_link.model.UrlEntity;
 import pablo.tzeliks.blink_link.service.UrlService;
 
 import java.net.URI;
 
 @RestController
-@RequestMapping("/url/v1")
 public class UrlController {
 
     private UrlService urlService;
@@ -20,26 +21,30 @@ public class UrlController {
         this.urlService = urlService;
     }
 
-    @PostMapping("/shorten")
-    public ResponseEntity<String> encode(@RequestBody ShortenRequest request, HttpServletRequest servletRequest) {
+    @PostMapping("url/v1/shorten")
+    public ResponseEntity<UrlResponse> encode(@RequestBody UrlRequest request, HttpServletRequest servletRequest) {
 
-        UrlEntity url = urlService.shorten(originalUrl);
+        UrlEntity url = urlService.shorten(request.url());
 
-        return ResponseEntity.ok(url.getShortCode());
+        // Construct a Domain Dinamic Redirect URL
+        // http://localhost:8080/ + short code
+        String redirectUrl = servletRequest.getRequestURL().toString().replace("url/v1/shorten", url.getShortCode());
+
+        return ResponseEntity.ok(new UrlResponse(redirectUrl));
     }
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<String> access(@PathVariable(name = "shortCode") String shortCode) {
+    public ResponseEntity<Void> access(@PathVariable(name = "shortCode") String shortCode) {
 
-        var url = urlService.resolve(shortCode);
+        UrlEntity url = urlService.resolve(shortCode);
 
         if (url == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Short URL not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(url.getOriginalUrl()));
 
-        return ResponseEntity.status(HttpStatus.FOUND).body(url.getOriginalUrl());
+        return new ResponseEntity<>(headers, HttpStatus.FOUND);
     }
 }

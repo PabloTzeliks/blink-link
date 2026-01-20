@@ -1,4 +1,4 @@
 package pablo.tzeliks.blink_link.dto;
 
-public record UrlRequest(String shortCode) {
+public record UrlRequest(String url) {
 }
