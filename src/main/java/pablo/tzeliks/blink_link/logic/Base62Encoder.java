@@ -32,7 +32,7 @@ public class Base62Encoder implements ShortenLogic {
     @Override
     public Long decode(String shortCode) {
 
-        if (shortCode == null | shortCode.isEmpty()) throw new IllegalArgumentException("Short Code cannot be empty");
+        if (shortCode == null || shortCode.isEmpty()) throw new IllegalArgumentException("Short Code cannot be empty");
 
         long decoded = 0;
         long base = privateBase.length();
