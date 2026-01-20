@@ -8,12 +8,12 @@ import pablo.tzeliks.blink_link.model.UrlEntity;
 import pablo.tzeliks.blink_link.repository.UrlRepository;
 
 @Service
-public class EncoderService {
+public class UrlService {
 
     private UrlRepository urlRepository;
     private ShortenLogic encoder;
 
-    public EncoderService(UrlRepository urlRepository, ShortenLogic encoder) {
+    public UrlService(UrlRepository urlRepository, ShortenLogic encoder) {
         this.urlRepository = urlRepository;
         this.encoder = encoder;
     }
