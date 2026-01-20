@@ -120,4 +120,3 @@ public class UrlEntity {
         this.originalUrl = originalUrl;
     }
 }
-}
