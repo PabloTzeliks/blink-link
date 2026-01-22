@@ -30,3 +30,4 @@ server:
 
 blink-link:
   secret-key: ${APP_SECRET_KEY}
+  base-url: ${APP_BASE_URL:http://localhost:8080}

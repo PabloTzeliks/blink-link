@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Component
 public class UrlDtoMapper {
 
-    @Value("${app.base-url:https://blink.link}")
+    @Value("${blink-link.base-url}")
     private String baseUrl;
 
     public UrlResponse toDto(Url domain) {
