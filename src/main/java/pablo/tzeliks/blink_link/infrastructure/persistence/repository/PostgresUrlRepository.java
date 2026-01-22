@@ -43,7 +43,6 @@ public class PostgresUrlRepository implements UrlRepositoryPort {
 
         return repository.findById(id)
                 .map(mapper::toDomain)
-                .orElse(new PersistenceException("Cannot find an URL for the ID " + id));
     }
 
     @Override
@@ -51,6 +50,5 @@ public class PostgresUrlRepository implements UrlRepositoryPort {
 
         return repository.findByShortCode(shortCode)
                 .map(mapper::toDomain)
-                .orElse(new PersistenceException("Cannot find an URL for the ShortCode " + shortCode));
     }
 }
