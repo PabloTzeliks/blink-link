@@ -10,7 +10,7 @@ public interface UrlRepositoryPort {
 
     Url save(Url url);
 
-    Url findById(Long id);
+    Optional<Url> findById(Long id);
 
     Optional<Url> findByShortCode(String shortCode);
 }

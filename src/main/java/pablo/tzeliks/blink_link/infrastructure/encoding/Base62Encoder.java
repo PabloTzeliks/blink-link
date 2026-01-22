@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infraestructure.encoding;
+package pablo.tzeliks.blink_link.infrastructure.encoding;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
