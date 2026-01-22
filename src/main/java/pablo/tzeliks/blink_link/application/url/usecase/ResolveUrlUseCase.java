@@ -17,7 +17,7 @@ public class ResolveUrlUseCase {
     @Value("${blink-link.base-url}")
     private String baseUrl;
 
-    public ShortenUrlUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper) {
+    public ResolveUrlUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }
