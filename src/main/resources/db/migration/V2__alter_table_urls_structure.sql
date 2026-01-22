@@ -1,0 +1,18 @@
+DROP TABLE IF EXISTS url;
+
+CREATE SEQUENCE url_id_seq
+    START WITH 1000000
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+CREATE TABLE url (
+    id BIGINT NOT NULL,
+    original_url TEXT NOT NULL,
+    short_code VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+
+    CONSTRAINT pk_url PRIMARY KEY (id),
+    CONSTRAINT uc_url_short_code UNIQUE (short_code)
+);
