@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
-import pablo.tzeliks.blink_link.application.url.usecase.UrlService;
 
 import java.net.URI;
 
