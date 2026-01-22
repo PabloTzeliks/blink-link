@@ -1,11 +1,11 @@
-package pablo.tzeliks.blink_link.service;
+package pablo.tzeliks.blink_link.application.url.usecase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import pablo.tzeliks.blink_link.logic.ShortenLogic;
-import pablo.tzeliks.blink_link.model.UrlEntity;
-import pablo.tzeliks.blink_link.repository.UrlRepository;
+import pablo.tzeliks.blink_link.domain.url.ports.ShortenLogic;
+import pablo.tzeliks.blink_link.domain.url.model.Url;
+import pablo.tzeliks.blink_link.infraestructure.persistence.repository.PostgresUrlRepository;
 
 /**
  * Service layer for URL shortening and resolution operations.
@@ -32,11 +32,11 @@ import pablo.tzeliks.blink_link.repository.UrlRepository;
 @Service
 public class UrlService {
 
-    private UrlRepository urlRepository;
+    private PostgresUrlRepository postgresUrlRepository;
     private ShortenLogic encoder;
 
-    public UrlService(UrlRepository urlRepository, ShortenLogic encoder) {
-        this.urlRepository = urlRepository;
+    public UrlService(PostgresUrlRepository postgresUrlRepository, ShortenLogic encoder) {
+        this.postgresUrlRepository = postgresUrlRepository;
         this.encoder = encoder;
     }
 
@@ -63,18 +63,18 @@ public class UrlService {
      * if the URL is null or empty, preventing invalid data from entering the system.
      *
      * @param longUrl the original URL to be shortened; must not be null or empty
-     * @return the persisted {@link UrlEntity} containing both the original URL and
+     * @return the persisted {@link Url} containing both the original URL and
      *         the generated short code
      * @throws IllegalArgumentException if the provided URL is null or empty
      */
     @Transactional
-    public UrlEntity shorten(String longUrl) {
+    public Url shorten(String longUrl) {
 
         if (longUrl == null || longUrl.isEmpty()) { throw new IllegalArgumentException("The URL cannot be empty."); }
 
-        UrlEntity rawUrl = new UrlEntity(longUrl);
+        Url rawUrl = new Url(longUrl);
 
-        UrlEntity savedUrl = urlRepository.save(rawUrl);
+        Url savedUrl = postgresUrlRepository.save(rawUrl);
 
         String shortCode = encoder.encode(savedUrl.getId());
         savedUrl.setShortCode(shortCode);
@@ -95,11 +95,11 @@ public class UrlService {
      * found and not-found cases for proper HTTP status code responses.
      *
      * @param shortCode the short code to look up in the database
-     * @return the {@link UrlEntity} associated with the short code, or {@code null}
+     * @return the {@link Url} associated with the short code, or {@code null}
      *         if no matching entity is found
      */
-    public UrlEntity resolve(String shortCode) {
+    public Url resolve(String shortCode) {
 
-        return urlRepository.findByShortCode(shortCode).orElse(null);
+        return postgresUrlRepository.findByShortCode(shortCode).orElse(null);
     }
 }

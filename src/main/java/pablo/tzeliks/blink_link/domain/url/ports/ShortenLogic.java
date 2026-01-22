@@ -1,4 +1,6 @@
-package pablo.tzeliks.blink_link.logic;
+package pablo.tzeliks.blink_link.domain.url.ports;
+
+import pablo.tzeliks.blink_link.infraestructure.encoding.Base62Encoder;
 
 /**
  * Interface defining the contract for URL shortening encoding and decoding operations.
