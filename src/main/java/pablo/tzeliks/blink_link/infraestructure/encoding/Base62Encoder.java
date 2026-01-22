@@ -3,12 +3,12 @@ package pablo.tzeliks.blink_link.infraestructure.encoding;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
-import pablo.tzeliks.blink_link.domain.url.ports.ShortenLogic;
+import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 
 /**
  * Base62 encoder implementation for converting numeric IDs to short URL-safe codes.
  * <p>
- * This class implements the {@link ShortenLogic} interface using Base62 encoding,
+ * This class implements the {@link ShortenerPort} interface using Base62 encoding,
  * a mathematical conversion algorithm that transforms Base 10 (decimal) numbers
  * into Base 62 representation. Base62 uses 62 characters: [0-9, a-z, A-Z], which
  * provides a good balance between:
@@ -38,14 +38,14 @@ import pablo.tzeliks.blink_link.domain.url.ports.ShortenLogic;
  * custom character sets for additional security or customization.
  * <p>
  * This implementation is marked as {@code @Primary} to serve as the default
- * {@link ShortenLogic} implementation when multiple implementations exist.
+ * {@link ShortenerPort} implementation when multiple implementations exist.
  *
  * @author Pablo Tzeliks
  * @since 1.0.0
  */
 @Component
 @Primary
-public class Base62Encoder implements ShortenLogic {
+public class Base62Encoder implements ShortenerPort {
 
     @Value(value = "${blink-link.secret-key}")
     private String privateBase;

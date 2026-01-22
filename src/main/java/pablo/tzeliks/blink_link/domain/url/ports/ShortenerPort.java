@@ -29,7 +29,7 @@ import pablo.tzeliks.blink_link.infraestructure.encoding.Base62Encoder;
  * @since 1.0.0
  * @see Base62Encoder
  */
-public interface ShortenLogic {
+public interface ShortenerPort {
 
     /**
      * Encodes a numeric ID into a short code string.
