@@ -3,7 +3,7 @@ package pablo.tzeliks.blink_link.application.url.usecase;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import pablo.tzeliks.blink_link.domain.url.ports.ShortenLogic;
+import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.infraestructure.persistence.repository.PostgresUrlRepository;
 
@@ -33,9 +33,9 @@ import pablo.tzeliks.blink_link.infraestructure.persistence.repository.PostgresU
 public class UrlService {
 
     private PostgresUrlRepository postgresUrlRepository;
-    private ShortenLogic encoder;
+    private ShortenerPort encoder;
 
-    public UrlService(PostgresUrlRepository postgresUrlRepository, ShortenLogic encoder) {
+    public UrlService(PostgresUrlRepository postgresUrlRepository, ShortenerPort encoder) {
         this.postgresUrlRepository = postgresUrlRepository;
         this.encoder = encoder;
     }
@@ -49,7 +49,7 @@ public class UrlService {
      *   <li><b>First Save:</b> Persists a new UrlEntity with only the original URL,
      *       triggering the database to generate a unique sequential ID</li>
      *   <li><b>Encoding:</b> Converts the numeric ID to a Base62-encoded short code
-     *       using the configured {@link ShortenLogic} implementation</li>
+     *       using the configured {@link ShortenerPort} implementation</li>
      *   <li><b>Update:</b> Sets the short code on the entity (automatically persisted
      *       due to JPA dirty checking within the transaction)</li>
      * </ol>
