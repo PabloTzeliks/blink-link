@@ -6,6 +6,8 @@ import java.util.Optional;
 
 public interface UrlRepositoryPort {
 
+    Long nextId();
+
     Url save(Url url);
 
     Url findById(Long id);
