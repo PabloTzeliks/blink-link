@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.model;
+package pablo.tzeliks.blink_link.domain.url.model;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,7 +47,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Entity
 @Table(name = "url", schema = "public")
-public class UrlEntity {
+public class Url {
 
     /**
      * Primary key identifier for the URL entity.
@@ -116,7 +116,7 @@ public class UrlEntity {
      *
      * @param originalUrl the long URL to be shortened; must not be null
      */
-    public UrlEntity(String originalUrl) {
+    public Url(String originalUrl) {
         this.originalUrl = originalUrl;
     }
 }

@@ -1,8 +1,9 @@
-package pablo.tzeliks.blink_link.logic;
+package pablo.tzeliks.blink_link.infraestructure.encoding;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+import pablo.tzeliks.blink_link.domain.url.ports.ShortenLogic;
 
 /**
  * Base62 encoder implementation for converting numeric IDs to short URL-safe codes.

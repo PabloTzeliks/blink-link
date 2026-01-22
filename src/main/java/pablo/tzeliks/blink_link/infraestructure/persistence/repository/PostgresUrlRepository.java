@@ -1,20 +1,20 @@
-package pablo.tzeliks.blink_link.repository;
+package pablo.tzeliks.blink_link.infraestructure.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import pablo.tzeliks.blink_link.model.UrlEntity;
+import pablo.tzeliks.blink_link.domain.url.model.Url;
 
 import java.util.Optional;
 
 /**
- * Repository interface for performing CRUD operations on {@link UrlEntity}.
+ * Repository interface for performing CRUD operations on {@link Url}.
  * <p>
  * This interface extends {@link JpaRepository} which provides out-of-the-box
  * implementations for standard database operations including save, findById,
  * findAll, delete, and more. By extending JpaRepository with type parameters
  * {@code <UrlEntity, Long>}, we declare that:
  * <ul>
- *   <li>{@link UrlEntity} is the domain class this repository manages</li>
+ *   <li>{@link Url} is the domain class this repository manages</li>
  *   <li>{@link Long} is the type of the primary key (ID field) in UrlEntity</li>
  * </ul>
  * <p>
@@ -29,7 +29,7 @@ import java.util.Optional;
  * @since 1.0.0
  */
 @Repository
-public interface UrlRepository extends JpaRepository<UrlEntity, Long> {
+public interface PostgresUrlRepository extends JpaRepository<Url, Long> {
 
     /**
      * Finds a URL entity by its short code.
@@ -46,8 +46,8 @@ public interface UrlRepository extends JpaRepository<UrlEntity, Long> {
      * be efficient. The unique constraint on short_code ensures query performance.
      *
      * @param shortCode the short code to search for; typically a Base62-encoded string
-     * @return an {@link Optional} containing the matching {@link UrlEntity} if found,
+     * @return an {@link Optional} containing the matching {@link Url} if found,
      *         or an empty Optional if no entity exists with the given short code
      */
-    Optional<UrlEntity> findByShortCode(String shortCode);
+    Optional<Url> findByShortCode(String shortCode);
 }

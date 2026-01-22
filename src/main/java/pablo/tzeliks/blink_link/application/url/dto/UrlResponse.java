@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.dto;
+package pablo.tzeliks.blink_link.application.url.dto;
 
 /**
  * Data Transfer Object (DTO) for URL shortening responses.

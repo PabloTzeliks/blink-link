@@ -1,14 +1,14 @@
-package pablo.tzeliks.blink_link.controller;
+package pablo.tzeliks.blink_link.infraestructure.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pablo.tzeliks.blink_link.dto.UrlRequest;
-import pablo.tzeliks.blink_link.dto.UrlResponse;
-import pablo.tzeliks.blink_link.model.UrlEntity;
-import pablo.tzeliks.blink_link.service.UrlService;
+import pablo.tzeliks.blink_link.application.url.dto.UrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.domain.url.model.Url;
+import pablo.tzeliks.blink_link.application.url.usecase.UrlService;
 
 import java.net.URI;
 
@@ -65,7 +65,7 @@ public class UrlController {
     @PostMapping("url/v1/shorten")
     public ResponseEntity<UrlResponse> encode(@RequestBody UrlRequest request, HttpServletRequest servletRequest) {
 
-        UrlEntity url = urlService.shorten(request.url());
+        Url url = urlService.shorten(request.url());
 
         // Construct a Domain Dynamic Redirect URL
         // http://localhost:8080/ + short code
@@ -97,7 +97,7 @@ public class UrlController {
     @GetMapping("/{shortCode}")
     public ResponseEntity<Void> access(@PathVariable(name = "shortCode") String shortCode) {
 
-        UrlEntity url = urlService.resolve(shortCode);
+        Url url = urlService.resolve(shortCode);
 
         if (url == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

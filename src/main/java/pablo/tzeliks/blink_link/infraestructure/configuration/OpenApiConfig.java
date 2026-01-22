@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.config;
+package pablo.tzeliks.blink_link.infraestructure.configuration;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
