@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infraestructure.web;
+package pablo.tzeliks.blink_link.infrastructure.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;

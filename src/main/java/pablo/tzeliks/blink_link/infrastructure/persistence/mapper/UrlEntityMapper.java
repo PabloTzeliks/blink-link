@@ -1,8 +1,8 @@
-package pablo.tzeliks.blink_link.infraestructure.persistence.mapper;
+package pablo.tzeliks.blink_link.infrastructure.persistence.mapper;
 
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
-import pablo.tzeliks.blink_link.infraestructure.persistence.entity.UrlEntity;
+import pablo.tzeliks.blink_link.infrastructure.persistence.entity.UrlEntity;
 
 @Component
 public class UrlEntityMapper {

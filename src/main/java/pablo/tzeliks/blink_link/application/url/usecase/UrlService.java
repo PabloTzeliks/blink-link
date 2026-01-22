@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
-import pablo.tzeliks.blink_link.infraestructure.persistence.repository.PostgresUrlRepository;
+import pablo.tzeliks.blink_link.infrastructure.persistence.repository.PostgresUrlRepository;
 
 /**
  * Service layer for URL shortening and resolution operations.
