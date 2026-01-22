@@ -1,5 +1,6 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
@@ -8,6 +9,7 @@ import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
+@Service
 public class ShortenUrlUseCase {
 
     private final ShortenerPort shortener;

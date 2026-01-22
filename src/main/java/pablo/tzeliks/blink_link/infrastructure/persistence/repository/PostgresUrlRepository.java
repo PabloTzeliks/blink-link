@@ -3,6 +3,7 @@ package pablo.tzeliks.blink_link.infrastructure.persistence.repository;
 import org.springframework.stereotype.Repository;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.infrastructure.exception.PersistenceException;
 import pablo.tzeliks.blink_link.infrastructure.persistence.mapper.UrlEntityMapper;
 
 import java.util.Optional;
@@ -41,13 +42,15 @@ public class PostgresUrlRepository implements UrlRepositoryPort {
     public Optional<Url> findById(Long id) {
 
         return repository.findById(id)
-                .map(mapper::toDomain);
+                .map(mapper::toDomain)
+                .orElse(new PersistenceException("Cannot find an URL for the ID " + id));
     }
 
     @Override
     public Optional<Url> findByShortCode(String shortCode) {
 
         return repository.findByShortCode(shortCode)
-                .map(mapper::toDomain);
+                .map(mapper::toDomain)
+                .orElse(new PersistenceException("Cannot find an URL for the ShortCode " + shortCode));
     }
 }
