@@ -5,7 +5,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pablo.tzeliks.blink_link.application.url.dto.UrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.application.url.usecase.UrlService;
@@ -57,13 +57,13 @@ public class UrlController {
      * This approach ensures that the shortened URL uses the same domain and protocol
      * as the incoming request, supporting multiple environments without configuration changes.
      *
-     * @param request the {@link UrlRequest} containing the original URL to be shortened
+     * @param request the {@link CreateUrlRequest} containing the original URL to be shortened
      * @param servletRequest the HTTP servlet request used to extract the base URL for constructing
      *                       the dynamic redirect URL
      * @return a {@link ResponseEntity} containing the {@link UrlResponse} with the complete shortened URL
      */
     @PostMapping("url/v1/shorten")
-    public ResponseEntity<UrlResponse> encode(@RequestBody UrlRequest request, HttpServletRequest servletRequest) {
+    public ResponseEntity<UrlResponse> encode(@RequestBody CreateUrlRequest request, HttpServletRequest servletRequest) {
 
         Url url = urlService.shorten(request.url());
 
