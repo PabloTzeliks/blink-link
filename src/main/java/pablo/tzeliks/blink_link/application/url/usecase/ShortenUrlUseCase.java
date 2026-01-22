@@ -1,5 +1,6 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
+import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
@@ -19,6 +20,7 @@ public class ShortenUrlUseCase {
         this.mapper = mapper;
     }
 
+    @Transactional
     public UrlResponse execute(CreateUrlRequest request) {
 
         Long id = repository.nextId();
