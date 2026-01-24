@@ -1,6 +1,8 @@
 package pablo.tzeliks.blink_link.application.url.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import org.hibernate.validator.constraints.URL;
 
 /**
  * TODO : new Docs
@@ -11,5 +13,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @since 1.0.0
  */
 public record CreateUrlRequest(
-        @JsonProperty("original_url") String originalUrl
+
+        @JsonProperty("original_url")
+        @NotBlank(message = "Original URL must not be blank")
+        @URL(message = "Original URL must be a valid URL")
+        String originalUrl
 ) { }
