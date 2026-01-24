@@ -22,6 +22,7 @@ public class UrlDtoMapper {
 
         return new UrlResponse(
                 domain.getOriginalUrl(),
+                domain.getShortCode(),
                 shortUrl,
                 domain.getCreatedAt()
         );
