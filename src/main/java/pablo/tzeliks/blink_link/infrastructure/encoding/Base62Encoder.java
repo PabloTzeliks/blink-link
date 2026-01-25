@@ -52,24 +52,4 @@ public class Base62Encoder implements ShortenerPort {
 
         return encoded.reverse().toString();
     }
-
-    @Override
-    public Long decode(String shortCode) {
-        if (shortCode == null || shortCode.isEmpty()) {
-            throw new EncoderException("Short Code cannot be empty");
-        }
-
-        long decoded = 0;
-
-        for (char c : shortCode.toCharArray()) {
-            Integer index = characterIndexMap.get(c);
-
-            if (index == null) {
-                throw new EncoderException("Character '" + c + "' is invalid for Base62 alphabet.");
-            }
-
-            decoded = decoded * base + index;
-        }
-        return decoded;
-    }
 }
