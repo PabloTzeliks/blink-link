@@ -2,10 +2,7 @@ package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
@@ -22,7 +19,8 @@ import java.net.URI;
  * @version 2.0.0
  * @since 1.0.0
  */
-@RestController("api/v2/urls")
+@RestController()
+@RequestMapping("api/v2/urls")
 public class UrlController {
 
     private final ShortenUrlUseCase shortenUrl;
@@ -48,7 +46,9 @@ public class UrlController {
     }
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<UrlResponse> access(@Valid @RequestBody ResolveUrlRequest request) {
+    public ResponseEntity<UrlResponse> access(@PathVariable String shortUrl) {
+
+        ResolveUrlRequest request = new ResolveUrlRequest(shortUrl);
 
         UrlResponse response = resolveUrl.execute(request);
         return ResponseEntity.ok(response);
