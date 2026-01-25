@@ -19,10 +19,10 @@ public class RedirectUrlController {
         this.resolveUrl = resolveUrl;
     }
 
-    @GetMapping("/{shortCode}")
-    public ResponseEntity<Void> redirect(@PathVariable String shortCode) {
+    @GetMapping("/{shortUrl}")
+    public ResponseEntity<Void> redirect(@PathVariable String shortUrl) {
 
-        var request = new ResolveUrlRequest(shortCode);
+        var request = new ResolveUrlRequest(shortUrl);
         var response = resolveUrl.execute(request);
 
         return ResponseEntity
