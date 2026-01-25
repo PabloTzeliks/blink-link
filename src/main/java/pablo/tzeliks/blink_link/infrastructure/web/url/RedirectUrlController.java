@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.web;
+package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
