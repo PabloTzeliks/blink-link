@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.web;
+package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
