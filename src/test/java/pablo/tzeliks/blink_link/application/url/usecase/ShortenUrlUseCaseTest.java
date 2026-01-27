@@ -9,17 +9,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
+import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.infrastructure.exception.EncoderException;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ShortenUrlUseCaseTest {
@@ -39,7 +39,6 @@ class ShortenUrlUseCaseTest {
     @Test
     @DisplayName("Should orchestrate the URL shortening process correctly: Generate ID -> Encode to Short Code -> Map to Domain -> Save -> Map to Response DTO")
     void shouldShortAnUrlCorrectly() {
-
         // Arrange
         String originalUrl = "https://github.com/PabloTzeliks";
         Long fakeId = 1000000L;
@@ -47,8 +46,6 @@ class ShortenUrlUseCaseTest {
         LocalDateTime now = LocalDateTime.now();
 
         CreateUrlRequest request = new CreateUrlRequest(originalUrl);
-
-        // Act
 
         // 1. Repository generate next ID
         when(repository.nextId()).thenReturn(fakeId);
@@ -76,7 +73,6 @@ class ShortenUrlUseCaseTest {
         when(mapper.toDto(url)).thenReturn(correctResponse);
 
         // Act
-
         UrlResponse trueResponse = shortenUrlUseCase.execute(request);
 
         // Assert
@@ -95,13 +91,29 @@ class ShortenUrlUseCaseTest {
     @Test
     @DisplayName("Should throw InvalidUrlException when ShortenerPort implementation fails to encode the ID")
     void shouldThrowInvalidUrlExceptionWhenEncodingFails() {
-
         // Arrange
         String originalUrl = "https://github.com/PabloTzeliks";
-        Long fakeId = 1000000L;
-        String errorMessage = ""
-        LocalDateTime now = LocalDateTime.now();
+        Long invalidId = -1L;
 
         CreateUrlRequest request = new CreateUrlRequest(originalUrl);
 
+        // 1. Repository generate next ID (Invalid ID)
+        when(repository.nextId()).thenReturn(invalidId);
+
+        // 2. Encode ID to Short Code (will fail)
+        when(shortener.encode(invalidId)).thenThrow(new EncoderException("ID cannot be negative"));
+
+        // Act & Assert
+        InvalidUrlException exception = assertThrows(InvalidUrlException.class, () -> {
+            shortenUrlUseCase.execute(request);
+        });
+
+        assertEquals("ID cannot be negative", exception.getMessage());
+
+        // Verify
+        verify(repository).nextId();
+        verify(shortener).encode(invalidId);
+
+        verify(repository, never()).save(any());
+    }
 }
