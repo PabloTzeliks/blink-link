@@ -91,4 +91,17 @@ class ShortenUrlUseCaseTest {
         verify(repository).save(url);
         verify(mapper).toDto(url);
     }
+
+    @Test
+    @DisplayName("Should throw InvalidUrlException when ShortenerPort implementation fails to encode the ID")
+    void shouldThrowInvalidUrlExceptionWhenEncodingFails() {
+
+        // Arrange
+        String originalUrl = "https://github.com/PabloTzeliks";
+        Long fakeId = 1000000L;
+        String errorMessage = ""
+        LocalDateTime now = LocalDateTime.now();
+
+        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+
 }

@@ -7,9 +7,6 @@ import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.infrastructure.exception.EncoderException;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * TODO : new Docs
  *
@@ -24,23 +21,21 @@ public class Base62Encoder implements ShortenerPort {
     @Value(value = "${blink-link.secret-key}")
     private String privateBase;
 
-    private Map<Character, Integer> characterIndexMap;
     private int base;
 
     @PostConstruct
     public void init() {
-        this.characterIndexMap = new HashMap<>();
         this.base = privateBase.length();
-        char[] chars = privateBase.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            characterIndexMap.put(chars[i], i);
-        }
     }
 
     @Override
     public String encode(Long id) {
-        if (id == null) throw new EncoderException("ID cannot be null");
-        if (id == 0) return String.valueOf(privateBase.charAt(0));
+
+        if (id == null) { throw new EncoderException("ID cannot be null"); }
+
+        if (id < 0) { throw new EncoderException("ID cannot be negative"); }
+
+        if (id == 0) { return String.valueOf(privateBase.charAt(0)); }
 
         StringBuilder encoded = new StringBuilder();
 
