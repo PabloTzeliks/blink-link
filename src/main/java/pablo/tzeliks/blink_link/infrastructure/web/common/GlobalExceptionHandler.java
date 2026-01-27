@@ -183,7 +183,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // Utility Method
+    // Utility method for building error responses
 
     /**
      * Builds a standardized error response.
