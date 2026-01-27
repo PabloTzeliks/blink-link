@@ -45,10 +45,10 @@ public class UrlController {
                 .body(response);
     }
 
-    @GetMapping("/{shortUrl}")
-    public ResponseEntity<UrlResponse> access(@PathVariable String shortUrl) {
+    @GetMapping("/{shortCode}")
+    public ResponseEntity<UrlResponse> access(@PathVariable String shortCode) {
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortUrl);
+        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
 
         UrlResponse response = resolveUrl.execute(request);
         return ResponseEntity.ok(response);
