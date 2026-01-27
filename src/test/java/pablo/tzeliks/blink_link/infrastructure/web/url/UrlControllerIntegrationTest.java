@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
-import pablo.tzeliks.blink_link.infrastructure.persistence.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 
 import java.time.LocalDateTime;
 
