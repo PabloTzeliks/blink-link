@@ -8,7 +8,7 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
-import pablo.tzeliks.blink_link.infrastructure.persistence.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 import pablo.tzeliks.blink_link.infrastructure.persistence.mapper.UrlEntityMapper;
 
 import java.time.LocalDateTime;

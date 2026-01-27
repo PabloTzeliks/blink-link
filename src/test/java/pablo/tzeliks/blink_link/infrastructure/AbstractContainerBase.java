@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.persistence;
+package pablo.tzeliks.blink_link.infrastructure;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
