@@ -1,6 +1,5 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
@@ -16,12 +15,10 @@ public class ResolveUrlUseCase {
 
     private final UrlRepositoryPort repository;
     private final UrlDtoMapper mapper;
-    private final String baseUrl;
 
-    public ResolveUrlUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper, @Value("${blink-link.base-url}") String baseUrl) {
+    public ResolveUrlUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
-        this.baseUrl = baseUrl;
     }
 
     @Transactional(readOnly = true)
