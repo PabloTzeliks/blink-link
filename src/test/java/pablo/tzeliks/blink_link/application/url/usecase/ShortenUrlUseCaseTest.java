@@ -21,6 +21,43 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for the URL shortening use case.
+ * <p>
+ * This test class validates the {@link ShortenUrlUseCase} orchestration logic in isolation
+ * using mocked dependencies. It focuses on testing the complete workflow of URL shortening
+ * without involving actual databases or encoders.
+ * <p>
+ * <b>Test Strategy:</b>
+ * <p>
+ * These are pure unit tests that:
+ * <ul>
+ *   <li>Use Mockito to mock all dependencies (shortener, repository, mapper)</li>
+ *   <li>Test the orchestration of the complete URL shortening workflow</li>
+ *   <li>Verify correct error handling and exception translation</li>
+ *   <li>Validate the sequence of operations and method call order</li>
+ * </ul>
+ * <p>
+ * <b>Test Coverage:</b>
+ * <ul>
+ *   <li>Happy path: Successful URL shortening with all steps in sequence</li>
+ *   <li>Error handling: Encoding failure and exception translation</li>
+ * </ul>
+ * <p>
+ * <b>Workflow Under Test:</b>
+ * <ol>
+ *   <li>Generate unique ID from database sequence</li>
+ *   <li>Encode ID to Base62 short code</li>
+ *   <li>Map request to domain model</li>
+ *   <li>Save domain model to repository</li>
+ *   <li>Map saved model to response DTO</li>
+ * </ol>
+ *
+ * @author Pablo Tzeliks
+ * @version 2.0.0
+ * @since 1.0.0
+ * @see ShortenUrlUseCase
+ */
 @ExtendWith(MockitoExtension.class)
 class ShortenUrlUseCaseTest {
 
@@ -36,6 +73,41 @@ class ShortenUrlUseCaseTest {
     @InjectMocks
     private ShortenUrlUseCase shortenUrlUseCase;
 
+    /**
+     * Unit Test: Verifies complete URL shortening workflow orchestration.
+     * <p>
+     * <b>Scenario:</b> Happy Path - All components work together correctly
+     * <p>
+     * <b>Given:</b> A valid long URL to be shortened
+     * <br><b>When:</b> execute() is called
+     * <br><b>Then:</b> The use case orchestrates all steps and returns a complete response
+     * <p>
+     * <b>Workflow Steps Tested:</b>
+     * <ol>
+     *   <li>Repository generates next ID (1000000)</li>
+     *   <li>Shortener encodes ID to Base62 ("HhqS")</li>
+     *   <li>Mapper creates domain model from request + ID + short code</li>
+     *   <li>Repository saves the domain model</li>
+     *   <li>Mapper converts saved model to response DTO</li>
+     * </ol>
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>Response is not null</li>
+     *   <li>Response contains correct original URL</li>
+     *   <li>Response contains correct short URL</li>
+     *   <li>Response contains correct short code</li>
+     * </ul>
+     * <p>
+     * <b>Verification:</b>
+     * <ul>
+     *   <li>All mocked methods were called exactly once in the correct order</li>
+     *   <li>Each method received the expected parameters</li>
+     * </ul>
+     * <p>
+     * This test validates the use case's role as an orchestrator, ensuring it
+     * correctly coordinates between the encoder, repository, and mapper layers.
+     */
     @Test
     @DisplayName("Should orchestrate the URL shortening process correctly: Generate ID -> Encode to Short Code -> Map to Domain -> Save -> Map to Response DTO")
     void shouldShortAnUrlCorrectly() {
@@ -88,6 +160,39 @@ class ShortenUrlUseCaseTest {
         verify(mapper).toDto(url);
     }
 
+    /**
+     * Unit Test: Verifies exception translation when encoding fails.
+     * <p>
+     * <b>Scenario:</b> Error Handling - Encoder throws exception
+     * <p>
+     * <b>Given:</b> An invalid ID (-1) that causes encoding to fail
+     * <br><b>When:</b> execute() is called and encoding fails
+     * <br><b>Then:</b> EncoderException is caught and re-thrown as InvalidUrlException
+     * <p>
+     * <b>Mocked Behavior:</b>
+     * <ol>
+     *   <li>Repository generates an invalid ID (-1)</li>
+     *   <li>Shortener throws EncoderException when encoding negative ID</li>
+     * </ol>
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>InvalidUrlException is thrown (not EncoderException)</li>
+     *   <li>Exception message is preserved from the original EncoderException</li>
+     * </ul>
+     * <p>
+     * <b>Verification:</b>
+     * <ul>
+     *   <li>Repository's nextId() was called</li>
+     *   <li>Shortener's encode() was called with the invalid ID</li>
+     *   <li>Repository's save() was never called (workflow stopped at encoding failure)</li>
+     * </ul>
+     * <p>
+     * This test validates the exception translation strategy where infrastructure
+     * exceptions (EncoderException) are wrapped as domain exceptions (InvalidUrlException)
+     * to maintain clean separation between layers. This allows the domain/application
+     * layer to remain independent of infrastructure-specific exception types.
+     */
     @Test
     @DisplayName("Should throw InvalidUrlException when ShortenerPort implementation fails to encode the ID")
     void shouldThrowInvalidUrlExceptionWhenEncodingFails() {
