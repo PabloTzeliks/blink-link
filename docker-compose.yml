@@ -1,7 +1,24 @@
 version: '3.8'
 
 services:
-  # Serviço do Banco de Dados
+
+  # Application (BlinkLink)
+  app:
+    container_name: blinklink-api
+    build: .  # Diz para procurar o Dockerfile na pasta atual
+    ports:
+      - "8080:8080" # Porta Externa : Porta Interna
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+      # Importante: O nome do host do banco agora é 'postgres-db', não 'localhost'
+    depends_on:
+      - postgres-db
+    networks:
+      - blink-network
+      -
+  # Database Service (PostgreSQL)
   postgres-db:
     image: postgres:17
     container_name: blinklink-pg_local
@@ -16,7 +33,7 @@ services:
     networks:
       - blink-network
 
-  # Interface Gráfica (pgAdmin) ---
+  # Database GUI (pgAdmin) ---
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: blinklink-pgadmin
