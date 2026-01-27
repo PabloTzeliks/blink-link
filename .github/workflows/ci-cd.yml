@@ -1,0 +1,47 @@
+name: CI/CD Pipeline - BlinkLink
+
+on:
+  push:
+    branches: [ "main", "dev", "feat/implement-v2.0.0" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Upload Repository Code
+      - name: Checkout Code
+        uses: actions/checkout@v6.0.0
+
+      # 2. Configure Java 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5.0.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 3. Run All Tests (Unit and Integration)
+      - name: Run Tests with Maven
+        id: maven-test
+        run: mvn verify -B
+        env:
+          APP_SECRET_KEY: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+          blink-link.secret-key: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+      # 4. Publish Test Reports
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: JUnit Tests Report
+          path: target/**/*-reports/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      # 5. Verify Docker Build
+      - name: Build Docker Image
+        if: steps.maven-test.outcome == 'success'
+        run: docker build . --file Dockerfile --tag blink-link:latest
