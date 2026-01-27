@@ -17,11 +17,49 @@ import pablo.tzeliks.blink_link.infrastructure.web.dto.ValidationError;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Global exception handler for the BlinkLink application.
+ * <p>
+ * This {@code @RestControllerAdvice} component intercepts exceptions thrown by
+ * controllers and converts them into standardized HTTP error responses. It ensures
+ * consistent error handling across the entire API and provides meaningful error
+ * messages to clients in a structured format conforming to RFC 7807 (Problem Details for HTTP APIs).
+ * <p>
+ * <b>Handled Exception Types:</b>
+ * <ul>
+ *   <li>{@link UrlNotFoundException} - Returns 404 Not Found</li>
+ *   <li>{@link InvalidUrlException} - Returns 400 Bad Request</li>
+ *   <li>{@link MethodArgumentNotValidException} - Returns 422 Unprocessable Content with validation details</li>
+ *   <li>{@link HttpMessageNotReadableException} - Returns 400 Bad Request for malformed JSON</li>
+ *   <li>{@link Exception} - Returns 500 Internal Server Error for unexpected errors</li>
+ * </ul>
+ * <p>
+ * All error responses follow a consistent structure defined by {@link ErrorResponse},
+ * including timestamp, status code, error details, and request path. For validation
+ * errors, the response includes a list of field-level validation failures.
+ *
+ * @author Pablo Tzeliks
+ * @version 2.0.0
+ * @since 1.0.0
+ * @see ErrorResponse
+ * @see ValidationError
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * Handles exceptions when a requested URL is not found in the database.
+     * <p>
+     * This handler is invoked when a client attempts to resolve or access a short code
+     * that doesn't exist in the system. It returns a structured error response with
+     * HTTP status 404 (Not Found).
+     *
+     * @param ex the exception containing details about the missing URL
+     * @param request the HTTP servlet request that triggered the exception
+     * @return a {@link ResponseEntity} with status 404 and an {@link ErrorResponse} body
+     */
     @ExceptionHandler(UrlNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUrlNotFound(UrlNotFoundException ex, HttpServletRequest request) {
 
@@ -34,6 +72,17 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Handles exceptions related to invalid URL formats or business rule violations.
+     * <p>
+     * This handler catches validation errors at the domain level, such as URLs that
+     * don't start with http/https, empty short codes, or other business rule violations.
+     * It returns a structured error response with HTTP status 400 (Bad Request).
+     *
+     * @param ex the exception containing details about the invalid URL
+     * @param request the HTTP servlet request that triggered the exception
+     * @return a {@link ResponseEntity} with status 400 and an {@link ErrorResponse} body
+     */
     @ExceptionHandler(InvalidUrlException.class)
     public ResponseEntity<ErrorResponse> handleInvalidUrl(InvalidUrlException ex, HttpServletRequest request) {
 
@@ -46,6 +95,22 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Handles Bean Validation failures on request objects.
+     * <p>
+     * This handler is triggered when {@code @Valid} annotation fails on request DTOs
+     * due to constraint violations (e.g., {@code @NotBlank}, {@code @URL}). It extracts
+     * all field-level validation errors and returns them in a structured format with
+     * HTTP status 422 (Unprocessable Content).
+     * <p>
+     * The response includes a list of {@link ValidationError} objects, each containing
+     * the field name and the validation error message.
+     *
+     * @param ex the exception containing details about validation failures
+     * @param request the HTTP servlet request that triggered the exception
+     * @return a {@link ResponseEntity} with status 422 and an {@link ErrorResponse} body
+     *         containing detailed validation errors
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
 
@@ -66,6 +131,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Handles JSON parsing errors in request bodies.
+     * <p>
+     * This handler is triggered when the client sends malformed JSON that cannot
+     * be deserialized into the expected request object. Common causes include
+     * syntax errors, type mismatches, or missing required fields.
+     * It returns HTTP status 400 (Bad Request).
+     *
+     * @param ex the exception containing details about the JSON parsing failure
+     * @param request the HTTP servlet request that triggered the exception
+     * @return a {@link ResponseEntity} with status 400 and an {@link ErrorResponse} body
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleJsonError(HttpMessageNotReadableException ex, HttpServletRequest request) {
 
@@ -78,6 +155,20 @@ public class GlobalExceptionHandler {
         );
     }
 
+    /**
+     * Handles unexpected exceptions that are not explicitly handled elsewhere.
+     * <p>
+     * This is the catch-all handler for any uncaught exceptions in the application.
+     * It logs the full exception details for debugging purposes and returns a generic
+     * error message to the client with HTTP status 500 (Internal Server Error).
+     * <p>
+     * <b>Security Note:</b> The actual exception details are logged server-side but
+     * not exposed to the client to prevent information leakage.
+     *
+     * @param ex the unexpected exception
+     * @param request the HTTP servlet request that triggered the exception
+     * @return a {@link ResponseEntity} with status 500 and a generic {@link ErrorResponse}
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
 
@@ -92,8 +183,22 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // Utilitary Method
+    // Utility Method
 
+    /**
+     * Builds a standardized error response.
+     * <p>
+     * This utility method constructs an {@link ErrorResponse} object with all required
+     * fields and wraps it in a {@link ResponseEntity} with the appropriate HTTP status.
+     * The error response follows RFC 7807 (Problem Details for HTTP APIs) conventions.
+     *
+     * @param status the HTTP status code for the response
+     * @param title a short, human-readable summary of the error type
+     * @param detail a human-readable explanation specific to this occurrence of the error
+     * @param instance the URI reference that identifies the specific occurrence of the error
+     * @param errors optional list of field-level validation errors; can be {@code null}
+     * @return a {@link ResponseEntity} containing the error response and status code
+     */
     private ResponseEntity<ErrorResponse> buildErrorResponse(
 
             HttpStatus status,

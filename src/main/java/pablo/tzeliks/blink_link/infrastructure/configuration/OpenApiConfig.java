@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
  * {@code http://localhost:8080/v3/api-docs}.
  *
  * @author Pablo Tzeliks
+ * @version 2.0.0
  * @since 1.0.0
  */
 @Configuration
@@ -58,6 +59,6 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("BlinkLink API 🔗")
                         .description("Professional URLs shortener API developed with Java and Spring Boot.")
-                        .version("1.0.0"));
+                        .version("2.0.0"));
     }
 }
