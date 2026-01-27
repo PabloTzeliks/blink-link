@@ -24,7 +24,7 @@ public class ResolveUrlUseCase {
     @Transactional(readOnly = true)
     public UrlResponse execute(ResolveUrlRequest request) {
 
-        String shortCode = request.shortUrl();
+        String shortCode = request.shortCode();
 
         // Validates URL format
         if (shortCode == null || shortCode.isEmpty()) {
