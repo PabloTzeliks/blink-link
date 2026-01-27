@@ -19,7 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({PostgresUrlRepository.class, UrlEntityMapper.class})
-public class PostgresUrlRepositoryTest extends AbstractContainerBase {
+public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase {
 
     @Autowired
     private UrlRepositoryPort repository;

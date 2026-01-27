@@ -34,13 +34,13 @@ public class UrlEntity implements Persistable<Long> {
     private String shortCode;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Transient
     private boolean isNew;
 
-    public UrlEntity() { }
+    protected UrlEntity() { }
 
     public UrlEntity(Long id, String originalUrl, String shortCode, LocalDateTime createdAt) {
         this.id = id;
@@ -75,5 +75,20 @@ public class UrlEntity implements Persistable<Long> {
     public String getShortCode() { return shortCode; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    // Additional
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UrlEntity urlEntity = (UrlEntity) o;
+        return id != null && id.equals(urlEntity.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
 
