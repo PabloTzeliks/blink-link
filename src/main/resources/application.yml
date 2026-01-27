@@ -2,14 +2,14 @@ spring:
   application:
     name: Blink Link
 
-  # Configuração do PostgreSQL
+  # PostgreSQL Configuration
   datasource:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     url: jdbc:postgresql://${DB_HOST:localhost}:5432/${POSTGRES_DB}
     driver-class-name: org.postgresql.Driver
 
-  # Configuração do JPA + Hibernate
+  # JPA + Hibernate Configuration
   jpa:
     database: POSTGRESQL
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -21,7 +21,7 @@ spring:
       hibernate:
         format_sql: true
 
-  # Configuração do Flyway (Migração de Banco)
+  # Flyway (DB Migrations) Configuration
   flyway:
     enabled: true
 
