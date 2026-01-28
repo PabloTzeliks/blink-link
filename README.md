@@ -415,10 +415,10 @@ A documentação Swagger mostra todos os endpoints, schemas de request/response 
 
 ## 📡 Endpoints da API
 
-### Criar URL Encurtada
+### 1. Criar URL Encurtada
 
 ```http
-POST /url/v1/shorten
+POST /api/v2/urls/shorten
 Content-Type: application/json
 
 {
@@ -436,7 +436,23 @@ Content-Type: application/json
 }
 ```
 
-### Resolver/Redirecionar URL
+### 2. Obter Detalhes da URL Encurtada
+
+```http
+GET /api/v2/urls/{shortCode}
+```
+
+**Resposta (200 OK):**
+```json
+{
+  "originalUrl": "https://www.exemplo.com/caminho/muito/longo",
+  "shortCode": "3D7",
+  "shortUrl": "http://localhost:8080/3D7",
+  "createdAt": "2026-01-28T01:30:00"
+}
+```
+
+### 3. Redirecionar para URL Original
 
 ```http
 GET /{shortCode}
@@ -447,6 +463,8 @@ GET /{shortCode}
 HTTP/1.1 302 Found
 Location: https://www.exemplo.com/caminho/muito/longo
 ```
+
+**Nota:** Este endpoint está na raiz do domínio para URLs mais curtas. Ele redireciona automaticamente para a URL original.
 
 ---
 
