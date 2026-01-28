@@ -468,13 +468,12 @@ Location: https://www.exemplo.com/caminho/muito/longo
 
 ---
 
-## 🔮 Próximos Passos (v2.1.0)
+## 🔮 Ideias para a v3.0.0
 
 - [ ] **Feature: Expiração de Links (TTL)** - URLs com tempo de vida configurável
-- [ ] **Analytics Básicos** - Contagem de acessos por short code
+- [ ] **Entidade de Usuário** - Aplicar Spring Security com Roles e novos Endpo
 - [ ] **Rate Limiting** - Proteção contra abuso (ex: 100 req/min por IP)
 - [ ] **Cache Redis** - Cache de URLs mais acessadas para reduzir latência
-- [ ] **Monitoramento** - Integração com Prometheus + Grafana
 
 ---
 
@@ -488,7 +487,7 @@ Location: https://www.exemplo.com/caminho/muito/longo
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PabloTzeliks)
 [![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:arq.pabloo@gmail.com)
 
-*Software Engineer | Java & Spring Boot Specialist | Clean Architecture Advocate*
+*System Development Apprentice at WEG | Java & Spring Boot Enthusiast | Future Software Engineer*
 
 </div>
 
@@ -500,6 +499,6 @@ Location: https://www.exemplo.com/caminho/muito/longo
 
 *Construído com ☕ e paixão por Engenharia de Software*
 
-**[📜 Veja o README da v1.0.0](./README-v1.0.0.md)** | **[🐛 Reportar Bug](https://github.com/PabloTzeliks/blink-link/issues)** | **[✨ Sugerir Feature](https://github.com/PabloTzeliks/blink-link/issues)**
+**[ 📜 Veja o README da v1.0.0](./README-v1.0.0.md)** | **[ 🐛 Reportar Bug](https://github.com/PabloTzeliks/blink-link/issues)** | **[ ✨ Sugerir Feature](https://github.com/PabloTzeliks/blink-link/issues)**
 
 </div>
