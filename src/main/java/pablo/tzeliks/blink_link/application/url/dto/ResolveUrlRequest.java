@@ -2,7 +2,6 @@ package pablo.tzeliks.blink_link.application.url.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.URL;
 
 /**
  * Data Transfer Object for URL resolution requests.

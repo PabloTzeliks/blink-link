@@ -66,34 +66,10 @@ public class Url {
      * @throws InvalidUrlException if the original URL is {@code null}, blank, or doesn't start with http/https
      */
     public Url(Long id, String originalUrl, String shortCode, LocalDateTime createdAt) {
-
-        validateOriginalUrl(originalUrl);
-
         this.id = id;
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
         this.createdAt = createdAt;
-    }
-
-    /**
-     * Validates the original URL according to business rules.
-     * <p>
-     * This private method enforces domain-level validation rules that ensure
-     * only valid URLs can exist in the system. These rules are applied
-     * regardless of where the URL object is created from.
-     * <p>
-     * <b>Validation Rules:</b>
-     * <ol>
-     *   <li>URL must not be {@code null}, empty, or contain only whitespace</li>
-     *   <li>URL must start with "http://" or "https://" for security and consistency</li>
-     * </ol>
-     *
-     * @param url the URL string to validate
-     * @throws InvalidUrlException if the URL is invalid according to business rules
-     */
-    private void validateOriginalUrl(String url) {
-        if (url == null || url.isBlank()) throw new InvalidUrlException("Invalid URL");
-        if (!url.startsWith("http")) throw new InvalidUrlException("URL must start with http/https");
     }
 
     // Getters
