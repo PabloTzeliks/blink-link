@@ -1,4 +1,7 @@
-package pablo.tzeliks.blink_link.domain.url.exception;
+package pablo.tzeliks.blink_link.domain.common.exception;
+
+import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
+import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 
 /**
  * Base exception class for business rule violations in the domain layer.

@@ -1,5 +1,7 @@
 package pablo.tzeliks.blink_link.infrastructure.exception;
 
+import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
+
 /**
  * Exception thrown when URL encoding operations fail.
  * <p>
@@ -12,7 +14,7 @@ package pablo.tzeliks.blink_link.infrastructure.exception;
  * </ul>
  * <p>
  * When this exception occurs during URL shortening, it is typically caught and
- * re-thrown as an {@link pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException}
+ * re-thrown as an {@link InvalidUrlException}
  * to maintain clean separation between infrastructure and domain concerns. This
  * allows the domain layer to handle encoding failures as business rule violations
  * rather than infrastructure errors.

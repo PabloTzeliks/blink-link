@@ -1,5 +1,7 @@
 package pablo.tzeliks.blink_link.domain.url.exception;
 
+import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
+
 /**
  * Exception thrown when a URL lookup fails because the short code doesn't exist.
  * <p>
