@@ -48,7 +48,7 @@ public class UrlController {
 
     /**
      * Creates a shortened URL from a long URL.
-     * <p>
+     * <
      * This endpoint accepts a long URL and generates a unique short code for it.
      * The short code is created by:
      * <ol>
