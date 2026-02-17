@@ -1,5 +1,7 @@
 package pablo.tzeliks.blink_link.domain.url.exception;
 
+import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
+
 /**
  * Exception thrown when URL validation fails according to business rules.
  * <p>
