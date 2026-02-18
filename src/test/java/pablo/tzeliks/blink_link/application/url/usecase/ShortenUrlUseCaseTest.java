@@ -13,7 +13,7 @@ import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
-import pablo.tzeliks.blink_link.infrastructure.exception.EncoderException;
+import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 
 import java.time.LocalDateTime;
 

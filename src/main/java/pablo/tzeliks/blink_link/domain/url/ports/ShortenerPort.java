@@ -1,6 +1,6 @@
 package pablo.tzeliks.blink_link.domain.url.ports;
 
-import pablo.tzeliks.blink_link.infrastructure.encoding.Base62Encoder;
+import pablo.tzeliks.blink_link.infrastructure.url.encoding.Base62Encoder;
 
 /**
  * Port interface for URL shortening operations in the hexagonal architecture.

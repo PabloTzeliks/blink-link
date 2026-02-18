@@ -1,6 +1,8 @@
-package pablo.tzeliks.blink_link.infrastructure.exception;
+package pablo.tzeliks.blink_link.infrastructure.url.exception;
 
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
+import pablo.tzeliks.blink_link.infrastructure.exception.InfraestructureException;
+import pablo.tzeliks.blink_link.infrastructure.url.encoding.Base62Encoder;
 
 /**
  * Exception thrown when URL encoding operations fail.
@@ -23,7 +25,7 @@ import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
  * @version 2.0.0
  * @since 1.0.0
  * @see InfraestructureException
- * @see pablo.tzeliks.blink_link.infrastructure.encoding.Base62Encoder
+ * @see Base62Encoder
  */
 public class EncoderException extends InfraestructureException {
     /**

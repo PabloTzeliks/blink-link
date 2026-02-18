@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Import;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
-import pablo.tzeliks.blink_link.infrastructure.persistence.mapper.UrlEntityMapper;
+import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
+import pablo.tzeliks.blink_link.infrastructure.url.persistence.repository.PostgresUrlRepository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
