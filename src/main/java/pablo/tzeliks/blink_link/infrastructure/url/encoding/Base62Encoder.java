@@ -1,11 +1,11 @@
-package pablo.tzeliks.blink_link.infrastructure.encoding;
+package pablo.tzeliks.blink_link.infrastructure.url.encoding;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
-import pablo.tzeliks.blink_link.infrastructure.exception.EncoderException;
+import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 
 /**
  * Base62 encoder implementation for generating short codes from numeric IDs.

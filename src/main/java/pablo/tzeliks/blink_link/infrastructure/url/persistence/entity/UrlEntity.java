@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.persistence.entity;
+package pablo.tzeliks.blink_link.infrastructure.url.persistence.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;

@@ -1,8 +1,8 @@
-package pablo.tzeliks.blink_link.infrastructure.persistence.mapper;
+package pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper;
 
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
-import pablo.tzeliks.blink_link.infrastructure.persistence.entity.UrlEntity;
+import pablo.tzeliks.blink_link.infrastructure.url.persistence.entity.UrlEntity;
 
 /**
  * Mapper for converting between URL domain models and JPA entities.

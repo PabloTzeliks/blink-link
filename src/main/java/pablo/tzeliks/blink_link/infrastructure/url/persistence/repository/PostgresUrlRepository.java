@@ -1,9 +1,9 @@
-package pablo.tzeliks.blink_link.infrastructure.persistence.repository;
+package pablo.tzeliks.blink_link.infrastructure.url.persistence.repository;
 
 import org.springframework.stereotype.Repository;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
-import pablo.tzeliks.blink_link.infrastructure.persistence.mapper.UrlEntityMapper;
+import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
 
 import java.util.Optional;
 
