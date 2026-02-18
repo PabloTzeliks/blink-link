@@ -1,5 +1,8 @@
 package pablo.tzeliks.blink_link.domain.user.model;
 
+import org.h2.schema.Domain;
+import pablo.tzeliks.blink_link.domain.common.exception.DomainException;
+import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 
@@ -17,7 +20,8 @@ public class User {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public User(UUID id,
+
+    private User(UUID id,
                 Email email,
                 Password password,
                 Role role, Plan plan,
@@ -32,17 +36,31 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public User(Email email, Password password, Role role, Plan plan) {
-        this.id = UUID.randomUUID();
-        this.email = email;
-        this.password = password;
-        this.role = role;
-        this.plan = plan;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    public static User create(Email email, Password password) {
+        return new User(UUID.randomUUID(), email, password, Role.USER, Plan.FREE, LocalDateTime.now(), LocalDateTime.now());
     }
 
+    public static User restore(UUID id, Email email, Password password, Role role, Plan plan, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new User(id, email, password, role, plan, createdAt, updatedAt);
+    }
 
+    public void upgradeToVip() {
+        this.plan = Plan.VIP;
+    }
+
+    public void promoteToAdmin() {
+        this.role = Role.ADMIN;
+    }
+
+    public void changePassword(Password newPassword) {
+
+        if (newPassword == this.password) {
+
+            throw new InvalidPasswordException("Invalid Password.");
+        }
+
+        this.password = newPassword;
+    }
 
     public UUID getId() {
         return id;
