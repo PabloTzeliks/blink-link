@@ -1,7 +1,5 @@
 package pablo.tzeliks.blink_link.domain.user.model;
 
-import org.h2.schema.Domain;
-import pablo.tzeliks.blink_link.domain.common.exception.DomainException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
@@ -12,14 +10,12 @@ import java.util.UUID;
 public class User {
 
     private final UUID id;
-    private Email email;
+    private final Email email;
     private Password password;
     private Role role;
     private Plan plan;
-
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 
     private User(UUID id,
                 Email email,
@@ -46,20 +42,23 @@ public class User {
 
     public void upgradeToVip() {
         this.plan = Plan.VIP;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void promoteToAdmin() {
         this.role = Role.ADMIN;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void changePassword(Password newPassword) {
 
-        if (newPassword == this.password) {
+        if (newPassword.equals(this.password)) {
 
-            throw new InvalidPasswordException("Invalid Password.");
+            throw new InvalidPasswordException("New password must be different from the current password.");
         }
 
         this.password = newPassword;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public UUID getId() {
