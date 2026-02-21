@@ -1,5 +1,6 @@
 package pablo.tzeliks.blink_link.infrastructure.user.persistence.repository;
 
+import org.springframework.stereotype.Repository;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
@@ -8,6 +9,7 @@ import pablo.tzeliks.blink_link.infrastructure.user.persistence.mapper.UserEntit
 
 import java.util.Optional;
 
+@Repository
 public class PostgresUserRepositoryAdapter implements UserRepositoryPort {
 
     private final JpaUserRepository repository;
