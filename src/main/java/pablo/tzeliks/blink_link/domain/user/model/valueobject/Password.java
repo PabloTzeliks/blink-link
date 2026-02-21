@@ -7,4 +7,8 @@ public record Password(String value) {
             throw new IllegalArgumentException("Password cannot be empty");
         }
     }
+
+    public String getValue() {
+        return value;
+    }
 }

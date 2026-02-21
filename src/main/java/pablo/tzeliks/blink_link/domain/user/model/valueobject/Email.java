@@ -13,4 +13,8 @@ public record Email(String value) {
             throw new InvalidEmailException("Invalid email format.");
         }
     }
+
+    public String getValue() {
+        return value;
+    }
 }
