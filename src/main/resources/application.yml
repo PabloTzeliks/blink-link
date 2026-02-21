@@ -31,3 +31,4 @@ server:
 blink-link:
   secret-key: ${APP_SECRET_KEY:0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ}
   base-url: ${APP_BASE_URL:http://localhost:8080/}
+  secret-token: ${APP_SECRET_TOKEN:Clbh0TwLgaPvrUINlhzt0DKSn2NTZlF/q16zVttAXqA=}
