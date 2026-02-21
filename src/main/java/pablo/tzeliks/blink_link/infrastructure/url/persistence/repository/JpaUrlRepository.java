@@ -34,7 +34,7 @@ import java.util.Optional;
  * @version 2.0.0
  * @since 1.0.0
  * @see UrlEntity
- * @see PostgresUrlRepository
+ * @see PostgresUrlRepositoryAdapter
  */
 @Repository
 public interface JpaUrlRepository extends JpaRepository<UrlEntity, Long> {
