@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.security;
+package pablo.tzeliks.blink_link.infrastructure.security.encoder;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
