@@ -1,9 +1,13 @@
 package pablo.tzeliks.blink_link.infrastructure.user.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import pablo.tzeliks.blink_link.domain.user.model.User;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
 
+import java.util.Optional;
 import java.util.UUID;
 
-public interface JpaUserRepository extends JpaRepository<User, UUID> {
+public interface JpaUserRepository extends JpaRepository<UserEntity, UUID> {
+
+    Optional<UserEntity> findByEmail(String email);
+    boolean existsByEmail(String email);
 }
