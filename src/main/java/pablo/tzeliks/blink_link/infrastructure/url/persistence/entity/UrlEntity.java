@@ -230,4 +230,3 @@ public class UrlEntity implements Persistable<Long> {
         return getClass().hashCode();
     }
 }
-

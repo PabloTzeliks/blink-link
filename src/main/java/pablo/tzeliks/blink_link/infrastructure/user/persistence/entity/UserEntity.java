@@ -3,7 +3,6 @@ package pablo.tzeliks.blink_link.infrastructure.user.persistence.entity;
 import jakarta.persistence.*;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.data.domain.Persistable;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.domain.user.model.Role;
 
@@ -13,7 +12,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users", schema = "public")
-public class UserEntity implements Persistable<UUID> {
+public class UserEntity {
 
     @Id
     private UUID id;
@@ -39,10 +38,8 @@ public class UserEntity implements Persistable<UUID> {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Transient
-    private boolean isNew = false;
-
-    public UserEntity() {}
+    @Version
+    private Long version;
 
     public UserEntity(UUID id,
                       String email,
@@ -59,24 +56,55 @@ public class UserEntity implements Persistable<UUID> {
         this.updatedAt = updatedAt;
     }
 
-    @Override
-    public UUID getId() { return id; }
+    public UserEntity() { }
 
-    @Override
-    public boolean isNew() {
-        return isNew;
+    public UUID getId() {
+        return id;
     }
 
-    public void markAsNew() {
-        this.isNew = true;
+    public String getEmail() {
+        return email;
     }
 
-    public String getEmail() { return email; }
-    public String getPassword() { return password; }
-    public Role getRole() { return role; }
-    public Plan getPlan() { return plan; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public String getPassword() {
+        return password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public Plan getPlan() {
+        return plan;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public void setPlan(Plan plan) {
+        this.plan = plan;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 
     @Override
     public boolean equals(Object o) {
