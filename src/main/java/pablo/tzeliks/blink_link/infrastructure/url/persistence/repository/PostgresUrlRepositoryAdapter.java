@@ -49,12 +49,12 @@ import java.util.Optional;
  * @see UrlEntityMapper
  */
 @Repository
-public class PostgresUrlRepository implements UrlRepositoryPort {
+public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
 
     private final JpaUrlRepository repository;
     private final UrlEntityMapper mapper;
 
-    public PostgresUrlRepository(JpaUrlRepository repository, UrlEntityMapper mapper) {
+    public PostgresUrlRepositoryAdapter(JpaUrlRepository repository, UrlEntityMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }
