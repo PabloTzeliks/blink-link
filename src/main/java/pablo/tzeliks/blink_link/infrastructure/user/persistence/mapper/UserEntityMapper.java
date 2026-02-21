@@ -1,10 +1,12 @@
 package pablo.tzeliks.blink_link.infrastructure.user.persistence.mapper;
 
+import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
 
+@Component
 public class UserEntityMapper {
 
     public UserEntity toEntity(User domain) {
