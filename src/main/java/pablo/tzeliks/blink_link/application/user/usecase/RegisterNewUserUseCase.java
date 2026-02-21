@@ -32,6 +32,7 @@ public class RegisterNewUserUseCase {
         Email email = new Email(request.email());
 
         if (repositoryPort.existsByEmail(email)) {
+
             throw new InvalidEmailException("Email is already in use.");
         }
 
