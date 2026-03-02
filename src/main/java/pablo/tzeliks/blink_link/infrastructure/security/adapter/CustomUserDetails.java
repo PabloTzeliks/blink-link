@@ -4,32 +4,32 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
+import pablo.tzeliks.blink_link.domain.user.model.User;
 
 import java.util.Collection;
 import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
 
-    private final UserEntity entity;
+    private final User domainUser;
 
-    public CustomUserDetails(UserEntity entity) {
-        this.entity = entity;
+    public CustomUserDetails(User domainUser) {
+        this.domainUser = domainUser;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + entity.getRole().name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + domainUser.getRole().name()));
     }
 
     @Override
     public @Nullable String getPassword() {
-        return entity.getPassword();
+        return domainUser.getPassword().getValue();
     }
 
     @Override
     public String getUsername() {
-        return entity.getEmail();
+        return domainUser.getEmail().getValue();
     }
 
     @Override public boolean isAccountNonExpired() { return true; }
