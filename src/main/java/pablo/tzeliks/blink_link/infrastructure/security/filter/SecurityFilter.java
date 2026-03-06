@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
@@ -16,6 +17,7 @@ import pablo.tzeliks.blink_link.infrastructure.security.jwt.TokenService;
 import java.io.IOException;
 import java.util.Optional;
 
+@Component
 public class SecurityFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
