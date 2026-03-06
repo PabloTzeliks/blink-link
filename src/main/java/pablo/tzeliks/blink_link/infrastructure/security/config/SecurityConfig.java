@@ -24,7 +24,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v2/urls/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{shortUrl}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
