@@ -7,17 +7,19 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.domain.user.model.User;
+import pablo.tzeliks.blink_link.domain.user.ports.TokenGenerationPort;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 @Service
-public class TokenService {
+public class TokenService implements TokenGenerationPort {
 
     @Value(value = "${blink-link.secret-token}")
     private String secret;
 
+    @Override
     public String generateToken(User user) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
