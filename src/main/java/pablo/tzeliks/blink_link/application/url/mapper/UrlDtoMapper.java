@@ -64,28 +64,4 @@ public class UrlDtoMapper {
 
 
     }
-
-    /**
-     * Converts a {@link CreateUrlRequest} DTO to a domain {@link Url} object.
-     * <p>
-     * This method creates a new domain model from the request data, combining it with
-     * the generated ID and short code. The creation timestamp is set to the current time.
-     * <p>
-     * <b>Note:</b> The {@code createdAt} timestamp set here will be overwritten by
-     * Hibernate's {@code @CreationTimestamp} mechanism during persistence.
-     *
-     * @param request the creation request containing the original URL
-     * @param id the unique identifier generated from the database sequence
-     * @param shortCode the Base62-encoded short code generated from the ID
-     * @return a new {@link Url} domain model ready for persistence
-     */
-    public Url toDomain(CreateUrlRequest request, Long id, String shortCode) {
-
-        return new Url(
-                id,
-                request.originalUrl(),
-                shortCode,
-                LocalDateTime.now()
-        );
-    }
 }
