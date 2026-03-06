@@ -1,8 +1,8 @@
 package pablo.tzeliks.blink_link.domain.user.exception;
 
-import pablo.tzeliks.blink_link.domain.common.exception.DomainException;
+import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 
-public class InvalidPasswordException extends DomainException {
+public class InvalidPasswordException extends AuthenticationException {
     public InvalidPasswordException(String message) {
         super(message);
     }
