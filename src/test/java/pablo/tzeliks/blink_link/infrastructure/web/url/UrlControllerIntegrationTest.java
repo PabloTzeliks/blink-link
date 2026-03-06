@@ -17,6 +17,7 @@ import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -109,6 +110,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
+                        .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isCreated())
@@ -150,6 +152,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
+                        .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isUnprocessableEntity()) // 422
@@ -183,6 +186,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
+                        .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(brokenJson))
                 .andExpect(status().isBadRequest()) // 400
@@ -225,7 +229,8 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         repository.save(savedUrl);
 
         // Act & Assert
-        mockMvc.perform(get("/api/v2/urls/" + savedUrl.getShortCode()))
+        mockMvc.perform(get("/api/v2/urls/" + savedUrl.getShortCode())
+                        .with(user("test@test.com").roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.original_url").value("https://rocketseat.com.br"))
                 .andExpect(jsonPath("$.short_code").value("rocket"));
@@ -252,7 +257,8 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Test
     @DisplayName("GET /api/v2/urls/{ShortCode} - Should return 404 for non-existent code (Sad Path)")
     void shouldReturn404ForDetailsOfGhostCode() throws Exception {
-        mockMvc.perform(get("/api/v2/urls/ghost-code-123"))
+        mockMvc.perform(get("/api/v2/urls/ghost-code-123")
+                        .with(user("test@test.com").roles("USER")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Resource Not Found"));
     }
