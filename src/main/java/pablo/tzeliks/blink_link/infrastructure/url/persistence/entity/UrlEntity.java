@@ -42,7 +42,7 @@ import java.time.LocalDateTime;
  * @since 1.0.0
  */
 @Entity
-@Table(name = "url", schema = "public")
+@Table(name = "urls", schema = "public")
 public class UrlEntity implements Persistable<Long> {
 
     /**

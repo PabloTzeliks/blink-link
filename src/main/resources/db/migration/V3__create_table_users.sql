@@ -1,4 +1,4 @@
-CREATE TABLE user (
+CREATE TABLE users (
     id UUID NOT NULL,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -8,8 +8,8 @@ CREATE TABLE user (
     updated_at TIMESTAMP WITHOUT TIME ZONE,
     version BIGINT NOT NULL DEFAULT 0,
 
-    CONSTRAINT pk_user PRIMARY KEY (id),
-    CONSTRAINT uc_user_email UNIQUE (email)
+    CONSTRAINT pk_users PRIMARY KEY (id),
+    CONSTRAINT uc_users_email UNIQUE (email)
 );
 
-CREATE INDEX idx_user_email ON user(email);
+CREATE INDEX idx_users_email ON users(email);

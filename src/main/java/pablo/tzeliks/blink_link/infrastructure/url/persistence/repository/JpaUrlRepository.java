@@ -64,7 +64,7 @@ public interface JpaUrlRepository extends JpaRepository<UrlEntity, Long> {
      *
      * @return the next available ID from the sequence
      */
-    @Query(value = "SELECT nextval('url_id_seq')", nativeQuery = true)
+    @Query(value = "SELECT nextval('urls_id_seq')", nativeQuery = true)
     Long nextId();
 }
 
