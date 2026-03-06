@@ -140,8 +140,8 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
 
     @Test
     @Order(7)
-    @DisplayName("E2E: POST /api/v2/auth/register - Should return 422 for duplicate email")
-    void shouldReturn422ForDuplicateRegistration() throws Exception {
+    @DisplayName("E2E: POST /api/v2/auth/register - Should return 401 for duplicate email")
+    void shouldReturn401ForDuplicateRegistration() throws Exception {
         String registerJson = """
                 {
                     "email": "e2e@blinklink.com",
