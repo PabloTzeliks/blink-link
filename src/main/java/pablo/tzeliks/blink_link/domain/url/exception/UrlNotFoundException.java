@@ -1,6 +1,7 @@
 package pablo.tzeliks.blink_link.domain.url.exception;
 
 import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
+import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
 
 /**
  * Exception thrown when a URL lookup fails because the short code doesn't exist.
@@ -26,7 +27,7 @@ import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
  * @since 1.0.0
  * @see BusinessRuleException
  */
-public class UrlNotFoundException extends BusinessRuleException {
+public class UrlNotFoundException extends ResourceNotFoundException {
     /**
      * Constructs a new URL not found exception with the specified detail message.
      *
