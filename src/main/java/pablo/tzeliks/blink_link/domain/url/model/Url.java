@@ -1,6 +1,9 @@
 package pablo.tzeliks.blink_link.domain.url.model;
 
+import pablo.tzeliks.blink_link.domain.common.exception.DomainException;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
+import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrategy;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
 
 import java.time.LocalDateTime;
 
@@ -45,68 +48,73 @@ public class Url {
     private final String originalUrl;
     private final String shortCode;
     private final LocalDateTime createdAt;
+    private final LocalDateTime expirationDate;
 
-    /**
-     * Constructs a new Url domain object with validation.
-     * <p>
-     * This constructor creates a new URL instance after validating the original URL
-     * according to business rules. If validation fails, an {@link InvalidUrlException}
-     * is thrown, preventing the creation of invalid domain objects.
-     * <p>
-     * <b>Validation Performed:</b>
-     * <ul>
-     *   <li>Checks that the URL is not {@code null}, empty, or blank</li>
-     *   <li>Ensures the URL starts with "http://" or "https://"</li>
-     * </ul>
-     *
-     * @param id the unique identifier for this URL (typically from database sequence)
-     * @param originalUrl the original long URL; must be valid per business rules
-     * @param shortCode the Base62-encoded short code representing this URL
-     * @param createdAt the timestamp when this URL was created
-     * @throws InvalidUrlException if the original URL is {@code null}, blank, or doesn't start with http/https
-     */
-    public Url(Long id, String originalUrl, String shortCode, LocalDateTime createdAt) {
+    private Url(Long id, String originalUrl, String shortCode, LocalDateTime expirationDate) {
+        validateOriginalUrl(originalUrl);
+
+        if (shortCode == null || shortCode.isBlank()) {
+            throw new DomainException("Short code cannot be null or blank");
+        }
+
         this.id = id;
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
+        this.expirationDate = expirationDate;
     }
 
-    // Getters
+    private void validateOriginalUrl(String url) {
+        if (url == null || url.isBlank()) {
+            throw new InvalidUrlException("Original URL cannot be null or blank");
+        }
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            throw new InvalidUrlException("Original URL must start with http:// or https://");
+        }
+    }
+
+    public static Url create(String originalUrl, String shortCode, ExpirationCalculationStrategy expirationStrategy) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expirationDate = expirationStrategy.calculateExpirationDate(now);
+
+        return new Url(null, originalUrl, shortCode, now, expirationDate);
+    }
 
     /**
-     * Gets the unique identifier of this URL.
-     *
-     * @return the URL's ID
+     * FACTORY METHOD: Restaura uma URL existente a partir do banco de dados (Infra Layer).
+     * Recebe todos os atributos exatos como estão armazenados.
      */
+    public static Url restore(Long id, String originalUrl, String shortCode, LocalDateTime createdAt, LocalDateTime expirationDate) {
+        return new Url(id, originalUrl, shortCode, createdAt, expirationDate);
+    }
+
+    /**
+     * COMPORTAMENTO DE DOMÍNIO: A própria URL sabe dizer se está expirada.
+     */
+    public boolean isExpired() {
+        if (this.expirationDate == null) {
+            return false; // URLs com expirationDate null são vitalícias
+        }
+        return LocalDateTime.now().isAfter(this.expirationDate);
+    }
+
     public Long getId() {
         return id;
     }
 
-    /**
-     * Gets the original long URL.
-     *
-     * @return the original URL string
-     */
     public String getOriginalUrl() {
         return originalUrl;
     }
 
-    /**
-     * Gets the Base62-encoded short code.
-     *
-     * @return the short code string
-     */
     public String getShortCode() {
         return shortCode;
     }
 
-    /**
-     * Gets the creation timestamp.
-     *
-     * @return the timestamp when this URL was created
-     */
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getExpirationDate() {
+        return expirationDate;
     }
 }
