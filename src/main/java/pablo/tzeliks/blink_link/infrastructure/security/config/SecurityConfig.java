@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v2/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/{shortCode}").permitAll()
                         .anyRequest().authenticated()
                 )
