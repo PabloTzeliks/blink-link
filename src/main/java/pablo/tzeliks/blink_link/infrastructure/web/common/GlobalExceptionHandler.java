@@ -9,6 +9,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
+import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
+import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ErrorResponse;
@@ -60,8 +63,8 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request that triggered the exception
      * @return a {@link ResponseEntity} with status 404 and an {@link ErrorResponse} body
      */
-    @ExceptionHandler(UrlNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUrlNotFound(UrlNotFoundException ex, HttpServletRequest request) {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.NOT_FOUND,
@@ -83,12 +86,24 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request that triggered the exception
      * @return a {@link ResponseEntity} with status 400 and an {@link ErrorResponse} body
      */
-    @ExceptionHandler(InvalidUrlException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidUrl(InvalidUrlException ex, HttpServletRequest request) {
+    @ExceptionHandler(InvalidResourceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidResource(InvalidResourceException ex, HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "Invalid Argument",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationError(AuthenticationException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid Credentials",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
