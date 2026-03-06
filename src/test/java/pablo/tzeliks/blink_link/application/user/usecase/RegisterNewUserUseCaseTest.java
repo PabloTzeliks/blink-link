@@ -103,6 +103,7 @@ class RegisterNewUserUseCaseTest {
         assertThrows(InvalidEmailException.class,
                 () -> useCase.execute(request));
 
+        verify(repositoryPort, never()).existsByEmail(any(Email.class));
         verifyNoInteractions(passwordEncoderPort);
         verify(repositoryPort, never()).save(any(User.class));
         verifyNoInteractions(mapper);
