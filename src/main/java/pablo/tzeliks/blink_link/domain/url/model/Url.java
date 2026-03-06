@@ -19,7 +19,11 @@ public class Url {
     private final LocalDateTime createdAt;
     private final LocalDateTime expirationDate;
 
-    private Url(Long id, String originalUrl, String shortCode, LocalDateTime createdAt, LocalDateTime expirationDate) {
+    private Url(Long id,
+                String originalUrl,
+                String shortCode,
+                LocalDateTime createdAt,
+                LocalDateTime expirationDate) {
 
         validateOriginalUrl(originalUrl);
 
@@ -45,15 +49,22 @@ public class Url {
         }
     }
 
-    public static Url create(String originalUrl, String shortCode, ExpirationCalculationStrategy expirationStrategy) {
+    public static Url create(Long id,
+                             String originalUrl,
+                             String shortCode,
+                             ExpirationCalculationStrategy expirationStrategy) {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expirationDate = expirationStrategy.calculateExpirationDate(now);
 
-        return new Url(null, originalUrl, shortCode, now, expirationDate);
+        return new Url(id, originalUrl, shortCode, now, expirationDate);
     }
 
-    public static Url restore(Long id, String originalUrl, String shortCode, LocalDateTime createdAt, LocalDateTime expirationDate) {
+    public static Url restore(Long id,
+                              String originalUrl,
+                              String shortCode,
+                              LocalDateTime createdAt,
+                              LocalDateTime expirationDate) {
 
         return new Url(id, originalUrl, shortCode, createdAt, expirationDate);
     }
