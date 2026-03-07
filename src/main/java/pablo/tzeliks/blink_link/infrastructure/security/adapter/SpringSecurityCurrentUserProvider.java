@@ -3,10 +3,12 @@ package pablo.tzeliks.blink_link.infrastructure.security.adapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.url.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.infrastructure.exception.InfraestructureException;
 
+@Component
 public class SpringSecurityCurrentUserProvider implements CurrentUserProviderPort {
 
     @Override
