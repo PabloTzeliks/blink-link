@@ -2,11 +2,8 @@ package pablo.tzeliks.blink_link.application.url.mapper;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
-
-import java.time.LocalDateTime;
 
 /**
  * Mapper for converting between URL DTOs and domain models.
@@ -61,7 +58,5 @@ public class UrlDtoMapper {
                 shortUrl,
                 domain.getCreatedAt()
         );
-
-
     }
 }
