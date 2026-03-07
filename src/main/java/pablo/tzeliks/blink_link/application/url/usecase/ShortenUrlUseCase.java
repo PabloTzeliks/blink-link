@@ -13,9 +13,6 @@ import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrateg
 import pablo.tzeliks.blink_link.domain.url.strategy.factory.ExpirationStrategyFactory;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 
-/**
-
- */
 @Service
 public class ShortenUrlUseCase {
 
@@ -31,8 +28,6 @@ public class ShortenUrlUseCase {
         this.userProviderPort = userProviderPort;
     }
 
-    /**
-     */
     @Transactional
     public UrlResponse execute(CreateUrlRequest request) {
 
