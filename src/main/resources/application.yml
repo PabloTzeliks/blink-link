@@ -6,7 +6,7 @@ spring:
   datasource:
     username: ${POSTGRES_USER:local_user}
     password: ${POSTGRES_PASSWORD:local_pass}
-    url: jdbc:postgresql://${DB_HOST:postgres-db}:5432/${POSTGRES_DB:blinklink_db}
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${POSTGRES_DB:blinklink_db}
     driver-class-name: org.postgresql.Driver
 
   # JPA + Hibernate Configuration

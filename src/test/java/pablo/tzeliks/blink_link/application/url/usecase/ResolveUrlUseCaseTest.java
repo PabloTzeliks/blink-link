@@ -106,7 +106,7 @@ class ResolveUrlUseCaseTest {
         String shortCode = "HhqS";
         String originalUrl = "https://github.com/PabloTzeliks";
         LocalDateTime now = LocalDateTime.now();
-        Url urlFound = new Url(1L, originalUrl, shortCode, now);
+        Url urlFound = Url.restore(1L, originalUrl, shortCode, now, now.plusDays(7));
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
         UrlResponse expectedResponse = new UrlResponse(originalUrl, shortCode, "http://localhost:8080/" + shortCode, now);

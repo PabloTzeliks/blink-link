@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS url;
 
+DROP TABLE IF EXISTS urls;
+
 CREATE SEQUENCE urls_id_seq
     START WITH 1000000
     INCREMENT BY 1
@@ -12,6 +14,7 @@ CREATE TABLE urls (
     original_url TEXT NOT NULL,
     short_code VARCHAR(20) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    expiration_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 
     CONSTRAINT pk_urls PRIMARY KEY (id),
     CONSTRAINT uc_urls_short_code UNIQUE (short_code)

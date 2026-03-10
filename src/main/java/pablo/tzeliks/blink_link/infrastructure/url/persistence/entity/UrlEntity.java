@@ -7,38 +7,9 @@ import org.springframework.data.domain.Persistable;
 import java.time.LocalDateTime;
 
 /**
- * Represents a shortened URL entry in the database.
- * <p>
- * This entity maps to the {@code url} table in the {@code public} schema of the PostgreSQL database.
- * It stores the relationship between original long URLs and their corresponding short codes,
- * along with creation timestamps for tracking purposes.
- * <p>
- * <b>Persistable Implementation:</b>
- * <p>
- * This entity implements {@link Persistable}{@code <Long>} to optimize database insertion performance.
- * By default, Spring Data JPA performs a {@code SELECT} query before every {@code INSERT} to determine
- * if an entity is new or existing. This causes unnecessary overhead when we know an entity is always new.
- * <p>
- * The {@link Persistable} interface allows us to explicitly control the "new" state through the
- * {@link #isNew()} method. When {@code isNew()} returns {@code true}, JPA will skip the SELECT and
- * perform a direct INSERT operation, significantly improving performance for high-volume URL creation.
- * <p>
- * <b>ID Generation Strategy:</b>
- * <p>
- * The {@code id} field is manually assigned before insertion using a database sequence
- * ({@code url_id_seq}). This pre-generated ID is then encoded into the Base62 short code,
- * ensuring uniqueness and consistency. The {@link #isNew} transient field is set to {@code true}
- * during construction and automatically updated to {@code false} after the entity is persisted
- * or loaded from the database.
- * <p>
- * <b>CreationTimestamp Behavior:</b>
- * <p>
- * The {@code createdAt} field is annotated with {@link CreationTimestamp}, which automatically
- * sets the timestamp when the entity is first persisted. Note that any value provided during
- * construction will be overwritten by Hibernate at insertion time with the current database timestamp.
  *
  * @author Pablo Tzeliks
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 @Entity
@@ -87,6 +58,9 @@ public class UrlEntity implements Persistable<Long> {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "expiration_date", nullable = false, updatable = false)
+    private LocalDateTime expirationDate;
+
     /**
      * Transient flag indicating whether this entity is new (not yet persisted).
      * <p>
@@ -121,14 +95,13 @@ public class UrlEntity implements Persistable<Long> {
      * @param shortCode the Base62-encoded short code
      * @param createdAt the creation timestamp (will be overwritten by Hibernate)
      */
-    public UrlEntity(Long id, String originalUrl, String shortCode, LocalDateTime createdAt) {
+    public UrlEntity(Long id, String originalUrl, String shortCode, LocalDateTime createdAt, LocalDateTime expirationDate) {
         this.id = id;
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
         this.createdAt = createdAt;
-        this.isNew = true;
+        this.expirationDate = expirationDate;
     }
-
     // Persistable implementation
 
     /**
@@ -196,6 +169,8 @@ public class UrlEntity implements Persistable<Long> {
      * @return the timestamp when this URL was created
      */
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public LocalDateTime getExpirationDate() { return expirationDate; }
 
     // Entity equality methods
 
