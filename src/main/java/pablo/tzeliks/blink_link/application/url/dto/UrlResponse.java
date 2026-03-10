@@ -33,5 +33,6 @@ public record UrlResponse(
         @JsonProperty("original_url") String originalUrl,
         @JsonProperty("short_code") String shortCode,
         @JsonProperty("short_url") String shortUrl,
-        @JsonProperty("created_at") LocalDateTime createdAt
+        @JsonProperty("created_at") LocalDateTime createdAt,
+        @JsonProperty("expiration_date") LocalDateTime expirationDate
 ) { }
