@@ -13,6 +13,7 @@ import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
 import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
+import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ErrorResponse;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ValidationError;
@@ -92,6 +93,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "Invalid Argument",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(UrlExpiredException.class)
+    public ResponseEntity<ErrorResponse> handleExpiredUrl(UrlExpiredException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.GONE,
+                "Url Expired",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null

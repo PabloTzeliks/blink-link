@@ -56,7 +56,8 @@ public class UrlDtoMapper {
                 domain.getOriginalUrl(),
                 domain.getShortCode(),
                 shortUrl,
-                domain.getCreatedAt()
+                domain.getCreatedAt(),
+                domain.getExpirationDate()
         );
     }
 }
