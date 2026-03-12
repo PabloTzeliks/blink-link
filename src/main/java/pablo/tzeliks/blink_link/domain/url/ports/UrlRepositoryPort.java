@@ -2,6 +2,7 @@ package pablo.tzeliks.blink_link.domain.url.ports;
 
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -91,4 +92,6 @@ public interface UrlRepositoryPort {
      * @return an {@link Optional} containing the URL if found, or empty if not found
      */
     Optional<Url> findByShortCode(String shortCode);
+
+    int deleteExpiredInBatch(LocalDateTime referenceTime, int batchSize);
 }
