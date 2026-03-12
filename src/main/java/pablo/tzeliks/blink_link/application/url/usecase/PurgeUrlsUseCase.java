@@ -1,9 +1,9 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
-import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
-@Service
+import java.time.LocalDateTime;
+
 public class PurgeUrlsUseCase {
 
     private final UrlRepositoryPort repository;
@@ -18,6 +18,28 @@ public class PurgeUrlsUseCase {
 
     public int execute() {
 
+        LocalDateTime now = LocalDateTime.now();
+        int totalDeleted = 0;
+        int deletedInCurrentBatch;
 
+        do {
+            deletedInCurrentBatch = repository.deleteExpiredInBatch(now, batchSize);
+            totalDeleted += deletedInCurrentBatch;
+
+            if (deletedInCurrentBatch > 0 && sleepTime > 0) {
+                sleepForDatabaseRelief();
+            }
+
+        } while (deletedInCurrentBatch == batchSize);
+
+        return totalDeleted;
+    }
+
+    private void sleepForDatabaseRelief() {
+        try {
+            Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

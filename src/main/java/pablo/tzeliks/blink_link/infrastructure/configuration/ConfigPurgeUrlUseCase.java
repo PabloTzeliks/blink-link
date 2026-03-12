@@ -13,9 +13,8 @@ public class ConfigPurgeUrlUseCase {
     public PurgeUrlsUseCase purgeUrlsUseCase(
             UrlRepositoryPort urlRepositoryPort,
             @Value(value = "${app.job.purge-urls.batch-size}") int batchSize,
-            @Value(value = "${app.job.purge-urls.sleep-millis}") long sleepTime
-    )
-    {
+            @Value(value = "${app.job.purge-urls.sleep-millis}") long sleepTime) {
+
         return new PurgeUrlsUseCase(urlRepositoryPort, batchSize, sleepTime);
     }
 }
