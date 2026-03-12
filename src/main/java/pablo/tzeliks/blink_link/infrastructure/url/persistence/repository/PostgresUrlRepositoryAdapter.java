@@ -1,6 +1,9 @@
 package pablo.tzeliks.blink_link.infrastructure.url.persistence.repository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
@@ -54,10 +57,14 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
 
     private final JpaUrlRepository repository;
     private final UrlEntityMapper mapper;
+    private final EntityManager entityManager;
 
-    public PostgresUrlRepositoryAdapter(JpaUrlRepository repository, UrlEntityMapper mapper) {
+    public PostgresUrlRepositoryAdapter(JpaUrlRepository repository,
+                                        UrlEntityMapper mapper,
+                                        EntityManager entityManager) {
         this.repository = repository;
         this.mapper = mapper;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -122,8 +129,24 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
+    @Transactional
     public int deleteExpiredInBatch(LocalDateTime referenceTime, int batchSize) {
-        return 0;
+
+        String sql = """
+            DELETE FROM urls 
+            WHERE id IN (
+                SELECT id FROM urls 
+                WHERE expiration_date < :refTime 
+                LIMIT :batchSize
+                FOR UPDATE SKIP LOCKED
+            )
+        """;
+
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter("refTime", referenceTime);
+        query.setParameter("batchSize", batchSize);
+
+        return query.executeUpdate();
     }
 
 
