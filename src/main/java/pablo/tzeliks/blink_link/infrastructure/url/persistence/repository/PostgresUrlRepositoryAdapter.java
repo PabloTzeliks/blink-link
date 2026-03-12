@@ -5,6 +5,7 @@ import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -119,4 +120,11 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
         return repository.findByShortCode(shortCode)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public int deleteExpiredInBatch(LocalDateTime referenceTime, int batchSize) {
+        return 0;
+    }
+
+
 }

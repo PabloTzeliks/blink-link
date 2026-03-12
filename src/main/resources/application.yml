@@ -25,6 +25,13 @@ spring:
   flyway:
     enabled: true
 
+app:
+  job:
+    purge-urls:
+      batch-size: 5000
+      sleep-millis: 100
+      cron: "0 0 3 * * *"
+
 server:
   port: 8080
 
