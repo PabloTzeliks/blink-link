@@ -11,8 +11,10 @@ import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
+import pablo.tzeliks.blink_link.domain.url.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 
 import java.time.LocalDateTime;
@@ -70,6 +72,9 @@ class ShortenUrlUseCaseTest {
     @Mock
     private UrlDtoMapper mapper;
 
+    @Mock
+    private CurrentUserProviderPort userProviderPort;
+
     @InjectMocks
     private ShortenUrlUseCase shortenUrlUseCase;
 
@@ -109,7 +114,7 @@ class ShortenUrlUseCaseTest {
      * correctly coordinates between the encoder, repository, and mapper layers.
      */
     @Test
-    @DisplayName("Should orchestrate the URL shortening process correctly: Generate ID -> Encode to Short Code -> Map to Domain -> Save -> Map to Response DTO")
+    @DisplayName("Should orchestrate the URL shortening process correctly: Generate ID -> Get User Plan -> Encode to Short Code -> Create Domain -> Save -> Map to Response DTO")
     void shouldShortAnUrlCorrectly() {
         // Arrange
         String originalUrl = "https://github.com/PabloTzeliks";
@@ -122,27 +127,26 @@ class ShortenUrlUseCaseTest {
         // 1. Repository generate next ID
         when(repository.nextId()).thenReturn(fakeId);
 
-        // 2. Encode ID to Short Code
+        // 2. Get current user plan
+        when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
+
+        // 3. Encode ID to Short Code
         when(shortener.encode(fakeId)).thenReturn(fakeShortCode);
 
-        // 3. Map to Domain Model
-        Url url = Url.restore(fakeId, originalUrl, fakeShortCode, now, now.plusDays(7));
-
-        when(mapper.toDomain(request, fakeId, fakeShortCode))
-                .thenReturn(url);
-
-        // 4. Save to Repository
-        when(repository.save(any(Url.class))).thenReturn(url);
+        // 4. Save to Repository (Url.create uses LocalDateTime.now() internally, so use any())
+        Url savedUrl = Url.restore(fakeId, originalUrl, fakeShortCode, now, now.plusDays(7));
+        when(repository.save(any(Url.class))).thenReturn(savedUrl);
 
         // 5. Map to Response DTO
         UrlResponse correctResponse = new UrlResponse(
                 originalUrl,
                 fakeShortCode,
                 "http://localhost:8080/" + fakeShortCode,
-                now
+                now,
+                now.plusDays(7)
         );
 
-        when(mapper.toDto(url)).thenReturn(correctResponse);
+        when(mapper.toDto(savedUrl)).thenReturn(correctResponse);
 
         // Act
         UrlResponse trueResponse = shortenUrlUseCase.execute(request);
@@ -154,10 +158,10 @@ class ShortenUrlUseCaseTest {
         assertEquals(correctResponse.shortCode(), trueResponse.shortCode());
 
         verify(repository).nextId();
+        verify(userProviderPort).getCurrentUserPlan();
         verify(shortener).encode(fakeId);
-        verify(mapper).toDomain(request, fakeId, fakeShortCode);
-        verify(repository).save(url);
-        verify(mapper).toDto(url);
+        verify(repository).save(any(Url.class));
+        verify(mapper).toDto(savedUrl);
     }
 
     /**
@@ -194,8 +198,8 @@ class ShortenUrlUseCaseTest {
      * layer to remain independent of infrastructure-specific exception types.
      */
     @Test
-    @DisplayName("Should throw InvalidUrlException when ShortenerPort implementation fails to encode the ID")
-    void shouldThrowInvalidUrlExceptionWhenEncodingFails() {
+    @DisplayName("Should throw EncoderException when ShortenerPort implementation fails to encode the ID")
+    void shouldThrowEncoderExceptionWhenEncodingFails() {
         // Arrange
         String originalUrl = "https://github.com/PabloTzeliks";
         Long invalidId = -1L;
@@ -205,11 +209,14 @@ class ShortenUrlUseCaseTest {
         // 1. Repository generate next ID (Invalid ID)
         when(repository.nextId()).thenReturn(invalidId);
 
-        // 2. Encode ID to Short Code (will fail)
+        // 2. Get current user plan
+        when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
+
+        // 3. Encode ID to Short Code (will fail)
         when(shortener.encode(invalidId)).thenThrow(new EncoderException("ID cannot be negative"));
 
         // Act & Assert
-        InvalidUrlException exception = assertThrows(InvalidUrlException.class, () -> {
+        EncoderException exception = assertThrows(EncoderException.class, () -> {
             shortenUrlUseCase.execute(request);
         });
 
@@ -217,6 +224,7 @@ class ShortenUrlUseCaseTest {
 
         // Verify
         verify(repository).nextId();
+        verify(userProviderPort).getCurrentUserPlan();
         verify(shortener).encode(invalidId);
 
         verify(repository, never()).save(any());

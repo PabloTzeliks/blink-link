@@ -12,9 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.model.Role;
+import pablo.tzeliks.blink_link.domain.user.model.User;
+import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
+import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.security.adapter.CustomUserDetails;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -82,6 +89,19 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Autowired
     private UrlRepositoryPort repository;
 
+    private CustomUserDetails createTestUserDetails() {
+        User testUser = User.restore(
+                UUID.randomUUID(),
+                new Email("test@test.com"),
+                new Password("hashedPassword"),
+                Role.USER,
+                Plan.FREE,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+        );
+        return new CustomUserDetails(testUser);
+    }
+
     /**
      * Integration Test: Verifies successful URL shortening via POST endpoint.
      * <p>
@@ -110,7 +130,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
-                        .with(user("test@test.com").roles("USER"))
+                        .with(user(createTestUserDetails()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isCreated())
@@ -152,7 +172,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
-                        .with(user("test@test.com").roles("USER"))
+                        .with(user(createTestUserDetails()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isUnprocessableEntity()) // 422
@@ -186,7 +206,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
-                        .with(user("test@test.com").roles("USER"))
+                        .with(user(createTestUserDetails()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(brokenJson))
                 .andExpect(status().isBadRequest()) // 400
@@ -219,18 +239,19 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         Long id = repository.nextId();
         LocalDateTime now = LocalDateTime.now();
 
-        Url savedUrl = new Url(
+        Url savedUrl = Url.restore(
                 id,
                 "https://rocketseat.com.br",
                 "rocket",
-                now
+                now,
+                now.plusDays(7)
         );
 
         repository.save(savedUrl);
 
         // Act & Assert
         mockMvc.perform(get("/api/v2/urls/" + savedUrl.getShortCode())
-                        .with(user("test@test.com").roles("USER")))
+                        .with(user(createTestUserDetails())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.original_url").value("https://rocketseat.com.br"))
                 .andExpect(jsonPath("$.short_code").value("rocket"));
@@ -258,7 +279,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @DisplayName("GET /api/v2/urls/{ShortCode} - Should return 404 for non-existent code (Sad Path)")
     void shouldReturn404ForDetailsOfGhostCode() throws Exception {
         mockMvc.perform(get("/api/v2/urls/ghost-code-123")
-                        .with(user("test@test.com").roles("USER")))
+                        .with(user(createTestUserDetails())))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Resource Not Found"));
     }
@@ -288,11 +309,12 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     void shouldRedirectSuccessfully() throws Exception {
         // Arrange
         Long id = repository.nextId();
-        Url savedUrl = new Url(
+        Url savedUrl = Url.restore(
                 id,
                 "https://github.com/PabloTzeliks",
                 "myGit",
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
         );
         repository.save(savedUrl);
 
