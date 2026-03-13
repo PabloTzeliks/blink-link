@@ -139,11 +139,12 @@ public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase 
         Long generatedId = repository.nextId();
 
         // 2. Create new Url
-        Url newUrl = new Url(
+        Url newUrl = Url.restore(
                 generatedId,
                 "https://github.com/PabloTzeliks",
                 "myGitHub",
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
         );
 
         // Act
