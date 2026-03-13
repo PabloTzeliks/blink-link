@@ -101,6 +101,7 @@ public class UrlEntity implements Persistable<Long> {
         this.shortCode = shortCode;
         this.createdAt = createdAt;
         this.expirationDate = expirationDate;
+        this.isNew = true;
     }
     // Persistable implementation
 
