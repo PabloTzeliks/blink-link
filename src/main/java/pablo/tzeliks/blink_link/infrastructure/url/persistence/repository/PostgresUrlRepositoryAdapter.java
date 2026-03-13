@@ -133,10 +133,10 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     public int deleteExpiredInBatch(LocalDateTime referenceTime, int batchSize) {
 
         String sql = """
-            DELETE FROM urls 
+            DELETE FROM urls
             WHERE id IN (
-                SELECT id FROM urls 
-                WHERE expiration_date < :refTime 
+                SELECT id FROM urls
+                WHERE expiration_date < :refTime
                 LIMIT :batchSize
                 FOR UPDATE SKIP LOCKED
             )
