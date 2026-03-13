@@ -300,12 +300,13 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     void shouldRedirectSuccessfully() throws Exception {
         // Arrange
         Long id = repository.nextId();
+        LocalDateTime now = LocalDateTime.now();
         Url savedUrl = Url.restore(
                 id,
                 "https://github.com/PabloTzeliks",
                 "myGit",
-                LocalDateTime.now(),
-                LocalDateTime.now().plusDays(7)
+                now,
+                now.plusDays(7)
         );
         repository.save(savedUrl);
 
