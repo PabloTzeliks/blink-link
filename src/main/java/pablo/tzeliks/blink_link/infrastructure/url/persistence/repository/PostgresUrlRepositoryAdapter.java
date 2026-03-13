@@ -137,8 +137,9 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
             WHERE id IN (
                 SELECT id FROM urls
                 WHERE expiration_date < :refTime
-                LIMIT :batchSize
+                ORDER BY id
                 FOR UPDATE SKIP LOCKED
+                LIMIT :batchSize
             )
         """;
 
