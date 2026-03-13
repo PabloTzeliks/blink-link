@@ -12,9 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.model.Role;
+import pablo.tzeliks.blink_link.domain.user.model.User;
+import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
+import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.security.adapter.CustomUserDetails;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -108,9 +115,13 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         CreateUrlRequest request = new CreateUrlRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/");
         String jsonRequest = objectMapper.writeValueAsString(request);
 
+        User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),
+                Role.USER, Plan.FREE, LocalDateTime.now(), LocalDateTime.now());
+        CustomUserDetails userDetails = new CustomUserDetails(domainUser);
+
         // Act & Assert
         mockMvc.perform(post("/api/v2/urls/shorten")
-                        .with(user("test@test.com").roles("USER"))
+                        .with(user(userDetails))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isCreated())
@@ -219,11 +230,12 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         Long id = repository.nextId();
         LocalDateTime now = LocalDateTime.now();
 
-        Url savedUrl = new Url(
+        Url savedUrl = Url.restore(
                 id,
                 "https://rocketseat.com.br",
                 "rocket",
-                now
+                now,
+                now.plusDays(7)
         );
 
         repository.save(savedUrl);
@@ -288,11 +300,12 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     void shouldRedirectSuccessfully() throws Exception {
         // Arrange
         Long id = repository.nextId();
-        Url savedUrl = new Url(
+        Url savedUrl = Url.restore(
                 id,
                 "https://github.com/PabloTzeliks",
                 "myGit",
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
         );
         repository.save(savedUrl);
 
