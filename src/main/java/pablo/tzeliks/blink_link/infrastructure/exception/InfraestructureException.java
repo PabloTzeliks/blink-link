@@ -1,5 +1,7 @@
 package pablo.tzeliks.blink_link.infrastructure.exception;
 
+import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
+
 /**
  * Base exception class for infrastructure-level errors.
  * <p>

@@ -13,7 +13,7 @@ import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
-import pablo.tzeliks.blink_link.infrastructure.exception.EncoderException;
+import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 
 import java.time.LocalDateTime;
 
@@ -126,7 +126,7 @@ class ShortenUrlUseCaseTest {
         when(shortener.encode(fakeId)).thenReturn(fakeShortCode);
 
         // 3. Map to Domain Model
-        Url url = new Url(fakeId, originalUrl, fakeShortCode, now);
+        Url url = Url.restore(fakeId, originalUrl, fakeShortCode, now, now.plusDays(7));
 
         when(mapper.toDomain(request, fakeId, fakeShortCode))
                 .thenReturn(url);

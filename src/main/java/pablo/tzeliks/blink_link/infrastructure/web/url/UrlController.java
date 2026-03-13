@@ -9,6 +9,8 @@ import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.usecase.ResolveUrlUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
+import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
+import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 
 import java.net.URI;
 
@@ -48,7 +50,7 @@ public class UrlController {
 
     /**
      * Creates a shortened URL from a long URL.
-     * <p>
+     * <
      * This endpoint accepts a long URL and generates a unique short code for it.
      * The short code is created by:
      * <ol>
@@ -107,8 +109,8 @@ public class UrlController {
      *
      * @param shortCode the short code to look up; captured from the URL path
      * @return a {@link ResponseEntity} with status 200 and the {@link UrlResponse} containing URL details
-     * @throws pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException if no URL exists for the short code
-     * @throws pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException if the short code is invalid
+     * @throws UrlNotFoundException if no URL exists for the short code
+     * @throws InvalidUrlException if the short code is invalid
      */
     @GetMapping("/{shortCode}")
     public ResponseEntity<UrlResponse> access(@PathVariable String shortCode) {

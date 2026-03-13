@@ -1,24 +1,6 @@
 version: '3.8'
 
 services:
-
-  # Application (BlinkLink)
-  app:
-    container_name: blinklink-api
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/${POSTGRES_DB}
-      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
-      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
-      - APP_SECRET_KEY=${APP_SECRET_KEY}
-      - TZ=America/Sao_Paulo
-    depends_on:
-      - postgres-db
-    networks:
-      - blink-network
-
   # Database Service (PostgreSQL)
   postgres-db:
     image: postgres:17
@@ -36,6 +18,12 @@ services:
     networks:
       - blink-network
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # Database GUI (pgAdmin)
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -46,7 +34,8 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
     networks:
       - blink-network
 

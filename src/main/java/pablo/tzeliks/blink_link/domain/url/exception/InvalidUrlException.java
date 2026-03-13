@@ -1,5 +1,9 @@
 package pablo.tzeliks.blink_link.domain.url.exception;
 
+import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
+import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
+import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
+
 /**
  * Exception thrown when URL validation fails according to business rules.
  * <p>
@@ -22,7 +26,7 @@ package pablo.tzeliks.blink_link.domain.url.exception;
  * @since 1.0.0
  * @see BusinessRuleException
  */
-public class InvalidUrlException extends BusinessRuleException {
+public class InvalidUrlException extends InvalidResourceException {
     /**
      * Constructs a new invalid URL exception with the specified detail message.
      *

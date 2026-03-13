@@ -2,6 +2,7 @@ package pablo.tzeliks.blink_link;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Main entry point for the BlinkLink URL Shortener application.
@@ -50,10 +51,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * </pre>
  *
  * @author Pablo Tzeliks
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 @SpringBootApplication
+@EnableScheduling
 public class Application {
 
 	/**
