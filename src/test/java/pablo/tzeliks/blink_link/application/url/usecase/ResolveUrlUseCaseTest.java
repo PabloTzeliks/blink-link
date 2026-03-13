@@ -109,7 +109,7 @@ class ResolveUrlUseCaseTest {
         Url urlFound = Url.restore(1L, originalUrl, shortCode, now, now.plusDays(7));
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
-        UrlResponse expectedResponse = new UrlResponse(originalUrl, shortCode, "http://localhost:8080/" + shortCode, now);
+        UrlResponse expectedResponse = new UrlResponse(originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
 
         // 1. Repository finds URL by short code
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
