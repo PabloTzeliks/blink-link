@@ -114,10 +114,6 @@ public class UserEntity {
         this.plan = plan;
     }
 
-    public void setProvider(AuthProvider provider) {
-        this.provider = provider;
-    }
-
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
