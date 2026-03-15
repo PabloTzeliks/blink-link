@@ -1,5 +1,8 @@
 package pablo.tzeliks.blink_link.domain.user.model;
 
+import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
+import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
+import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
@@ -14,30 +17,62 @@ public class User {
     private Password password;
     private Role role;
     private Plan plan;
+    private AuthProvider authProvider;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     private User(UUID id,
-                Email email,
-                Password password,
-                Role role, Plan plan,
-                LocalDateTime createdAt,
-                LocalDateTime updatedAt) {
+                 Email email,
+                 Password password,
+                 Role role,
+                 Plan plan,
+                 AuthProvider authProvider,
+                 LocalDateTime createdAt,
+                 LocalDateTime updatedAt) {
+
+        validatePasswordBasedOnProvider(password, authProvider);
+
         this.id = id;
         this.email = email;
         this.password = password;
         this.role = role;
         this.plan = plan;
+        this.authProvider = authProvider;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public static User create(Email email, Password password) {
-        return new User(UUID.randomUUID(), email, password, Role.USER, Plan.FREE, LocalDateTime.now(), LocalDateTime.now());
+    public static User createLocal(Email email, Password password) {
+        if (email == null || password == null) {
+            throw new InvalidResourceException("Credentials must not be null.");
+        }
+
+        return new User(UUID.randomUUID(), email, password, Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
     }
 
-    public static User restore(UUID id, Email email, Password password, Role role, Plan plan, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new User(id, email, password, role, plan, createdAt, updatedAt);
+    public static User createaOAuth2(Email email, AuthProvider authProvider) {
+        if (authProvider.equals(AuthProvider.LOCAL)) {
+            throw new AuthenticationException("OAuth2 users must have a correct authentication provider.");
+        }
+
+        return new User(UUID.randomUUID(), email, null, Role.USER, Plan.FREE, authProvider, LocalDateTime.now(), LocalDateTime.now());
+    }
+
+    public static User restore(UUID id,
+                               Email email,
+                               Password password,
+                               Role role, Plan plan,
+                               AuthProvider authProvider,
+                               LocalDateTime createdAt,
+                               LocalDateTime updatedAt) {
+
+        return new User(id, email, password, role, plan, authProvider, createdAt, updatedAt);
+    }
+
+    private void validatePasswordBasedOnProvider(Password password, AuthProvider provider) {
+        if (provider == AuthProvider.LOCAL && password == null) {
+            throw new AuthenticationException("Local users must have a Password.");
+        }
     }
 
     public void upgradeToVip() {
@@ -52,8 +87,11 @@ public class User {
 
     public void changePassword(Password newPassword) {
 
-        if (newPassword.equals(this.password)) {
+        if (this.authProvider != AuthProvider.LOCAL && this.password == null) {
+            throw new InvalidPasswordException("Authenticated users with " + this.authProvider + " does not manage password here.");
+        }
 
+        if (newPassword.equals(this.password)) {
             throw new InvalidPasswordException("New password must be different from the current password.");
         }
 
@@ -79,6 +117,10 @@ public class User {
 
     public Plan getPlan() {
         return plan;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
     }
 
     public LocalDateTime getCreatedAt() {
