@@ -10,7 +10,7 @@ import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
-import pablo.tzeliks.blink_link.domain.url.ports.CurrentUserProviderPort;
+import pablo.tzeliks.blink_link.domain.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;

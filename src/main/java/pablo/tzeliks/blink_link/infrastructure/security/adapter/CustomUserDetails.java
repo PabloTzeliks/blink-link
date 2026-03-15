@@ -4,18 +4,37 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-public class CustomUserDetails implements UserDetails {
+public class CustomUserDetails implements UserDetails, OAuth2User {
 
     private final User domainUser;
+    private final Map<String, Object> attributes;
 
     public CustomUserDetails(User domainUser) {
         this.domainUser = domainUser;
+        this.attributes = null;
+    }
+
+    public CustomUserDetails(User domainUser, Map<String, Object> attributes) {
+        this.domainUser = domainUser;
+        this.attributes = attributes;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public String getName() {
+        return domainUser.getEmail().getValue();
     }
 
     @Override
@@ -25,7 +44,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public @Nullable String getPassword() {
-        return domainUser.getPassword().getValue();
+        return domainUser.hasPassword() ? domainUser.getPassword().getValue() : null;
     }
 
     @Override
