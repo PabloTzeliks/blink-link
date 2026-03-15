@@ -3,6 +3,7 @@ package pablo.tzeliks.blink_link.domain.user.model;
 import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
+import pablo.tzeliks.blink_link.domain.user.exception.OAuth2AuthenticationException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 
@@ -51,7 +52,7 @@ public class User {
 
     public static User createaOAuth2(Email email, AuthProvider authProvider) {
         if (authProvider.equals(AuthProvider.LOCAL)) {
-            throw new AuthenticationException("OAuth2 users must have a correct authentication provider.");
+            throw new OAuth2AuthenticationException("OAuth2 users must have a correct authentication provider.");
         }
 
         return new User(UUID.randomUUID(), email, null, Role.USER, Plan.FREE, authProvider, LocalDateTime.now(), LocalDateTime.now());
