@@ -2,7 +2,6 @@ package pablo.tzeliks.blink_link.domain.user.model;
 
 import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
-import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
