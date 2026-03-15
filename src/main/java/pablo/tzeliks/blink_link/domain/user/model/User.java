@@ -43,10 +43,6 @@ public class User {
     }
 
     public static User createLocal(Email email, Password password) {
-        if (email == null || password == null) {
-            throw new InvalidResourceException("Credentials must not be null.");
-        }
-
         return new User(UUID.randomUUID(), email, password, Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
     }
 

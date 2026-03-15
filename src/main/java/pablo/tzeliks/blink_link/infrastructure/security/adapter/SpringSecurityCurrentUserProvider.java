@@ -12,7 +12,9 @@ import pablo.tzeliks.blink_link.infrastructure.exception.InfraestructureExceptio
 public class SpringSecurityCurrentUserProvider implements CurrentUserProviderPort {
 
     @Override
-    public Plan getCurrentUserPlan() {        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public Plan getCurrentUserPlan() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
             throw new AuthenticationException("User not logged in.") {
