@@ -3,3 +3,5 @@ ALTER TABLE users ADD COLUMN provider VARCHAR(20);
 UPDATE users SET provider = 'LOCAL' WHERE provider IS NULL;
 
 ALTER TABLE users ALTER COLUMN provider SET NOT NULL;
+
+ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
