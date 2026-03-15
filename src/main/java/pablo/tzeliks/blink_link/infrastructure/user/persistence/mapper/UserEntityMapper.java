@@ -11,12 +11,21 @@ public class UserEntityMapper {
 
     public UserEntity toEntity(User domain) {
 
+        String userPassword;
+
+        if (domain.hasPassword()) {
+            userPassword = domain.getPassword().getValue();
+        } else {
+            userPassword = null;
+        }
+
         return new UserEntity(
                 domain.getId(),
                 domain.getEmail().getValue(),
-                domain.getPassword().getValue(),
+                userPassword,
                 domain.getRole(),
                 domain.getPlan(),
+                domain.getAuthProvider(),
                 domain.getCreatedAt(),
                 domain.getUpdatedAt()
         );
@@ -24,12 +33,17 @@ public class UserEntityMapper {
 
     public User toDomain(UserEntity entity) {
 
+        Password passwordObj = entity.getPassword() != null
+                ? new Password(entity.getPassword())
+                : null;
+
         return User.restore(
                 entity.getId(),
                 new Email(entity.getEmail()),
-                new Password(entity.getPassword()),
+                passwordObj,
                 entity.getRole(),
                 entity.getPlan(),
+                entity.getProvider(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

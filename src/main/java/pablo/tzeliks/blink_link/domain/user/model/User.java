@@ -98,6 +98,10 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public boolean hasPassword() {
+        return this.password != null;
+    }
+
     public UUID getId() {
         return id;
     }
