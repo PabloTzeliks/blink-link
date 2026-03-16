@@ -1,7 +1,9 @@
 package pablo.tzeliks.blink_link.infrastructure.web.user;
 
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,10 +38,22 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody LoginUserRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginUserRequest request) {
 
         AuthResponse response = loginUserUseCase.execute(request);
 
-        return ResponseEntity.ok(response);
+        String token = response.token();
+
+        ResponseCookie tokenCookie = ResponseCookie.from("jwt_token", token)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(3600)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
+                .body(response);
     }
 }
