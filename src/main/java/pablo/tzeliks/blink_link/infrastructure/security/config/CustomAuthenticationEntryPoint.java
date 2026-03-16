@@ -4,7 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.core.AuthenticationException;
+import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -21,7 +21,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     }
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        resolver.resolveException(request, response, null, authException);
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         org.springframework.security.core.AuthenticationException authSpringException) throws IOException, ServletException {
+
+        AuthenticationException domainAuthException = new AuthenticationException("You must be authenticated.");
+
+        resolver.resolveException(request, response, null, domainAuthException);
     }
 }
