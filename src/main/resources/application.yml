@@ -10,7 +10,7 @@ spring:
           github:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
-            scope: openid,profile,email
+            scope: read:user,user:email
   application:
     name: Blink Link
 
