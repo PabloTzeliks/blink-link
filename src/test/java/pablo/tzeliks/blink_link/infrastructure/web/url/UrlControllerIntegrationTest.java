@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.domain.user.model.Role;
 import pablo.tzeliks.blink_link.domain.user.model.User;
@@ -116,7 +117,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         String jsonRequest = objectMapper.writeValueAsString(request);
 
         User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),
-                Role.USER, Plan.FREE, LocalDateTime.now(), LocalDateTime.now());
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
         CustomUserDetails userDetails = new CustomUserDetails(domainUser);
 
         // Act & Assert
