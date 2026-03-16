@@ -26,12 +26,15 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
-                          OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
+                          OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+                          CustomAuthenticationEntryPoint authenticationEntryPoint) {
 
         this.customOAuth2UserService = customOAuth2UserService;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
+        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Bean
@@ -44,6 +47,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/{shortUrl}").permitAll()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
