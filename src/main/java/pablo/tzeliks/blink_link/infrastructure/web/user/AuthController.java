@@ -56,4 +56,20 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
                 .body(response);
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+
+        ResponseCookie deleteCookie = ResponseCookie.from("jwt_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+                .build();
+    }
 }
