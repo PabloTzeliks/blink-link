@@ -27,6 +27,10 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
         this.attributes = attributes;
     }
 
+    public User getUser() {
+        return domainUser;
+    }
+
     @Override
     public Map<String, Object> getAttributes() {
         return attributes;

@@ -5,11 +5,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
+import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.PostgresUserRepositoryAdapter;
 
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final PostgresUserRepositoryAdapter repository;
+    private final UserRepositoryPort repository;
 
     public UserDetailsServiceImpl(PostgresUserRepositoryAdapter repository) {
         this.repository = repository;
