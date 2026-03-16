@@ -12,20 +12,37 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import pablo.tzeliks.blink_link.infrastructure.security.filter.SecurityFilter;
+import pablo.tzeliks.blink_link.infrastructure.security.oauth2.CustomOAuth2UserService;
+import pablo.tzeliks.blink_link.infrastructure.security.oauth2.OAuth2LoginSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
+                          OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler) {
+
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, SecurityFilter securityFilter) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // Desabilitamos porque usamos Stateless + SameSite Cookie
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/v2/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/{shortUrl}").permitAll()
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2LoginSuccessHandler)
                 )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
