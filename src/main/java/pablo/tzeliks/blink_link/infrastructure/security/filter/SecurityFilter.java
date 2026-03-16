@@ -2,6 +2,7 @@ package pablo.tzeliks.blink_link.infrastructure.security.filter;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -58,12 +59,15 @@ public class SecurityFilter extends OncePerRequestFilter {
 
     private String recoverToken(HttpServletRequest request) {
 
-        var authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
 
-            return null;
+                if (cookie.getName().equals("jwt_token")) {
+                    return cookie.getValue();
+                }
+            }
         }
 
-        return authHeader.replace("Bearer ", "");
+        return null;
     }
 }
