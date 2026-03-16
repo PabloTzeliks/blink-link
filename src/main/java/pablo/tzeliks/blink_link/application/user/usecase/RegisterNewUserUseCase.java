@@ -39,7 +39,7 @@ public class RegisterNewUserUseCase {
         String hashedPassword = passwordEncoderPort.encode(request.password());
         Password password = new Password(hashedPassword);
 
-        User newUser = User.create(email, password);
+        User newUser = User.createLocal(email, password);
 
         User savedUser = repositoryPort.save(newUser);
 

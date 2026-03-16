@@ -50,7 +50,7 @@ class LoginUserUseCaseTest {
 
         LoginUserRequest request = new LoginUserRequest(email, rawPassword);
 
-        User existingUser = User.create(new Email(email), new Password(hashedPassword));
+        User existingUser = User.createLocal(new Email(email), new Password(hashedPassword));
 
         when(repositoryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(true);
@@ -98,7 +98,7 @@ class LoginUserUseCaseTest {
 
         LoginUserRequest request = new LoginUserRequest(email, rawPassword);
 
-        User existingUser = User.create(new Email(email), new Password(hashedPassword));
+        User existingUser = User.createLocal(new Email(email), new Password(hashedPassword));
 
         when(repositoryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(existingUser));
         when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(false);
