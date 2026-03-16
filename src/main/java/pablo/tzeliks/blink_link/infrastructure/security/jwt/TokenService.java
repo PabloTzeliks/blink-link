@@ -12,6 +12,7 @@ import pablo.tzeliks.blink_link.domain.user.ports.TokenGenerationPort;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class TokenService implements TokenGenerationPort {
@@ -47,6 +48,6 @@ public class TokenService implements TokenGenerationPort {
     }
 
     private Instant genExpirationDate(){
-        return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
+        return Instant.now().plus(1, ChronoUnit.HOURS);
     }
 }
