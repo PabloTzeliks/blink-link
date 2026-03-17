@@ -51,7 +51,15 @@ public class UserEntityMapper {
 
     public void updateEntityFromDomain(User domain, UserEntity entity) {
 
-        entity.setPassword(domain.getPassword().getValue());
+        String userPassword;
+
+        if (domain.hasPassword()) {
+            userPassword = domain.getPassword().getValue();
+        } else {
+            userPassword = null;
+        }
+
+        entity.setPassword(userPassword);
         entity.setRole(domain.getRole());
         entity.setPlan(domain.getPlan());
         entity.setUpdatedAt(domain.getUpdatedAt());
