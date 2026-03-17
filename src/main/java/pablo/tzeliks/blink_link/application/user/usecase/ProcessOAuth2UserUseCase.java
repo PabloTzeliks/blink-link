@@ -26,7 +26,7 @@ public class ProcessOAuth2UserUseCase {
             return userOptional.get();
         }
 
-        User newUser = User.createaOAuth2(email, provider);
+        User newUser = User.createOAuth2(email, provider);
         return userRepository.save(newUser);
     }
 }
