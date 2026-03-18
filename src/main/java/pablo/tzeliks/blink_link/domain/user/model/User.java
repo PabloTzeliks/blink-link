@@ -2,6 +2,7 @@ package pablo.tzeliks.blink_link.domain.user.model;
 
 import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
+import pablo.tzeliks.blink_link.domain.user.exception.InvalidPlanException;
 import pablo.tzeliks.blink_link.domain.user.exception.OAuth2AuthenticationException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
@@ -74,9 +75,10 @@ public class User {
 
         if (plan == this.plan) {
 
-
+            throw new InvalidPlanException("User already has this plan.");
         }
 
+        this.plan = plan;
         this.updatedAt = LocalDateTime.now();
     }
 
