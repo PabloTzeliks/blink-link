@@ -70,8 +70,13 @@ public class User {
         }
     }
 
-    public void upgradeToVip() {
-        this.plan = Plan.VIP;
+    public void changePlan(Plan plan) {
+
+        if (plan == this.plan) {
+
+
+        }
+
         this.updatedAt = LocalDateTime.now();
     }
 
