@@ -3,6 +3,8 @@ package pablo.tzeliks.blink_link.application.user.usecase;
 import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.application.user.dto.AuthResponse;
 import pablo.tzeliks.blink_link.application.user.dto.LoginUserRequest;
+import pablo.tzeliks.blink_link.application.user.dto.UserResponse;
+import pablo.tzeliks.blink_link.application.user.mapper.UserDtoMapper;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidEmailException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.User;
@@ -15,13 +17,17 @@ import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 public class LoginUserUseCase {
 
     private final UserRepositoryPort repositoryPort;
+    private final UserDtoMapper mapper;
     private final UserPasswordEncoderPort passwordEncoder;
     private final TokenGenerationPort tokenPort;
 
     public LoginUserUseCase(UserRepositoryPort repositoryPort,
+                            UserDtoMapper mapper,
                             UserPasswordEncoderPort passwordEncoder,
                             TokenGenerationPort tokenPort) {
+
         this.repositoryPort = repositoryPort;
+        this.mapper = mapper;
         this.passwordEncoder = passwordEncoder;
         this.tokenPort = tokenPort;
     }
@@ -41,6 +47,8 @@ public class LoginUserUseCase {
 
         String token = tokenPort.generateToken(loggedUser);
 
-        return new AuthResponse(token);
+        UserResponse userResponse = mapper.toDto(loggedUser);
+
+        return new AuthResponse(userResponse, token);
     }
 }
