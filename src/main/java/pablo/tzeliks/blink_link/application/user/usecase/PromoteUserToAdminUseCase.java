@@ -2,30 +2,36 @@ package pablo.tzeliks.blink_link.application.user.usecase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
+import pablo.tzeliks.blink_link.domain.user.exception.UserAlreadyAdminException;
 import pablo.tzeliks.blink_link.domain.user.exception.UserNotFoundException;
-import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.model.Role;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 
 import java.util.UUID;
 
 @Service
-public class ChangeUserPlanUseCase {
+public class PromoteUserToAdminUseCase {
 
     private final UserRepositoryPort userRepository;
 
-    public ChangeUserPlanUseCase(UserRepositoryPort userRepository) {
+    public PromoteUserToAdminUseCase(UserRepositoryPort userRepository) {
         this.userRepository = userRepository;
     }
 
     @Transactional
-    public void execute(UUID userId, Plan newPlan) {
+    public void execute(UUID userId) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
 
-        user.changePlan(newPlan);
+        if (user.getRole() == Role.ADMIN) {
 
+            throw new UserAlreadyAdminException("User is already an Admin.");
+        }
+
+        user.promoteToAdmin();
         userRepository.save(user);
     }
 }
