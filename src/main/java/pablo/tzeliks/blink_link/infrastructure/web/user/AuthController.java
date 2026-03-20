@@ -17,7 +17,7 @@ import pablo.tzeliks.blink_link.application.user.usecase.LoginUserUseCase;
 import pablo.tzeliks.blink_link.application.user.usecase.RegisterNewUserUseCase;
 
 @RestController
-@RequestMapping("api/v2/auth")
+@RequestMapping("api/v3/auth")
 public class AuthController {
 
     private final RegisterNewUserUseCase registerNewUserUseCase;
