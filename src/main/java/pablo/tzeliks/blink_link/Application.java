@@ -2,6 +2,8 @@ package pablo.tzeliks.blink_link;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -56,22 +58,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication
 @EnableScheduling
-public class Application {
+public class Application extends SpringBootServletInitializer {
 
-	/**
-	 * Main method that bootstraps the Spring Boot application.
-	 * <p>
-	 * This method uses Spring Boot's {@link SpringApplication#run} to:
-	 * <ol>
-	 *   <li>Initialize the Spring application context</li>
-	 *   <li>Configure auto-configuration and component scanning</li>
-	 *   <li>Start the embedded web server (Tomcat by default)</li>
-	 *   <li>Execute database migrations via Flyway</li>
-	 *   <li>Make the API endpoints available for requests</li>
-	 * </ol>
-	 *
-	 * @param args command line arguments passed to the application
-	 */
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+		return application.sources(Application.class);
+	}
+
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}

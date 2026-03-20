@@ -8,6 +8,7 @@ import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntit
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.mapper.UserEntityMapper;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class PostgresUserRepositoryAdapter implements UserRepositoryPort {
@@ -48,6 +49,13 @@ public class PostgresUserRepositoryAdapter implements UserRepositoryPort {
     public Optional<User> findByEmail(Email email) {
 
         return repository.findByEmail(email.getValue())
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+
+        return repository.findById(id)
                 .map(mapper::toDomain);
     }
 
