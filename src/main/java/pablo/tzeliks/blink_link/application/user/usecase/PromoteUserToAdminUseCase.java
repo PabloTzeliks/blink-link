@@ -26,12 +26,8 @@ public class PromoteUserToAdminUseCase {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
 
-        if (user.getRole() == Role.ADMIN) {
-
-            throw new UserAlreadyAdminException("User is already an Admin.");
-        }
-
         user.promoteToAdmin();
+
         userRepository.save(user);
     }
 }

@@ -23,7 +23,7 @@ public class UserPlanController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> changePlan(@PathVariable UUID id, @RequestBody ChangePlanRequest request) {
 
-        Plan newPlan = Plan.valueOf(request.plan().name().toUpperCase());
+        Plan newPlan = Plan.valueOf(request.plan().toUpperCase());
 
         changeUserPlanUseCase.execute(id, newPlan);
 

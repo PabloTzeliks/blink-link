@@ -83,6 +83,12 @@ public class User {
     }
 
     public void promoteToAdmin() {
+
+        if (Role.ADMIN == this.role) {
+
+            throw new InvalidPlanException("User already has this role.");
+        }
+
         this.role = Role.ADMIN;
         this.updatedAt = LocalDateTime.now();
     }
