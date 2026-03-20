@@ -1,6 +1,7 @@
 package pablo.tzeliks.blink_link.application.user.usecase;
 
 import pablo.tzeliks.blink_link.domain.common.exception.DomainException;
+import pablo.tzeliks.blink_link.domain.user.exception.UserNotFoundException;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
