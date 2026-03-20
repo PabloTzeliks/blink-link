@@ -23,6 +23,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Value("${app.frontend.oauth2-redirect-url:http://localhost:3000/dashboard}")
     private String frontendRedirectUrl;
 
+    @Value("${security.jwt.cookie-secure:false}")
+    private boolean secure;
+
     public OAuth2LoginSuccessHandler(TokenService tokenService) {
         this.tokenService = tokenService;
     }
@@ -40,7 +43,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         ResponseCookie springCookie = ResponseCookie.from("jwt_token", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(secure)
                 .path("/")
                 .maxAge(3600)
                 .sameSite("Lax")

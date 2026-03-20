@@ -1,6 +1,7 @@
 package pablo.tzeliks.blink_link.infrastructure.web.user;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -38,7 +39,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginUserRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginUserRequest request,
+                                              @Value("${security.jwt.cookie-secure:false}") boolean secure) {
 
         AuthResponse response = loginUserUseCase.execute(request);
 
@@ -46,7 +48,7 @@ public class AuthController {
 
         ResponseCookie tokenCookie = ResponseCookie.from("jwt_token", token)
                 .httpOnly(true)
-                .secure(false)
+                .secure(secure)
                 .path("/")
                 .maxAge(3600)
                 .sameSite("Lax")

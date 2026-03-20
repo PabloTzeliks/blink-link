@@ -1,5 +1,7 @@
 spring:
   security:
+    jwt:
+      cookie-secure: false
     oauth2:
       client:
         registration:
