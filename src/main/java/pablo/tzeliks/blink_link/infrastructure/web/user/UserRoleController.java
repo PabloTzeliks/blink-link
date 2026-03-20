@@ -18,7 +18,7 @@ public class UserRoleController {
     }
 
     @PatchMapping("/{id}/promote")
-    @PreAuthorize("hasRole('ADMIN')") // Fundamental: Apenas admins promovem admins
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToAdmin(@PathVariable UUID id) {
 
         promoteUserToAdminUseCase.execute(id);

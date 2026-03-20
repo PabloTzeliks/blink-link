@@ -60,11 +60,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    public ResponseEntity<Void> logout(@Value("${security.jwt.cookie-secure:false}") boolean secure) {
 
         ResponseCookie deleteCookie = ResponseCookie.from("jwt_token", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(secure)
                 .path("/")
                 .maxAge(0)
                 .sameSite("Lax")
