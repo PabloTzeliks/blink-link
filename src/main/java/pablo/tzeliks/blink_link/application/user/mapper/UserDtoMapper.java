@@ -18,6 +18,4 @@ public class UserDtoMapper {
                 domain.getUpdatedAt()
         );
     }
-
-    public
 }

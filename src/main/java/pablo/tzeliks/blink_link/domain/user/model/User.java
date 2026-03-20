@@ -93,6 +93,17 @@ public class User {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void revokeAdmin() {
+
+        if (Role.USER == this.role) {
+
+            throw new InvalidPlanException("User already has this role.");
+        }
+
+        this.role = Role.USER;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void changePassword(Password newPassword) {
 
         if (this.authProvider != AuthProvider.LOCAL && this.password == null) {
