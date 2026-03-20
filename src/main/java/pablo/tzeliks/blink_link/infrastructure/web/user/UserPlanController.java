@@ -1,0 +1,32 @@
+package pablo.tzeliks.blink_link.infrastructure.web.user;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import pablo.tzeliks.blink_link.application.user.dto.ChangePlanRequest;
+import pablo.tzeliks.blink_link.application.user.usecase.ChangeUserPlanUseCase;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+
+import java.util.UUID;
+
+public class UserPlanController {
+
+    private final ChangeUserPlanUseCase changeUserPlanUseCase;
+
+    public UserPlanController(ChangeUserPlanUseCase changeUserPlan) {
+        this.changeUserPlanUseCase = changeUserPlan;
+    }
+
+    @PatchMapping("/{id}/plan")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> changePlan(@PathVariable UUID id, @RequestBody ChangePlanRequest request) {
+
+        Plan newPlan = Plan.valueOf(request.plan().name().toUpperCase());
+
+        changeUserPlanUseCase.execute(id, newPlan);
+
+        return ResponseEntity.noContent().build();
+    }
+}
