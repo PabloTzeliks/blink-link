@@ -9,10 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
-import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
-import pablo.tzeliks.blink_link.domain.common.exception.InvalidResourceException;
-import pablo.tzeliks.blink_link.domain.common.exception.ResourceNotFoundException;
+import pablo.tzeliks.blink_link.domain.common.exception.*;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
@@ -101,11 +98,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidResource(BusinessRuleException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleBusinessRuleError(BusinessRuleException ex, HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.CONFLICT,
                 "Business Rule Error",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(AuthorizationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationError(AuthorizationException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Unauthorized",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
