@@ -41,7 +41,7 @@ spring:
 
 app:
   frontend:
-    oauth2-redirect-url: http://localhost:3000/dashboard
+    oauth2-redirect-url: ${APP_BASE_URL:http://localhost:8080}/dashboard
   job:
     purge-urls:
       batch-size: 5000
