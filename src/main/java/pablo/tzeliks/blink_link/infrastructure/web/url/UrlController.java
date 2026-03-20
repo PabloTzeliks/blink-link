@@ -37,7 +37,7 @@ import java.net.URI;
  * @see ResolveUrlUseCase
  */
 @RestController()
-@RequestMapping("api/v2/urls")
+@RequestMapping("api/v3/urls")
 public class UrlController {
 
     private final ShortenUrlUseCase shortenUrl;

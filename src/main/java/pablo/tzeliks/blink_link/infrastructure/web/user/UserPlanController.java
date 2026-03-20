@@ -2,15 +2,15 @@ package pablo.tzeliks.blink_link.infrastructure.web.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 import pablo.tzeliks.blink_link.application.user.dto.ChangePlanRequest;
 import pablo.tzeliks.blink_link.application.user.usecase.ChangeUserPlanUseCase;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 
 import java.util.UUID;
 
+@RestController
+@RequestMapping("/api/v3/users")
 public class UserPlanController {
 
     private final ChangeUserPlanUseCase changeUserPlanUseCase;
