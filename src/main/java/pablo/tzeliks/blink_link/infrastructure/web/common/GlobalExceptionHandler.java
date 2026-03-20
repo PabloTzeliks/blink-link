@@ -6,9 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import pablo.tzeliks.blink_link.domain.common.exception.*;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
@@ -113,8 +116,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthorizationError(AuthorizationException ex, HttpServletRequest request) {
 
         return buildErrorResponse(
-                HttpStatus.UNAUTHORIZED,
-                "Unauthorized",
+                HttpStatus.FORBIDDEN,
+                "Access Denied",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
@@ -140,6 +143,34 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED,
                 "Invalid Credentials",
                 ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                "Resource Not Found",
+                "The requested endpoint or resource does not exist.",
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    /**
+     * Handles calls with an unsupported HTTP method for a specific endpoint.
+     * Returns HTTP status 405 (Method Not Allowed).
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "Method Not Allowed",
+                String.format("The HTTP method '%s' is not supported for this endpoint.", ex.getMethod()),
                 request.getRequestURI(),
                 null
         );
