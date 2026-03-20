@@ -39,7 +39,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginUserRequest request,
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginUserRequest request,
                                               @Value("${security.jwt.cookie-secure:false}") boolean secure) {
 
         AuthResponse response = loginUserUseCase.execute(request);
@@ -56,7 +56,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, tokenCookie.toString())
-                .body(response);
+                .body(response.userProfile());
     }
 
     @PostMapping("/logout")
