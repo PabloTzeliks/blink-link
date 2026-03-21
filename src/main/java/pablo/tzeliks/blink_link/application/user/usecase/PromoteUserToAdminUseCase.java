@@ -2,10 +2,7 @@ package pablo.tzeliks.blink_link.application.user.usecase;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
-import pablo.tzeliks.blink_link.domain.user.exception.UserAlreadyAdminException;
 import pablo.tzeliks.blink_link.domain.user.exception.UserNotFoundException;
-import pablo.tzeliks.blink_link.domain.user.model.Role;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 
