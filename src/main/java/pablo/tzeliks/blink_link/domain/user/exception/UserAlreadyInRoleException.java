@@ -2,8 +2,8 @@ package pablo.tzeliks.blink_link.domain.user.exception;
 
 import pablo.tzeliks.blink_link.domain.common.exception.BusinessRuleException;
 
-public class UserAlreadyAdminException extends BusinessRuleException {
-    public UserAlreadyAdminException(String message) {
+public class UserAlreadyInRoleException extends BusinessRuleException {
+    public UserAlreadyInRoleException(String message) {
         super(message);
     }
 }

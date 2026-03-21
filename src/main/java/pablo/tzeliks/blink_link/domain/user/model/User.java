@@ -4,6 +4,7 @@ import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPlanException;
 import pablo.tzeliks.blink_link.domain.user.exception.OAuth2AuthenticationException;
+import pablo.tzeliks.blink_link.domain.user.exception.UserAlreadyInRoleException;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 
@@ -86,7 +87,7 @@ public class User {
 
         if (Role.ADMIN == this.role) {
 
-            throw new InvalidPlanException("User already has this role.");
+            throw new UserAlreadyInRoleException("User already has this role.");
         }
 
         this.role = Role.ADMIN;
@@ -97,7 +98,7 @@ public class User {
 
         if (Role.USER == this.role) {
 
-            throw new InvalidPlanException("User already has this role.");
+            throw new UserAlreadyInRoleException("User already has this role.");
         }
 
         this.role = Role.USER;
