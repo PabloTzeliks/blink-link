@@ -58,8 +58,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>
  * <b>Test Coverage:</b>
  * <ul>
- *   <li>URL creation (POST /api/v2/urls/shorten) - Happy path and validation errors</li>
- *   <li>URL retrieval (GET /api/v2/urls/{shortCode}) - Success and 404 scenarios</li>
+ *   <li>URL creation (POST /api/v3/urls/shorten) - Happy path and validation errors</li>
+ *   <li>URL retrieval (GET /api/v3/urls/{shortCode}) - Success and 404 scenarios</li>
  *   <li>URL redirection (GET /{shortCode}) - Success and 404 scenarios</li>
  *   <li>Malformed JSON handling</li>
  * </ul>
@@ -96,7 +96,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * <b>Scenario:</b> Happy Path - Valid URL submission
      * <p>
      * <b>Given:</b> A valid long URL (LinkedIn profile)
-     * <br><b>When:</b> POST request is made to /api/v2/urls/shorten
+     * <br><b>When:</b> POST request is made to /api/v3/urls/shorten
      * <br><b>Then:</b> API returns 201 Created with complete URL response including
      * original URL, short code, full short URL, and creation timestamp. The Location
      * header contains the URI of the newly created resource.
@@ -121,7 +121,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         CustomUserDetails userDetails = new CustomUserDetails(domainUser);
 
         // Act & Assert
-        mockMvc.perform(post("/api/v2/urls/shorten")
+        mockMvc.perform(post("/api/v3/urls/shorten")
                         .with(user(userDetails))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
@@ -139,7 +139,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * <b>Scenario:</b> Validation Failure - Empty URL parameter
      * <p>
      * <b>Given:</b> A request with an empty originalUrl field
-     * <br><b>When:</b> POST request is made to /api/v2/urls/shorten
+     * <br><b>When:</b> POST request is made to /api/v3/urls/shorten
      * <br><b>Then:</b> API returns 422 Unprocessable Content with validation error details
      * <p>
      * <b>Assertions:</b>
@@ -163,7 +163,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
                 """;
 
         // Act & Assert
-        mockMvc.perform(post("/api/v2/urls/shorten")
+        mockMvc.perform(post("/api/v3/urls/shorten")
                         .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
@@ -178,7 +178,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * <b>Scenario:</b> Malformed JSON - Syntax error in request body
      * <p>
      * <b>Given:</b> A JSON string with syntax errors (missing closing quote)
-     * <br><b>When:</b> POST request is made to /api/v2/urls/shorten
+     * <br><b>When:</b> POST request is made to /api/v3/urls/shorten
      * <br><b>Then:</b> API returns 400 Bad Request with malformed JSON error message
      * <p>
      * <b>Assertions:</b>
@@ -197,7 +197,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         String brokenJson = "{ \"original_url\": \"https://google.com }";
 
         // Act & Assert
-        mockMvc.perform(post("/api/v2/urls/shorten")
+        mockMvc.perform(post("/api/v3/urls/shorten")
                         .with(user("test@test.com").roles("USER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(brokenJson))
@@ -211,7 +211,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * <b>Scenario:</b> Happy Path - Retrieve existing URL information
      * <p>
      * <b>Given:</b> A URL has been pre-inserted into the database with short code "rocket"
-     * <br><b>When:</b> GET request is made to /api/v2/urls/rocket
+     * <br><b>When:</b> GET request is made to /api/v3/urls/rocket
      * <br><b>Then:</b> API returns 200 OK with complete URL details
      * <p>
      * <b>Assertions:</b>
@@ -225,7 +225,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * without performing a redirect.
      */
     @Test
-    @DisplayName("GET /api/v2/urls/{ShortCode} - Should return URL details (Happy Path)")
+    @DisplayName("GET /api/v3/urls/{ShortCode} - Should return URL details (Happy Path)")
     void shouldReturnUrlDetails() throws Exception {
         // Arrange: Pre-insert an URL into the database
         Long id = repository.nextId();
@@ -242,7 +242,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         repository.save(savedUrl);
 
         // Act & Assert
-        mockMvc.perform(get("/api/v2/urls/" + savedUrl.getShortCode())
+        mockMvc.perform(get("/api/v3/urls/" + savedUrl.getShortCode())
                         .with(user("test@test.com").roles("USER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.original_url").value("https://rocketseat.com.br"))
@@ -255,7 +255,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * <b>Scenario:</b> Error Case - Short code does not exist in database
      * <p>
      * <b>Given:</b> A short code "ghost-code-123" that doesn't exist
-     * <br><b>When:</b> GET request is made to /api/v2/urls/ghost-code-123
+     * <br><b>When:</b> GET request is made to /api/v3/urls/ghost-code-123
      * <br><b>Then:</b> API returns 404 Not Found with error details
      * <p>
      * <b>Assertions:</b>
@@ -268,9 +268,9 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
      * {@code UrlNotFoundException}.
      */
     @Test
-    @DisplayName("GET /api/v2/urls/{ShortCode} - Should return 404 for non-existent code (Sad Path)")
+    @DisplayName("GET /api/v3/urls/{ShortCode} - Should return 404 for non-existent code (Sad Path)")
     void shouldReturn404ForDetailsOfGhostCode() throws Exception {
-        mockMvc.perform(get("/api/v2/urls/ghost-code-123")
+        mockMvc.perform(get("/api/v3/urls/ghost-code-123")
                         .with(user("test@test.com").roles("USER")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Resource Not Found"));
