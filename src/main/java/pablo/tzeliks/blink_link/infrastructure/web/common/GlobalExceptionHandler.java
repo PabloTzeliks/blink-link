@@ -114,7 +114,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({AuthorizationException.class, AuthorizationDeniedException.class})
-    public ResponseEntity<ErrorResponse> handleAuthorizationError(AuthorizationException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleAuthorizationError(Exception ex, HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.FORBIDDEN,
