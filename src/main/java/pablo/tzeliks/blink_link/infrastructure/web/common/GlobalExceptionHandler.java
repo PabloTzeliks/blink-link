@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -112,7 +113,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(AuthorizationException.class)
+    @ExceptionHandler({AuthorizationException.class, AuthorizationDeniedException.class})
     public ResponseEntity<ErrorResponse> handleAuthorizationError(AuthorizationException ex, HttpServletRequest request) {
 
         return buildErrorResponse(
