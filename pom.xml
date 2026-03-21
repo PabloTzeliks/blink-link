@@ -13,7 +13,7 @@
 	<version>3.0.0</version>
 	<name>Blink Link</name>
 	<description>An application for an enterprise level URL shortener</description>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<url/>
 	<licenses>
 		<license/>
