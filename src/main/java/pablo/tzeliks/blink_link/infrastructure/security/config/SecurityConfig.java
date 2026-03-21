@@ -60,7 +60,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v2/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v3/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/{shortUrl}").permitAll()
 
                         .anyRequest().authenticated()

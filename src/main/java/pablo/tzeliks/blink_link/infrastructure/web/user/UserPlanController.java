@@ -1,5 +1,6 @@
 package pablo.tzeliks.blink_link.infrastructure.web.user;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class UserPlanController {
 
     @PatchMapping("/{id}/plan")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> changePlan(@PathVariable UUID id, @RequestBody ChangePlanRequest request) {
+    public ResponseEntity<Void> changePlan(@PathVariable UUID id, @RequestBody @Valid ChangePlanRequest request) {
 
         Plan newPlan = Plan.valueOf(request.plan().toUpperCase());
 
