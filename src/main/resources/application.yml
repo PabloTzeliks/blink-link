@@ -41,7 +41,7 @@ spring:
 
 app:
   frontend:
-    oauth2-redirect-url: ${APP_BASE_URL:http://localhost:8080}/dashboard
+    oauth2-redirect-url: ${FRONT_BASE_URL:http://localhost:8080}/dashboard
   job:
     purge-urls:
       batch-size: 5000
@@ -54,4 +54,5 @@ server:
 blink-link:
   secret-key: ${APP_SECRET_KEY:0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ}
   base-url: ${APP_BASE_URL:http://localhost:8080/}
+  front-end-url: ${FRONT_BASE_URL:http://localhost:3000/}
   secret-token: ${APP_SECRET_TOKEN:Clbh0TwLgaPvrUINlhzt0DKSn2NTZlF/q16zVttAXqA=}
