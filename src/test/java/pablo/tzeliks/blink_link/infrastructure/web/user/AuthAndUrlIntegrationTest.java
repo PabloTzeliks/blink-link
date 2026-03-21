@@ -1,6 +1,7 @@
 package pablo.tzeliks.blink_link.infrastructure.web.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,12 +31,12 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static String jwtToken;
+    private static Cookie jwtCookie;
     private static String createdShortCode;
 
     @Test
     @Order(1)
-    @DisplayName("E2E: POST /api/v2/auth/register - Should register a new user")
+    @DisplayName("E2E: POST /api/v3/auth/register - Should register a new user")
     void shouldRegisterUser() throws Exception {
         String registerJson = """
                 {
@@ -43,7 +45,7 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v2/auth/register")
+        mockMvc.perform(post("/api/v3/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerJson))
                 .andExpect(status().isCreated())
@@ -55,8 +57,8 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
 
     @Test
     @Order(2)
-    @DisplayName("E2E: POST /api/v2/auth/login - Should login and receive JWT token")
-    void shouldLoginAndReceiveToken() throws Exception {
+    @DisplayName("E2E: POST /api/v3/auth/login - Should login and receive JWT via HttpOnly cookie")
+    void shouldLoginAndReceiveJwtCookie() throws Exception {
         String loginJson = """
                 {
                     "email": "e2e@blinklink.com",
@@ -64,37 +66,43 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
                 }
                 """;
 
-        MvcResult result = mockMvc.perform(post("/api/v2/auth/login")
+        MvcResult result = mockMvc.perform(post("/api/v3/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists())
-                .andExpect(jsonPath("$.token").isString())
+                .andExpect(header().exists("Set-Cookie"))
+                .andExpect(header().string("Set-Cookie", containsString("jwt_token=")))
+                .andExpect(header().string("Set-Cookie", containsString("HttpOnly")))
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.email").value("e2e@blinklink.com"))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.plan").value("FREE"))
+                .andExpect(jsonPath("$.token").doesNotExist())
                 .andReturn();
 
-        String responseBody = result.getResponse().getContentAsString();
-        jwtToken = objectMapper.readTree(responseBody).get("token").asText();
+        jwtCookie = result.getResponse().getCookie("jwt_token");
+        assertNotNull(jwtCookie, "jwt_token cookie must be present in the login response");
+        assertTrue(jwtCookie.isHttpOnly(), "jwt_token cookie must be HttpOnly");
     }
 
     @Test
     @Order(3)
-    @DisplayName("E2E: POST /api/v2/urls/shorten - Should create shortened URL with JWT auth")
-    void shouldShortenUrlWithJwtAuth() throws Exception {
+    @DisplayName("E2E: POST /api/v3/urls/shorten - Should create shortened URL with cookie auth")
+    void shouldShortenUrlWithCookieAuth() throws Exception {
         String urlJson = """
                 {
                     "original_url": "https://github.com/PabloTzeliks/blink-link"
                 }
                 """;
 
-        MvcResult result = mockMvc.perform(post("/api/v2/urls/shorten")
-                        .header("Authorization", "Bearer " + jwtToken)
+        MvcResult result = mockMvc.perform(post("/api/v3/urls/shorten")
+                        .cookie(jwtCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(urlJson))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andExpect(jsonPath("$.original_url").value("https://github.com/PabloTzeliks/blink-link"))
                 .andExpect(jsonPath("$.short_code").exists())
-                .andExpect(jsonPath("$.short_url").exists())
                 .andExpect(jsonPath("$.created_at").exists())
                 .andReturn();
 
@@ -104,10 +112,10 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
 
     @Test
     @Order(4)
-    @DisplayName("E2E: GET /api/v2/urls/{shortCode} - Should retrieve URL details with JWT auth")
-    void shouldRetrieveUrlDetailsWithJwtAuth() throws Exception {
-        mockMvc.perform(get("/api/v2/urls/" + createdShortCode)
-                        .header("Authorization", "Bearer " + jwtToken))
+    @DisplayName("E2E: GET /api/v3/urls/{shortCode} - Should retrieve URL details with cookie auth")
+    void shouldRetrieveUrlDetailsWithCookieAuth() throws Exception {
+        mockMvc.perform(get("/api/v3/urls/" + createdShortCode)
+                        .cookie(jwtCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.original_url").value("https://github.com/PabloTzeliks/blink-link"))
                 .andExpect(jsonPath("$.short_code").value(createdShortCode));
@@ -124,7 +132,7 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
 
     @Test
     @Order(6)
-    @DisplayName("E2E: POST /api/v2/urls/shorten - Should return 403 without authentication")
+    @DisplayName("E2E: POST /api/v3/urls/shorten - Should return 401 without authentication")
     void shouldReturn403WithoutAuthentication() throws Exception {
         String urlJson = """
                 {
@@ -132,15 +140,15 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v2/urls/shorten")
+        mockMvc.perform(post("/api/v3/urls/shorten")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(urlJson))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     @Order(7)
-    @DisplayName("E2E: POST /api/v2/auth/register - Should return 401 for duplicate email")
+    @DisplayName("E2E: POST /api/v3/auth/register - Should return 401 for duplicate email")
     void shouldReturn401ForDuplicateRegistration() throws Exception {
         String registerJson = """
                 {
@@ -149,7 +157,7 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v2/auth/register")
+        mockMvc.perform(post("/api/v3/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registerJson))
                 .andExpect(status().isUnauthorized());
@@ -157,7 +165,7 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
 
     @Test
     @Order(8)
-    @DisplayName("E2E: POST /api/v2/auth/login - Should return 401 for wrong password")
+    @DisplayName("E2E: POST /api/v3/auth/login - Should return 401 for wrong password")
     void shouldReturn401ForWrongPassword() throws Exception {
         String loginJson = """
                 {
@@ -166,10 +174,22 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v2/auth/login")
+        mockMvc.perform(post("/api/v3/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.title").value("Invalid Credentials"));
+    }
+
+    @Test
+    @Order(9)
+    @DisplayName("E2E: POST /api/v3/auth/logout - Should clear the jwt_token cookie")
+    void shouldLogoutAndClearCookie() throws Exception {
+        mockMvc.perform(post("/api/v3/auth/logout")
+                        .cookie(jwtCookie))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("Set-Cookie"))
+                .andExpect(header().string("Set-Cookie", containsString("jwt_token=")))
+                .andExpect(header().string("Set-Cookie", containsString("Max-Age=0")));
     }
 }
