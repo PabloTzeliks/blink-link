@@ -61,7 +61,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/v3/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/{shortUrl}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/*").permitAll()
 
                         .anyRequest().authenticated()
                 )
