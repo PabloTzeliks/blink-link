@@ -18,6 +18,7 @@ public class ExpiredUrlCleanUpScheduler {
 
     @Scheduled(cron = "${app.job.purge-urls.cron}")
     public void triggerCleanup() {
+
         LOG.info("Starting expired Urls cleanup Schedule.");
 
         long startDate = System.currentTimeMillis();

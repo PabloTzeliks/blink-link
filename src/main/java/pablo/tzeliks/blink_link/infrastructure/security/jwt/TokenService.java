@@ -10,8 +10,6 @@ import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.ports.TokenGenerationPort;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 @Service

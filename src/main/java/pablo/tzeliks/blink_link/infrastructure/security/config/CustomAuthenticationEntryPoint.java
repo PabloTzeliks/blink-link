@@ -4,10 +4,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
-import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerExceptionResolver;
+import pablo.tzeliks.blink_link.domain.common.exception.AuthenticationException;
 
 import java.io.IOException;
 
