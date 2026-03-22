@@ -133,7 +133,7 @@ public class AuthAndUrlIntegrationTest extends AbstractContainerBase {
     @Test
     @Order(6)
     @DisplayName("E2E: POST /api/v3/urls/shorten - Should return 401 without authentication")
-    void shouldReturn403WithoutAuthentication() throws Exception {
+    void shouldReturn401WithoutAuthentication() throws Exception {
         String urlJson = """
                 {
                     "original_url": "https://google.com"
