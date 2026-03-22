@@ -25,6 +25,6 @@ public class RevokeUserAdminUseCase {
 
         user.revokeAdmin();
 
-        userRepository.save(user);
+        userRepository.update(user);
     }
 }

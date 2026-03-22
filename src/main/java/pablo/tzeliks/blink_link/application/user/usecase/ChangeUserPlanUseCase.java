@@ -26,6 +26,6 @@ public class ChangeUserPlanUseCase {
 
         user.changePlan(newPlan);
 
-        userRepository.save(user);
+        userRepository.update(user);
     }
 }

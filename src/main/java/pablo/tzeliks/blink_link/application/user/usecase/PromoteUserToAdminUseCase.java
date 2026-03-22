@@ -25,6 +25,6 @@ public class PromoteUserToAdminUseCase {
 
         user.promoteToAdmin();
 
-        userRepository.save(user);
+        userRepository.update(user);
     }
 }
