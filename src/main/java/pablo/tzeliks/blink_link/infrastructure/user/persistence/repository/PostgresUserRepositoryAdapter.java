@@ -1,6 +1,7 @@
 package pablo.tzeliks.blink_link.infrastructure.user.persistence.repository;
 
 import org.springframework.stereotype.Repository;
+import pablo.tzeliks.blink_link.domain.user.exception.UserNotFoundException;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
@@ -24,25 +25,24 @@ public class PostgresUserRepositoryAdapter implements UserRepositoryPort {
     @Override
     public User save(User user) {
 
-        Optional<UserEntity> existingEntityOpt = repository.findById(user.getId());
+        UserEntity newEntity = mapper.toEntity(user);
 
-        if (existingEntityOpt.isPresent()) {
+        UserEntity savedEntity = repository.save(newEntity);
 
-            // Update flow
-            UserEntity existingEntity = existingEntityOpt.get();
-            mapper.updateEntityFromDomain(user, existingEntity);
+        return mapper.toDomain(savedEntity);
+    }
 
-            UserEntity savedEntity = repository.save(existingEntity);
+    @Override
+    public User update(User user) {
 
-            return mapper.toDomain(savedEntity);
-        } else {
+        UserEntity existingEntity = repository.findById(user.getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found for update"));
 
-            // Insert flow
-            UserEntity newEntity = mapper.toEntity(user);
-            UserEntity savedEntity = repository.save(newEntity);
+        mapper.updateEntityFromDomain(user, existingEntity);
 
-            return mapper.toDomain(savedEntity);
-        }
+        UserEntity savedEntity = repository.save(existingEntity);
+
+        return mapper.toDomain(savedEntity);
     }
 
     @Override
