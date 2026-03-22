@@ -40,7 +40,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginUserRequest request,
-                                              @Value("${security.jwt.cookie-secure:false}") boolean secure) {
+                                              @Value("${spring.security.jwt.cookie-secure:false}") boolean secure) {
 
         AuthResponse response = loginUserUseCase.execute(request);
 
