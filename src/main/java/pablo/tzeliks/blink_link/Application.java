@@ -2,6 +2,7 @@ package pablo.tzeliks.blink_link;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Main entry point for the BlinkLink URL Shortener application.
@@ -50,26 +51,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * </pre>
  *
  * @author Pablo Tzeliks
- * @version 2.0.0
+ * @version 3.0.0
  * @since 1.0.0
  */
 @SpringBootApplication
+@EnableScheduling
 public class Application {
 
-	/**
-	 * Main method that bootstraps the Spring Boot application.
-	 * <p>
-	 * This method uses Spring Boot's {@link SpringApplication#run} to:
-	 * <ol>
-	 *   <li>Initialize the Spring application context</li>
-	 *   <li>Configure auto-configuration and component scanning</li>
-	 *   <li>Start the embedded web server (Tomcat by default)</li>
-	 *   <li>Execute database migrations via Flyway</li>
-	 *   <li>Make the API endpoints available for requests</li>
-	 * </ol>
-	 *
-	 * @param args command line arguments passed to the application
-	 */
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
 	}

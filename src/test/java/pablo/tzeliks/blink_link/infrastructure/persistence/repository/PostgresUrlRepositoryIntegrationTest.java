@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Import;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
-import pablo.tzeliks.blink_link.infrastructure.persistence.mapper.UrlEntityMapper;
+import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
+import pablo.tzeliks.blink_link.infrastructure.url.persistence.repository.PostgresUrlRepositoryAdapter;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * Integration tests for the PostgreSQL URL repository implementation.
  * <p>
- * This test class validates the {@link PostgresUrlRepository} adapter and its
+ * This test class validates the {@link PostgresUrlRepositoryAdapter} adapter and its
  * interaction with the actual PostgreSQL database. It tests the repository pattern
  * implementation, entity-domain mapping, and database operations.
  * <p>
@@ -57,12 +58,12 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  * @author Pablo Tzeliks
  * @version 2.0.0
  * @since 1.0.0
- * @see PostgresUrlRepository
+ * @see PostgresUrlRepositoryAdapter
  * @see AbstractContainerBase
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({PostgresUrlRepository.class, UrlEntityMapper.class})
+@Import({PostgresUrlRepositoryAdapter.class, UrlEntityMapper.class})
 public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase {
 
     @Autowired
@@ -138,11 +139,12 @@ public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase 
         Long generatedId = repository.nextId();
 
         // 2. Create new Url
-        Url newUrl = new Url(
+        Url newUrl = Url.restore(
                 generatedId,
                 "https://github.com/PabloTzeliks",
                 "myGitHub",
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
         );
 
         // Act
