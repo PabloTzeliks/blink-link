@@ -42,7 +42,7 @@ class RevokeUserAdminUseCaseTest {
                 Role.ADMIN, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(adminUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.update(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         useCase.execute(userId);
@@ -50,7 +50,7 @@ class RevokeUserAdminUseCaseTest {
         // Assert
         assertEquals(Role.USER, adminUser.getRole());
         verify(userRepository).findById(userId);
-        verify(userRepository).save(adminUser);
+        verify(userRepository).update(adminUser);
     }
 
     @Test
@@ -66,7 +66,7 @@ class RevokeUserAdminUseCaseTest {
 
         assertEquals("User not found.", exception.getMessage());
         verify(userRepository).findById(userId);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).update(any(User.class));
     }
 
     @Test
@@ -83,6 +83,6 @@ class RevokeUserAdminUseCaseTest {
         assertThrows(UserAlreadyInRoleException.class, () -> useCase.execute(userId));
 
         verify(userRepository).findById(userId);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).update(any(User.class));
     }
 }

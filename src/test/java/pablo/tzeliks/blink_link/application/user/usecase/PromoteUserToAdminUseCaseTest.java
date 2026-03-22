@@ -42,7 +42,7 @@ class PromoteUserToAdminUseCaseTest {
                 Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.update(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
         useCase.execute(userId);
@@ -50,7 +50,7 @@ class PromoteUserToAdminUseCaseTest {
         // Assert
         assertEquals(Role.ADMIN, user.getRole());
         verify(userRepository).findById(userId);
-        verify(userRepository).save(user);
+        verify(userRepository).update(user);
     }
 
     @Test
@@ -66,7 +66,7 @@ class PromoteUserToAdminUseCaseTest {
 
         assertEquals("User not found.", exception.getMessage());
         verify(userRepository).findById(userId);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).update(any(User.class));
     }
 
     @Test
@@ -83,6 +83,6 @@ class PromoteUserToAdminUseCaseTest {
         assertThrows(UserAlreadyInRoleException.class, () -> useCase.execute(userId));
 
         verify(userRepository).findById(userId);
-        verify(userRepository, never()).save(any(User.class));
+        verify(userRepository, never()).update(any(User.class));
     }
 }
