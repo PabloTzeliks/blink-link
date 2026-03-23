@@ -10,9 +10,7 @@
 [![Flyway](https://img.shields.io/badge/Flyway-migrations-CC0200?logo=flyway)](https://flywaydb.org/)
 [![JUnit 5](https://img.shields.io/badge/JUnit%205-Unit%20%7C%20Integration%20%7C%20E2E-25A162?logo=junit5)](https://junit.org/junit5/)
 [![Coverage](https://img.shields.io/badge/Coverage-JaCoCo%2080%25%2B-success)](https://www.jacoco.org/jacoco/)
-[![License](https://img.shields.io/badge/License-Not%20specified-lightgrey)](https://github.com/PabloTzeliks/blink-link)
-
-> **License notice:** this repository currently does not include a root `LICENSE` file. Until one is added, reuse rights are not explicitly granted.
+[![License](https://img.shields.io/badge/MIT-lightgrey)](https://github.com/PabloTzeliks/blink-link)
 
 ---
 
@@ -192,16 +190,16 @@ sequenceDiagram
 
 ## v2.0.0 vs v3.0.0 — Feature Evolution
 
-| Area | v2.0.0 | v3.0.0 |
+| Area | v3.0.0 |
 |---|---|---|
-| Security Model | Basic auth-related flow | **IAM layer** with role + plan domain modeling |
-| Authentication | Traditional API login behavior | **Stateless JWT** in **HttpOnly cookie** (`jwt_token`) |
-| Social Login | Not available | **OAuth2** with Google and GitHub |
-| Authorization | Limited role semantics | **RBAC** with ADMIN-protected management endpoints |
-| URL Lifecycle | Core shortening + resolving | Plan-based TTL: **FREE (7d)**, **VIP (1y)**, **ENTERPRISE (10y)** |
-| Expiration Handling | Basic lifecycle support | **410 Gone** + async purge engine with `FOR UPDATE SKIP LOCKED` |
-| Domain Model | Clean architecture baseline | Stronger **DDD** boundaries, ports, use cases, domain strategies |
-| Testing & Quality Gate | CI + tests | **89 tests** and **JaCoCo 80% instruction threshold** in pipeline |
+| Security Model | **IAM layer** with role + plan domain modeling |
+| Authentication | **Stateless JWT** in **HttpOnly cookie** (`jwt_token`) |
+| Social Login | **OAuth2** with Google and GitHub |
+| Authorization | **RBAC** with ADMIN-protected management endpoints |
+| URL Lifecycle | Plan-based TTL: **FREE (7d)**, **VIP (1y)**, **ENTERPRISE (10y)** |
+| Expiration Handling | **410 Gone** + async purge engine with `FOR UPDATE SKIP LOCKED` |
+| Domain Model | Stronger **DDD** boundaries, ports, use cases, domain strategies |
+| Testing & Quality Gate | **89 tests** and **JaCoCo 80% instruction threshold** in pipeline |
 
 ---
 
