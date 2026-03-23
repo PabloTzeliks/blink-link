@@ -46,7 +46,8 @@ public class UserRoleController {
     @PatchMapping("/{id}/promote")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> promoteToAdmin(
-            @Parameter(description = "The UUID of the user to promote", required = true) @PathVariable UUID id) {
+            @Parameter(description = "The UUID of the user to promote", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID id) {
 
         promoteUserToAdminUseCase.execute(id);
 
@@ -66,7 +67,8 @@ public class UserRoleController {
     @PatchMapping("/{id}/revoke")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> revokeAdmin(
-            @Parameter(description = "The UUID of the user to revoke ADMIN privileges from", required = true) @PathVariable UUID id) {
+            @Parameter(description = "The UUID of the user to revoke ADMIN privileges from", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID id) {
 
         revokeUserAdminUseCase.execute(id);
 
