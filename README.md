@@ -188,10 +188,10 @@ sequenceDiagram
 
 ---
 
-## v2.0.0 vs v3.0.0 — Feature Evolution
+## v3.0.0 — Feature Evolution
 
 | Area | v3.0.0 |
-|---|---|---|
+|---|---|
 | Security Model | **IAM layer** with role + plan domain modeling |
 | Authentication | **Stateless JWT** in **HttpOnly cookie** (`jwt_token`) |
 | Social Login | **OAuth2** with Google and GitHub |
@@ -336,8 +336,9 @@ mvn verify -B
 Planned direction:
 - **Kafka** for click/traffic event streams.
 - **Redis** for ultra-fast hot-link resolution and counters.
-- **Cassandra** for long-term, high-volume analytics storage.
+- **DynamoDB** for long-term, high-volume analytics storage.
+- **AWS** full deploy of application on AWS services.
 
 ---
 
-BlinkLink v3.0.0 demonstrates how to evolve from MVP into a secure and maintainable platform while preserving **clean boundaries**, explicit trade-offs, and production-grade operational behavior.
+BlinkLink v3.0.0 demonstrates how to evolve from MVP into a secure and maintainable platform while preserving **clean boundaries**, explicit trade-offs, production-grade operational behavior and being a personal lab for developing new complex concepts on a relevant Project.
