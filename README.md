@@ -118,6 +118,39 @@ sequenceDiagram
     Ctrl-->>C: 201 Created (+ Location header)
 ```
 
+### 3) Sequence View — Redirect Resolution + Expiration Behavior
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as Client
+    participant RCtrl as RedirectUrlController
+    participant RUC as ResolveUrlUseCase
+    participant RepoP as UrlRepositoryPort
+    participant Adapter as PostgresUrlRepositoryAdapter
+    participant DB as PostgreSQL
+
+    C->>RCtrl: GET /{shortCode}
+    RCtrl->>RUC: execute(ResolveUrlRequest)
+    RUC->>RepoP: findByShortCode(shortCode)
+    RepoP->>Adapter: findByShortCode(shortCode)
+    Adapter->>DB: SELECT ... WHERE short_code = ?
+    DB-->>Adapter: url row (with expiration_date)
+    Adapter-->>RepoP: Optional<Url>
+    RepoP-->>RUC: Optional<Url>
+
+    alt URL exists and is active
+        RUC-->>RCtrl: UrlResponse
+        RCtrl-->>C: 302 Found + Location: original_url
+    else URL is expired
+        RUC-->>RCtrl: throws UrlExpiredException
+        RCtrl-->>C: 410 Gone (RFC 7807 payload)
+    else URL not found
+        RUC-->>RCtrl: throws UrlNotFoundException
+        RCtrl-->>C: 404 Not Found (RFC 7807 payload)
+    end
+```
+
 > The database is accessed only through adapters/ports; the **Domain never depends on JPA or SQL**.
 
 ---
@@ -149,10 +182,35 @@ sequenceDiagram
 - TTL rules stay isolated and testable.
 - Cleanup runs in chunks, minimizing lock pressure.
 - Multiple app instances can safely purge in parallel while avoiding **table-level lock contention**.
+- User plan policy and garbage collection are connected by design: plan-driven TTL is computed at creation time and persisted as `expiration_date`; purge jobs remove only rows whose expiration has elapsed.
 
 **Trade-off:**
 - **Gain:** High resilience and horizontal cleanup safety.
 - **Cost:** Operational complexity (scheduler tuning: cron, batch size, sleep interval).
+
+---
+
+## v2.0.0 vs v3.0.0 — Feature Evolution
+
+| Area | v2.0.0 | v3.0.0 |
+|---|---|---|
+| Security Model | Basic auth-related flow | **IAM layer** with role + plan domain modeling |
+| Authentication | Traditional API login behavior | **Stateless JWT** in **HttpOnly cookie** (`jwt_token`) |
+| Social Login | Not available | **OAuth2** with Google and GitHub |
+| Authorization | Limited role semantics | **RBAC** with ADMIN-protected management endpoints |
+| URL Lifecycle | Core shortening + resolving | Plan-based TTL: **FREE (7d)**, **VIP (1y)**, **ENTERPRISE (10y)** |
+| Expiration Handling | Basic lifecycle support | **410 Gone** + async purge engine with `FOR UPDATE SKIP LOCKED` |
+| Domain Model | Clean architecture baseline | Stronger **DDD** boundaries, ports, use cases, domain strategies |
+| Testing & Quality Gate | CI + tests | **89 tests** and **JaCoCo 80% instruction threshold** in pipeline |
+
+---
+
+## DDD in Practice (Strongly Enforced in v3.0.0)
+
+- **Domain as source of truth:** `User`, `Url`, `Role`, `Plan`, `Email`, `Password`, and domain exceptions encode business language and invariants.
+- **Application orchestration only:** use cases (`ShortenUrlUseCase`, `ResolveUrlUseCase`, `PurgeUrlsUseCase`, auth/admin use cases) coordinate behavior through ports instead of frameworks.
+- **Ports & adapters discipline:** persistence, JWT, OAuth2, and web concerns stay in Infrastructure; the Domain remains framework-agnostic.
+- **Open/Closed domain policies:** expiration logic uses `ExpirationCalculationStrategy` + factory keyed by user plan, avoiding conditional sprawl in use cases.
 
 ---
 
@@ -166,6 +224,14 @@ sequenceDiagram
 - Batch purge engine for expired URLs using PostgreSQL row-level locking semantics.
 - Test strategy covering **Unit**, **Integration** (Testcontainers + PostgreSQL), and **E2E**.
 - CI/CD pipeline with Maven verification, JaCoCo coverage checks, Docker image build, and compose validation.
+
+---
+
+## Quality Gates: Tests & Coverage
+
+- **89 automated tests** across Unit, Integration, and E2E layers.
+- **JaCoCo minimum coverage gate: 80% instruction coverage** (build fails if threshold is not met).
+- Test execution is part of CI through `mvn verify -B`, with JUnit reporting and JaCoCo artifacts published in GitHub Actions.
 
 ---
 
