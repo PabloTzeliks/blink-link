@@ -1,13 +1,13 @@
 package pablo.tzeliks.blink_link.infrastructure.web.user;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +25,6 @@ import pablo.tzeliks.blink_link.application.user.dto.UserResponse;
 import pablo.tzeliks.blink_link.application.user.usecase.LoginUserUseCase;
 import pablo.tzeliks.blink_link.application.user.usecase.RegisterNewUserUseCase;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ErrorResponse;
-
 
 @RestController
 @RequestMapping("api/v3/auth")
@@ -53,7 +52,13 @@ public class AuthController {
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
+    public ResponseEntity<UserResponse> register(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload containing user registration details",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = RegisterUserRequest.class))
+            )
+            @Valid @RequestBody RegisterUserRequest request) {
 
         UserResponse response = registerNewUserUseCase.execute(request);
 
@@ -71,8 +76,14 @@ public class AuthController {
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginUserRequest request,
-                                              @Value("${spring.security.jwt.cookie-secure:false}") boolean secure) {
+    public ResponseEntity<UserResponse> login(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload containing user login credentials",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = LoginUserRequest.class))
+            )
+            @Valid @RequestBody LoginUserRequest request,
+            @Parameter(hidden = true) @Value("${spring.security.jwt.cookie-secure:false}") boolean secure) {
 
         AuthResponse response = loginUserUseCase.execute(request);
 
@@ -95,7 +106,8 @@ public class AuthController {
     @ApiResponse(responseCode = "200", description = "User successfully logged out",
             headers = @Header(name = HttpHeaders.SET_COOKIE, description = "Clears the JWT token", schema = @Schema(type = "string")))
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@Value("${security.jwt.cookie-secure:false}") boolean secure) {
+    public ResponseEntity<Void> logout(
+            @Parameter(hidden = true) @Value("${security.jwt.cookie-secure:false}") boolean secure) {
 
         ResponseCookie deleteCookie = ResponseCookie.from("jwt_token", "")
                 .httpOnly(true)
