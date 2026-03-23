@@ -46,7 +46,14 @@ public class UrlController {
                     content = @Content(mediaType = "application/problem+json", schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/shorten")
-    public ResponseEntity<UrlResponse> encode(@Valid @RequestBody CreateUrlRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<UrlResponse> encode(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload containing the original URL and optional configuration (like custom alias)",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = CreateUrlRequest.class))
+            )
+            @Valid @RequestBody CreateUrlRequest request,
+            @Parameter(hidden = true) UriComponentsBuilder uriBuilder) {
 
         UrlResponse response = shortenUrl.execute(request);
 
