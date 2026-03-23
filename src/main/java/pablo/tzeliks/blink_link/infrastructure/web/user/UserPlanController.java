@@ -46,7 +46,13 @@ public class UserPlanController {
     @PatchMapping("/{id}/plan")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> changePlan(
-            @Parameter(description = "The UUID of the user to update", required = true) @PathVariable UUID id,
+            @Parameter(description = "The UUID of the user to update", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable UUID id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload containing the new subscription plan for the user",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ChangePlanRequest.class))
+            )
             @Valid @RequestBody ChangePlanRequest request) {
 
         Plan newPlan = Plan.fromString(request.plan());
