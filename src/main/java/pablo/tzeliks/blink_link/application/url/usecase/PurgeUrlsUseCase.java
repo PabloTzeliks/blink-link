@@ -1,17 +1,25 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
+import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PurgeUrlsUseCase {
 
     private final UrlRepositoryPort repository;
+    private final CachePort cachePort;
     private final int batchSize;
     private final long sleepTime;
 
-    public PurgeUrlsUseCase(UrlRepositoryPort repository, int batchSize, long sleepTime) {
+    public PurgeUrlsUseCase(UrlRepositoryPort repository,
+                            CachePort cachePort,
+                            int batchSize,
+                            long sleepTime) {
+
         this.repository = repository;
+        this.cachePort = cachePort;
         this.batchSize = batchSize;
         this.sleepTime = sleepTime;
     }
@@ -23,8 +31,10 @@ public class PurgeUrlsUseCase {
         int deletedInCurrentBatch;
 
         do {
-            deletedInCurrentBatch = repository.deleteExpiredInBatch(now, batchSize);
-            totalDeleted += deletedInCurrentBatch;
+            List<String> deletedCodes = repository.deleteExpiredInBatchReturningCodes(now, batchSize);
+            deletedCodes.forEach(cachePort::evict);
+
+            deletedInCurrentBatch = deletedCodes.size();
 
             if (deletedInCurrentBatch > 0 && sleepTime > 0) {
                 sleepForDatabaseRelief();
