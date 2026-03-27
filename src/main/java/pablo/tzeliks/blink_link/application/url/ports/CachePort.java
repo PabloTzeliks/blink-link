@@ -1,6 +1,5 @@
 package pablo.tzeliks.blink_link.application.url.ports;
 
-import java.time.Duration;
 import java.util.Optional;
 
 public interface CachePort {
