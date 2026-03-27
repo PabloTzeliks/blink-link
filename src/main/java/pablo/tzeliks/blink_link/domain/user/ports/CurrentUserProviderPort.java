@@ -2,7 +2,11 @@ package pablo.tzeliks.blink_link.domain.user.ports;
 
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 
+import java.util.UUID;
+
 public interface CurrentUserProviderPort {
 
     Plan getCurrentUserPlan();
+
+    UUID getCurrentUserId();
 }

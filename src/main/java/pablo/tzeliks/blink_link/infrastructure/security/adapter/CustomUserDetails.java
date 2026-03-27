@@ -60,5 +60,4 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
     @Override public boolean isEnabled() { return true; }
-    public Plan getPlan() { return domainUser.getPlan(); }
 }
