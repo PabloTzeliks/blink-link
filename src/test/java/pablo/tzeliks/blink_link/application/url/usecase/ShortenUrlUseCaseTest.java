@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
@@ -141,7 +141,7 @@ class ShortenUrlUseCaseTest {
         when(repository.save(any(Url.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // 5. Map to Response DTO
-        UrlResponse correctResponse = new UrlResponse(
+        UrlDetailsResponse correctResponse = new UrlDetailsResponse(
                 fakeUserId,
                 originalUrl,
                 fakeShortCode,
@@ -153,7 +153,7 @@ class ShortenUrlUseCaseTest {
         when(mapper.toDto(any(Url.class))).thenReturn(correctResponse);
 
         // Act
-        UrlResponse trueResponse = shortenUrlUseCase.execute(request);
+        UrlDetailsResponse trueResponse = shortenUrlUseCase.execute(request);
 
         // Assert
         assertNotNull(trueResponse);

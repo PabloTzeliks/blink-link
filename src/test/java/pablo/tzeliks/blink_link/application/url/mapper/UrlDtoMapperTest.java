@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 
 import java.time.LocalDateTime;
@@ -43,7 +43,7 @@ class UrlDtoMapperTest {
         Url domain = Url.restore(1L, UUID.randomUUID(), "https://example.com", "abc123", createdAt, expirationDate);
 
         // Act
-        UrlResponse response = mapper.toDto(domain);
+        UrlDetailsResponse response = mapper.toDto(domain);
 
         // Assert
         assertThat(response.originalUrl()).isEqualTo("https://example.com");
@@ -62,7 +62,7 @@ class UrlDtoMapperTest {
         Url domain = Url.restore(2L, UUID.randomUUID(), "https://example.com", "def456", createdAt, null);
 
         // Act
-        UrlResponse response = mapper.toDto(domain);
+        UrlDetailsResponse response = mapper.toDto(domain);
 
         // Assert
         assertThat(response.originalUrl()).isEqualTo("https://example.com");
@@ -82,7 +82,7 @@ class UrlDtoMapperTest {
         Url domain = Url.restore(3L, UUID.randomUUID(), "https://example.com", "ghi789", createdAt, createdAt.plusDays(7));
 
         // Act
-        UrlResponse response = mapper.toDto(domain);
+        UrlDetailsResponse response = mapper.toDto(domain);
 
         // Assert
         assertThat(response.shortUrl()).isEqualTo("http://localhost:8080/ghi789");

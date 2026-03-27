@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.usecase.ResolveUrlUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
 
@@ -30,9 +30,9 @@ public class UrlController {
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<UrlResponse> encode(@Valid @RequestBody CreateUrlRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<UrlDetailsResponse> encode(@Valid @RequestBody CreateUrlRequest request, UriComponentsBuilder uriBuilder) {
 
-        UrlResponse response = shortenUrl.execute(request);
+        UrlDetailsResponse response = shortenUrl.execute(request);
 
         URI pathLocation = uriBuilder.path("/api/v2/urls/{shortCode}")
                 .buildAndExpand(response.shortCode())
@@ -44,11 +44,11 @@ public class UrlController {
     }
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<UrlResponse> access(@PathVariable String shortCode) {
+    public ResponseEntity<UrlDetailsResponse> access(@PathVariable String shortCode) {
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
 
-        UrlResponse response = resolveUrl.execute(request);
+        UrlDetailsResponse response = resolveUrl.execute(request);
         return ResponseEntity.ok(response);
     }
 }

@@ -5,35 +5,20 @@ import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
-import java.util.Optional;
-
-/**
- *
- * @author Pablo Tzeliks
- * @version 3.0.0
- * @since 1.0.0
- * @see UrlRepositoryPort
- */
 @Service
-public class ResolveUrlUseCase {
+public class GetUrlDetailsUseCase {
 
     private final UrlRepositoryPort repository;
-    private final CachePort cachePort;
     private final UrlDtoMapper mapper;
 
-    public ResolveUrlUseCase(UrlRepositoryPort repository,
-                             CachePort cachePort,
-                             UrlDtoMapper mapper) {
-
+    public GetUrlDetailsUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper) {
         this.repository = repository;
-        this.cachePort = cachePort;
         this.mapper = mapper;
     }
 
