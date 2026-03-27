@@ -6,22 +6,22 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.usecase.ResolveUrlUseCase;
+import pablo.tzeliks.blink_link.application.url.usecase.RedirectUrlUseCase;
 
 import java.net.URI;
 
 /**
  * @author Pablo Tzeliks
- * @version 2.0.0
+ * @version 4.0.0
  * @since 1.0.0
- * @see ResolveUrlUseCase
+ * @see RedirectUrlUseCase
  */
 @RestController
 public class RedirectUrlController {
 
-    private final ResolveUrlUseCase resolveUrl;
+    private final RedirectUrlUseCase resolveUrl;
 
-    public RedirectUrlController(ResolveUrlUseCase resolveUrl) {
+    public RedirectUrlController(RedirectUrlUseCase resolveUrl) {
         this.resolveUrl = resolveUrl;
     }
 
