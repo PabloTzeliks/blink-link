@@ -143,7 +143,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         repository.save(valid);
 
         // Act
-        repository.deleteExpiredInBatch(now, 100);
+        repository.deleteExpiredInBatchReturningCodes(now, 100);
 
         // Assert: The valid URL should still exist
         assertThat(repository.findByShortCode(validShortCode)).isPresent();
