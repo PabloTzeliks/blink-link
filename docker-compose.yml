@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Database Service (PostgreSQL)
+  # --- Database Service (PostgreSQL) ---
   postgres-db:
     image: postgres:17
     container_name: blinklink-pg_local
@@ -17,14 +17,13 @@ services:
       - pg_data:/var/lib/postgresql/data
     networks:
       - blink-network
-
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  # Database GUI (pgAdmin)
+  # --- Database GUI (pgAdmin) ---
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: blinklink-pgadmin
@@ -39,8 +38,25 @@ services:
     networks:
       - blink-network
 
+  # --- Cache Service (Redis) ---
+  redis-cache:
+    image: redis:7-alpine
+    container_name: blinklink-redis_local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - blink-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   pg_data:
+  redis_data:
 
 networks:
   blink-network:
