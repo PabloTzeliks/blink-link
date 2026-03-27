@@ -17,6 +17,7 @@ import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -129,6 +130,10 @@ class ShortenUrlUseCaseTest {
         // 2. Get current user plan
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
 
+        // 2b. Get current user ID
+        UUID fakeUserId = UUID.randomUUID();
+        when(userProviderPort.getCurrentUserId()).thenReturn(fakeUserId);
+
         // 3. Encode ID to Short Code
         when(shortener.encode(fakeId)).thenReturn(fakeShortCode);
 
@@ -137,6 +142,7 @@ class ShortenUrlUseCaseTest {
 
         // 5. Map to Response DTO
         UrlResponse correctResponse = new UrlResponse(
+                fakeUserId,
                 originalUrl,
                 fakeShortCode,
                 "http://localhost:8080/" + fakeShortCode,
@@ -157,6 +163,7 @@ class ShortenUrlUseCaseTest {
 
         verify(repository).nextId();
         verify(userProviderPort).getCurrentUserPlan();
+        verify(userProviderPort).getCurrentUserId();
         verify(shortener).encode(fakeId);
         verify(repository).save(any(Url.class));
         verify(mapper).toDto(any(Url.class));
@@ -222,6 +229,9 @@ class ShortenUrlUseCaseTest {
         // 2. Get current user plan
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
 
+        // 2b. Get current user ID
+        when(userProviderPort.getCurrentUserId()).thenReturn(UUID.randomUUID());
+
         // 3. Encode ID to Short Code (will fail)
         when(shortener.encode(invalidId)).thenThrow(new EncoderException("ID cannot be negative"));
 
@@ -235,6 +245,7 @@ class ShortenUrlUseCaseTest {
         // Verify
         verify(repository).nextId();
         verify(userProviderPort).getCurrentUserPlan();
+        verify(userProviderPort).getCurrentUserId();
         verify(shortener).encode(invalidId);
 
         verify(repository, never()).save(any());
