@@ -23,6 +23,7 @@ public class UrlDtoMapper {
                 : baseUrl + "/" + domain.getShortCode();
 
         return new UrlResponse(
+                domain.getUserId(),
                 domain.getOriginalUrl(),
                 domain.getShortCode(),
                 shortUrl,
