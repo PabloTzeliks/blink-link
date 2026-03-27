@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.domain.user.ports;
+package pablo.tzeliks.blink_link.application.user.ports;
 
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 

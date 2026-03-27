@@ -5,7 +5,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
-import pablo.tzeliks.blink_link.domain.user.ports.CurrentUserProviderPort;
+import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.infrastructure.exception.InfraestructureException;
 
 import java.util.UUID;
