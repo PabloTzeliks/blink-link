@@ -5,6 +5,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  *
@@ -19,6 +20,9 @@ public class UrlEntity implements Persistable<Long> {
     @Id
     @Column(name = "id", nullable = false)
     private Long id;
+
+    @Column(name = "user_id", nullable = false, updatable = false)
+    private UUID userId;
 
     @Column(name = "original_url", nullable = false)
     private String originalUrl;
@@ -38,8 +42,9 @@ public class UrlEntity implements Persistable<Long> {
 
     protected UrlEntity() { }
 
-    public UrlEntity(Long id, String originalUrl, String shortCode, LocalDateTime createdAt, LocalDateTime expirationDate) {
+    public UrlEntity(Long id, UUID userId, String originalUrl, String shortCode, LocalDateTime createdAt, LocalDateTime expirationDate) {
         this.id = id;
+        this.userId = userId;
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
         this.createdAt = createdAt;
@@ -65,6 +70,8 @@ public class UrlEntity implements Persistable<Long> {
     }
 
     // Getters
+
+    public UUID getUserId() { return userId; }
 
     public String getOriginalUrl() { return originalUrl; }
 
