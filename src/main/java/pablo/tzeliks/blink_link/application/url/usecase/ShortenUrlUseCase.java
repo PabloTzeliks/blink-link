@@ -13,6 +13,8 @@ import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrateg
 import pablo.tzeliks.blink_link.domain.url.strategy.factory.ExpirationStrategyFactory;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 
+import java.util.UUID;
+
 @Service
 public class ShortenUrlUseCase {
 
@@ -34,12 +36,13 @@ public class ShortenUrlUseCase {
         Long id = repository.nextId();
 
         Plan userPlan = userProviderPort.getCurrentUserPlan();
+        UUID userId = userProviderPort.getCurrentUserId();
 
         ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
 
         String shortCode = shortener.encode(id);
 
-        Url url = Url.create(id, request.originalUrl(), shortCode, strategy);
+        Url url = Url.create(id, userId, request.originalUrl(), shortCode, strategy);
         Url savedUrl = repository.save(url);
 
         return mapper.toDto(savedUrl);
