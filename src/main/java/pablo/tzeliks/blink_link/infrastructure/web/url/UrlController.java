@@ -7,14 +7,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
-import pablo.tzeliks.blink_link.application.url.usecase.ResolveUrlUseCase;
+import pablo.tzeliks.blink_link.application.url.usecase.GetUrlDetailsUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
 
 import java.net.URI;
 
 /**
  * @author Pablo Tzeliks
- * @version 2.0.0
+ * @version 4.0.0
  * @since 1.0.0
  */
 @RestController()
@@ -22,11 +22,11 @@ import java.net.URI;
 public class UrlController {
 
     private final ShortenUrlUseCase shortenUrl;
-    private final ResolveUrlUseCase resolveUrl;
+    private final GetUrlDetailsUseCase urlDetailsUseCase;
 
-    public UrlController(ShortenUrlUseCase shortenUrl, ResolveUrlUseCase resolveUrl) {
+    public UrlController(ShortenUrlUseCase shortenUrl, GetUrlDetailsUseCase urlDetailsUseCase) {
         this.shortenUrl = shortenUrl;
-        this.resolveUrl = resolveUrl;
+        this.urlDetailsUseCase = urlDetailsUseCase;
     }
 
     @PostMapping("/shorten")
@@ -48,7 +48,7 @@ public class UrlController {
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
 
-        UrlDetailsResponse response = resolveUrl.execute(request);
+        UrlDetailsResponse response = urlDetailsUseCase.execute(request);
         return ResponseEntity.ok(response);
     }
 }
