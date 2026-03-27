@@ -14,6 +14,7 @@ import pablo.tzeliks.blink_link.infrastructure.url.persistence.repository.Postgr
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -141,6 +142,7 @@ public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase 
         // 2. Create new Url
         Url newUrl = Url.restore(
                 generatedId,
+                UUID.randomUUID(),
                 "https://github.com/PabloTzeliks",
                 "myGitHub",
                 LocalDateTime.now(),

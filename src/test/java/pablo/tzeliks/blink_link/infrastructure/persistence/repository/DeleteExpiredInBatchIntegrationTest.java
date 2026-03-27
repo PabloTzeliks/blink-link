@@ -13,6 +13,7 @@ import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityM
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.repository.PostgresUrlRepositoryAdapter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,14 +47,14 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         // Insert 3 expired URLs
         for (int i = 0; i < 3; i++) {
             Long id = repository.nextId();
-            Url expired = Url.restore(id, "https://expired-" + i + ".com", "exp" + id, now.minusDays(20), pastDate);
+            Url expired = Url.restore(id, UUID.randomUUID(), "https://expired-" + i + ".com", "exp" + id, now.minusDays(20), pastDate);
             repository.save(expired);
         }
 
         // Insert 2 valid (non-expired) URLs
         for (int i = 0; i < 2; i++) {
             Long id = repository.nextId();
-            Url valid = Url.restore(id, "https://valid-" + i + ".com", "val" + id, now, futureDate);
+            Url valid = Url.restore(id, UUID.randomUUID(), "https://valid-" + i + ".com", "val" + id, now, futureDate);
             repository.save(valid);
         }
 
@@ -74,7 +75,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         // Insert 5 expired URLs
         for (int i = 0; i < 5; i++) {
             Long id = repository.nextId();
-            Url expired = Url.restore(id, "https://batch-" + i + ".com", "btc" + id, now.minusDays(10), pastDate);
+            Url expired = Url.restore(id, UUID.randomUUID(), "https://batch-" + i + ".com", "btc" + id, now.minusDays(10), pastDate);
             repository.save(expired);
         }
 
@@ -93,7 +94,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         LocalDateTime futureDate = now.plusDays(30);
 
         Long id = repository.nextId();
-        Url valid = Url.restore(id, "https://valid.com", "noexp" + id, now, futureDate);
+        Url valid = Url.restore(id, UUID.randomUUID(), "https://valid.com", "noexp" + id, now, futureDate);
         repository.save(valid);
 
         // Act
@@ -113,13 +114,13 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
 
         // Insert 1 expired URL
         Long expiredId = repository.nextId();
-        Url expired = Url.restore(expiredId, "https://expired.com", "exp" + expiredId, now.minusDays(10), pastDate);
+        Url expired = Url.restore(expiredId, UUID.randomUUID(), "https://expired.com", "exp" + expiredId, now.minusDays(10), pastDate);
         repository.save(expired);
 
         // Insert 1 valid URL
         Long validId = repository.nextId();
         String validShortCode = "val" + validId;
-        Url valid = Url.restore(validId, "https://valid.com", validShortCode, now, futureDate);
+        Url valid = Url.restore(validId, UUID.randomUUID(), "https://valid.com", validShortCode, now, futureDate);
         repository.save(valid);
 
         // Act

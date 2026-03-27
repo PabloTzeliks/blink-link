@@ -233,6 +233,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
         Url savedUrl = Url.restore(
                 id,
+                UUID.randomUUID(),
                 "https://rocketseat.com.br",
                 "rocket",
                 now,
@@ -304,6 +305,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         LocalDateTime now = LocalDateTime.now();
         Url savedUrl = Url.restore(
                 id,
+                UUID.randomUUID(),
                 "https://github.com/PabloTzeliks",
                 "myGit",
                 now,

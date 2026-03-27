@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrategy;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,7 +33,7 @@ class UrlDomainTest {
             LocalDateTime createdAt = LocalDateTime.now().minusDays(10);
             LocalDateTime expirationDate = LocalDateTime.now().minusDays(1);
 
-            Url expiredUrl = Url.restore(1L, "https://example.com", "abc123", createdAt, expirationDate);
+            Url expiredUrl = Url.restore(1L, UUID.randomUUID(), "https://example.com", "abc123", createdAt, expirationDate);
 
             // Act
             boolean result = expiredUrl.isExpired();
@@ -48,7 +49,7 @@ class UrlDomainTest {
             LocalDateTime createdAt = LocalDateTime.now();
             LocalDateTime expirationDate = LocalDateTime.now().plusDays(7);
 
-            Url validUrl = Url.restore(2L, "https://example.com", "def456", createdAt, expirationDate);
+            Url validUrl = Url.restore(2L, UUID.randomUUID(), "https://example.com", "def456", createdAt, expirationDate);
 
             // Act
             boolean result = validUrl.isExpired();
@@ -63,7 +64,7 @@ class UrlDomainTest {
             // Arrange: URL with null expiration (lifetime)
             LocalDateTime createdAt = LocalDateTime.now();
 
-            Url lifetimeUrl = Url.restore(3L, "https://example.com", "ghi789", createdAt, null);
+            Url lifetimeUrl = Url.restore(3L, UUID.randomUUID(), "https://example.com", "ghi789", createdAt, null);
 
             // Act
             boolean result = lifetimeUrl.isExpired();
@@ -82,12 +83,14 @@ class UrlDomainTest {
         void shouldCreateUrlWithExpirationFromStrategy() {
             // Arrange
             ExpirationCalculationStrategy sevenDayStrategy = now -> now.plusDays(7);
+            UUID userId = UUID.randomUUID();
 
             // Act
-            Url url = Url.create(100L, "https://example.com", "strat1", sevenDayStrategy);
+            Url url = Url.create(100L, userId, "https://example.com", "strat1", sevenDayStrategy);
 
             // Assert
             assertThat(url.getId()).isEqualTo(100L);
+            assertThat(url.getUserId()).isEqualTo(userId);
             assertThat(url.getOriginalUrl()).isEqualTo("https://example.com");
             assertThat(url.getShortCode()).isEqualTo("strat1");
             assertThat(url.getCreatedAt()).isNotNull();

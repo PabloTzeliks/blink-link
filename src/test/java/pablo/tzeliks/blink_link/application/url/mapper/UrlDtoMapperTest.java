@@ -8,6 +8,7 @@ import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,13 +39,15 @@ class UrlDtoMapperTest {
         // Arrange
         LocalDateTime createdAt = LocalDateTime.of(2026, 1, 1, 12, 0, 0);
         LocalDateTime expirationDate = LocalDateTime.of(2026, 1, 8, 12, 0, 0);
+        UUID userId = UUID.randomUUID();
 
-        Url domain = Url.restore(1L, "https://example.com", "abc123", createdAt, expirationDate);
+        Url domain = Url.restore(1L, userId, "https://example.com", "abc123", createdAt, expirationDate);
 
         // Act
         UrlResponse response = mapper.toDto(domain);
 
         // Assert
+        assertThat(response.userId()).isEqualTo(userId);
         assertThat(response.originalUrl()).isEqualTo("https://example.com");
         assertThat(response.shortCode()).isEqualTo("abc123");
         assertThat(response.shortUrl()).isEqualTo(BASE_URL + "abc123");
@@ -57,13 +60,15 @@ class UrlDtoMapperTest {
     void shouldMapDomainWithNullExpirationDateToDto() {
         // Arrange
         LocalDateTime createdAt = LocalDateTime.of(2026, 1, 1, 12, 0, 0);
+        UUID userId = UUID.randomUUID();
 
-        Url domain = Url.restore(2L, "https://example.com", "def456", createdAt, null);
+        Url domain = Url.restore(2L, userId, "https://example.com", "def456", createdAt, null);
 
         // Act
         UrlResponse response = mapper.toDto(domain);
 
         // Assert
+        assertThat(response.userId()).isEqualTo(userId);
         assertThat(response.originalUrl()).isEqualTo("https://example.com");
         assertThat(response.shortCode()).isEqualTo("def456");
         assertThat(response.shortUrl()).isEqualTo(BASE_URL + "def456");
@@ -78,7 +83,7 @@ class UrlDtoMapperTest {
         ReflectionTestUtils.setField(mapper, "baseUrl", "http://localhost:8080");
 
         LocalDateTime createdAt = LocalDateTime.now();
-        Url domain = Url.restore(3L, "https://example.com", "ghi789", createdAt, createdAt.plusDays(7));
+        Url domain = Url.restore(3L, UUID.randomUUID(), "https://example.com", "ghi789", createdAt, createdAt.plusDays(7));
 
         // Act
         UrlResponse response = mapper.toDto(domain);
