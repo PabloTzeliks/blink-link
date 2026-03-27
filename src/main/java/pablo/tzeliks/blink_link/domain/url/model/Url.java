@@ -5,21 +5,24 @@ import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrategy;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * @author Pablo Tzeliks
- * @version 3.0.0
+ * @version 4.0.0
  * @since 2.0.0
  */
 public class Url {
 
     private final Long id;
+    private final UUID userId;
     private final String originalUrl;
     private final String shortCode;
     private final LocalDateTime createdAt;
     private final LocalDateTime expirationDate;
 
     private Url(Long id,
+                UUID userId,
                 String originalUrl,
                 String shortCode,
                 LocalDateTime createdAt,
@@ -32,6 +35,7 @@ public class Url {
         }
 
         this.id = id;
+        this.userId = userId;
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
         this.createdAt = createdAt;
@@ -50,6 +54,7 @@ public class Url {
     }
 
     public static Url create(Long id,
+                             UUID userId,
                              String originalUrl,
                              String shortCode,
                              ExpirationCalculationStrategy expirationStrategy) {
@@ -57,16 +62,17 @@ public class Url {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expirationDate = expirationStrategy.calculateExpirationDate(now);
 
-        return new Url(id, originalUrl, shortCode, now, expirationDate);
+        return new Url(id, userId, originalUrl, shortCode, now, expirationDate);
     }
 
     public static Url restore(Long id,
+                              UUID userId,
                               String originalUrl,
                               String shortCode,
                               LocalDateTime createdAt,
                               LocalDateTime expirationDate) {
 
-        return new Url(id, originalUrl, shortCode, createdAt, expirationDate);
+        return new Url(id, userId, originalUrl, shortCode, createdAt, expirationDate);
     }
 
     public boolean isExpired() {
@@ -80,6 +86,10 @@ public class Url {
 
     public Long getId() {
         return id;
+    }
+
+    public UUID getUserId() {
+        return userId;
     }
 
     public String getOriginalUrl() {
