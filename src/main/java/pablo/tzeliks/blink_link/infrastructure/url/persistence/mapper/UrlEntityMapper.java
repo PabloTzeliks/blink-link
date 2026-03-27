@@ -16,6 +16,7 @@ public class UrlEntityMapper {
 
         return new UrlEntity(
                 domain.getId(),
+                domain.getUserId(),
                 domain.getOriginalUrl(),
                 domain.getShortCode(),
                 domain.getCreatedAt(),
@@ -27,6 +28,7 @@ public class UrlEntityMapper {
 
         return Url.restore(
                 entity.getId(),
+                entity.getUserId(),
                 entity.getOriginalUrl(),
                 entity.getShortCode(),
                 entity.getCreatedAt(),
