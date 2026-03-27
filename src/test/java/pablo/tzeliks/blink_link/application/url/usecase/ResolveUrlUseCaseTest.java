@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
@@ -111,7 +111,7 @@ class ResolveUrlUseCaseTest {
         Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
-        UrlResponse expectedResponse = new UrlResponse(userId, originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
+        UrlDetailsResponse expectedResponse = new UrlDetailsResponse(userId, originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
 
         // 1. Repository finds URL by short code
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
@@ -120,7 +120,7 @@ class ResolveUrlUseCaseTest {
         when(mapper.toDto(urlFound)).thenReturn(expectedResponse);
 
         // Act
-        UrlResponse actualResponse = useCase.execute(request);
+        UrlDetailsResponse actualResponse = useCase.execute(request);
 
         // Assert
         assertNotNull(actualResponse);

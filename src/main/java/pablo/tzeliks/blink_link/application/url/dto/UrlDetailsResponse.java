@@ -11,7 +11,7 @@ import java.util.UUID;
  * @version 4.0.0
  * @since 1.0.0
  */
-public record UrlResponse(
+public record UrlDetailsResponse(
 
         @JsonProperty("user_id")
         UUID userId,
