@@ -1,4 +1,10 @@
 spring:
+  application:
+    name: Blink Link
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   security:
     jwt:
       cookie-secure: false
@@ -13,8 +19,6 @@ spring:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
             scope: read:user,user:email
-  application:
-    name: Blink Link
 
   # PostgreSQL Configuration
   datasource:
