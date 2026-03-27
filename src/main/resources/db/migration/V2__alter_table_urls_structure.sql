@@ -12,7 +12,7 @@ CREATE SEQUENCE urls_id_seq
 CREATE TABLE urls (
     id BIGINT NOT NULL,
     original_url TEXT NOT NULL,
-    short_code VARCHAR(20) NOT NULL,
+    short_code VARCHAR(7) NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     expiration_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 
