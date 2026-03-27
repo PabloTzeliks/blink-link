@@ -1,5 +1,6 @@
 package pablo.tzeliks.blink_link.infrastructure.persistence.repository;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,11 +9,17 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.model.Role;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.repository.PostgresUrlRepositoryAdapter;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -35,6 +42,19 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
     @Autowired
     private UrlRepositoryPort repository;
 
+    @Autowired
+    private JpaUserRepository jpaUserRepository;
+
+    private UUID testUserId;
+
+    @BeforeEach
+    void setUp() {
+        testUserId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(testUserId, "batch-test@example.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+    }
+
     @Test
     @DisplayName("Should delete only expired URLs and respect the batch size limit")
     void shouldDeleteOnlyExpiredUrlsRespectingBatchSize() {
@@ -46,14 +66,14 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         // Insert 3 expired URLs
         for (int i = 0; i < 3; i++) {
             Long id = repository.nextId();
-            Url expired = Url.restore(id, "https://expired-" + i + ".com", "exp" + id, now.minusDays(20), pastDate);
+            Url expired = Url.restore(id, testUserId, "https://expired-" + i + ".com", "exp" + i, now.minusDays(20), pastDate);
             repository.save(expired);
         }
 
         // Insert 2 valid (non-expired) URLs
         for (int i = 0; i < 2; i++) {
             Long id = repository.nextId();
-            Url valid = Url.restore(id, "https://valid-" + i + ".com", "val" + id, now, futureDate);
+            Url valid = Url.restore(id, testUserId, "https://valid-" + i + ".com", "val" + i, now, futureDate);
             repository.save(valid);
         }
 
@@ -74,7 +94,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         // Insert 5 expired URLs
         for (int i = 0; i < 5; i++) {
             Long id = repository.nextId();
-            Url expired = Url.restore(id, "https://batch-" + i + ".com", "btc" + id, now.minusDays(10), pastDate);
+            Url expired = Url.restore(id, testUserId, "https://batch-" + i + ".com", "btc" + i, now.minusDays(10), pastDate);
             repository.save(expired);
         }
 
@@ -93,7 +113,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         LocalDateTime futureDate = now.plusDays(30);
 
         Long id = repository.nextId();
-        Url valid = Url.restore(id, "https://valid.com", "noexp" + id, now, futureDate);
+        Url valid = Url.restore(id, testUserId, "https://valid.com", "noExp", now, futureDate);
         repository.save(valid);
 
         // Act
@@ -113,13 +133,13 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
 
         // Insert 1 expired URL
         Long expiredId = repository.nextId();
-        Url expired = Url.restore(expiredId, "https://expired.com", "exp" + expiredId, now.minusDays(10), pastDate);
+        Url expired = Url.restore(expiredId, testUserId, "https://expired.com", "expd", now.minusDays(10), pastDate);
         repository.save(expired);
 
         // Insert 1 valid URL
         Long validId = repository.nextId();
-        String validShortCode = "val" + validId;
-        Url valid = Url.restore(validId, "https://valid.com", validShortCode, now, futureDate);
+        String validShortCode = "valid";
+        Url valid = Url.restore(validId, testUserId, "https://valid.com", validShortCode, now, futureDate);
         repository.save(valid);
 
         // Act

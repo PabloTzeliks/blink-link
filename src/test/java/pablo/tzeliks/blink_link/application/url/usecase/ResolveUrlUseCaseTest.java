@@ -16,6 +16,7 @@ import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -106,10 +107,11 @@ class ResolveUrlUseCaseTest {
         String shortCode = "HhqS";
         String originalUrl = "https://github.com/PabloTzeliks";
         LocalDateTime now = LocalDateTime.now();
-        Url urlFound = Url.restore(1L, originalUrl, shortCode, now, now.plusDays(7));
+        UUID userId = UUID.randomUUID();
+        Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
-        UrlResponse expectedResponse = new UrlResponse(originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
+        UrlResponse expectedResponse = new UrlResponse(userId, originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
 
         // 1. Repository finds URL by short code
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
