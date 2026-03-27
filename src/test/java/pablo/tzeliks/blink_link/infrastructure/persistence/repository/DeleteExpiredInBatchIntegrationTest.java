@@ -19,6 +19,7 @@ import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntit
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,10 +79,10 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         }
 
         // Act: Delete expired URLs with batch size of 10 (larger than count)
-        int deleted = repository.deleteExpiredInBatch(now, 10);
+        List<String> result = repository.deleteExpiredInBatchReturningCodes(now, 10);
 
         // Assert: Only 3 expired URLs should be deleted
-        assertThat(deleted).isEqualTo(3);
+        assertThat(result.size()).isEqualTo(3);
     }
 
     @Test
@@ -99,10 +100,10 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         }
 
         // Act: Delete with batch size of 2 (smaller than total expired count)
-        int deleted = repository.deleteExpiredInBatch(now, 2);
+        List<String> result = repository.deleteExpiredInBatchReturningCodes(now, 2);
 
         // Assert: Only 2 should be deleted (respecting batch size)
-        assertThat(deleted).isEqualTo(2);
+        assertThat(result.size()).isEqualTo(2);
     }
 
     @Test
@@ -117,10 +118,10 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         repository.save(valid);
 
         // Act
-        int deleted = repository.deleteExpiredInBatch(now, 100);
+        List<String> result = repository.deleteExpiredInBatchReturningCodes(now, 100);
 
         // Assert
-        assertThat(deleted).isZero();
+        assertThat(result).isEmpty();
     }
 
     @Test
