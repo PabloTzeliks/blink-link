@@ -57,10 +57,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
  * @author Pablo Tzeliks
  * @version 2.0.0
  * @since 1.0.0
- * @see ResolveUrlUseCase
+ * @see GetUrlDetailsUseCase
  */
 @ExtendWith(MockitoExtension.class)
-class ResolveUrlUseCaseTest {
+class GetUrlDetailsUseCaseTest {
 
     @Mock
     private UrlRepositoryPort repository;
@@ -69,39 +69,10 @@ class ResolveUrlUseCaseTest {
     private UrlDtoMapper mapper;
 
     @InjectMocks
-    private ResolveUrlUseCase useCase;
+    private GetUrlDetailsUseCase useCase;
 
-    /**
-     * Unit Test: Verifies successful URL resolution from short code.
-     * <p>
-     * <b>Scenario:</b> Happy Path - Short code exists in system
-     * <p>
-     * <b>Given:</b> A valid short code "HhqS" that exists in the repository
-     * <br><b>When:</b> execute() is called with this short code
-     * <br><b>Then:</b> The use case returns a complete UrlResponse with all details
-     * <p>
-     * <b>Mocked Behavior:</b>
-     * <ol>
-     *   <li>Repository returns the URL domain object for the given short code</li>
-     *   <li>Mapper converts the domain object to a DTO response</li>
-     * </ol>
-     * <p>
-     * <b>Assertions:</b>
-     * <ul>
-     *   <li>Response is not null</li>
-     *   <li>Response contains correct original URL</li>
-     *   <li>Response contains correct short URL</li>
-     *   <li>Response contains correct short code</li>
-     * </ul>
-     * <p>
-     * <b>Verification:</b>
-     * <ul>
-     *   <li>Repository's findByShortCode() was called once with correct parameter</li>
-     *   <li>Mapper's toDto() was called once with the domain object</li>
-     * </ul>
-     */
     @Test
-    @DisplayName("Should return UrlResponse when short code exists")
+    @DisplayName("Should return UrlDetailsResponse when short code exists")
     void shouldResolveUrlSuccessfully() {
         // Arrange
         String shortCode = "HhqS";
