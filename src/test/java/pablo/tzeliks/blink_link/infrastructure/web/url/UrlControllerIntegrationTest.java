@@ -20,6 +20,8 @@ import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 import pablo.tzeliks.blink_link.infrastructure.security.adapter.CustomUserDetails;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -89,6 +91,9 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
     @Autowired
     private UrlRepositoryPort repository;
+
+    @Autowired
+    private JpaUserRepository jpaUserRepository;
 
     /**
      * Integration Test: Verifies successful URL shortening via POST endpoint.
@@ -227,12 +232,18 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Test
     @DisplayName("GET /api/v3/urls/{ShortCode} - Should return URL details (Happy Path)")
     void shouldReturnUrlDetails() throws Exception {
-        // Arrange: Pre-insert an URL into the database
+        // Arrange: Create a real user to satisfy FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "detail-user@test.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+
         Long id = repository.nextId();
         LocalDateTime now = LocalDateTime.now();
 
         Url savedUrl = Url.restore(
                 id,
+                userId,
                 "https://rocketseat.com.br",
                 "rocket",
                 now,
@@ -299,11 +310,17 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Test
     @DisplayName("GET /{shortUrl} - Should redirect to original URL (Happy Path)")
     void shouldRedirectSuccessfully() throws Exception {
-        // Arrange
+        // Arrange: Create a real user to satisfy FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "redirect-user@test.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+
         Long id = repository.nextId();
         LocalDateTime now = LocalDateTime.now();
         Url savedUrl = Url.restore(
                 id,
+                userId,
                 "https://github.com/PabloTzeliks",
                 "myGit",
                 now,

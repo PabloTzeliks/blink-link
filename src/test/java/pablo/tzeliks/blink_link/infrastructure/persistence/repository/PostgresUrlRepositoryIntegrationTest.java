@@ -14,6 +14,13 @@ import pablo.tzeliks.blink_link.infrastructure.url.persistence.repository.Postgr
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
+
+import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.model.Role;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -68,6 +75,9 @@ public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase 
 
     @Autowired
     private UrlRepositoryPort repository;
+
+    @Autowired
+    private JpaUserRepository jpaUserRepository;
 
     /**
      * Integration Test: Verifies PostgreSQL sequence ID generation.
@@ -135,14 +145,21 @@ public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase 
     void shouldSaveAnUrlAndFindItByShortCode() {
         // Arrange
 
-        // 1. Generate new ID
+        // 1. Create a real user to satisfy the FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "repo-test@example.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+
+        // 2. Generate new ID
         Long generatedId = repository.nextId();
 
-        // 2. Create new Url
+        // 3. Create new Url
         Url newUrl = Url.restore(
                 generatedId,
+                userId,
                 "https://github.com/PabloTzeliks",
-                "myGitHub",
+                "myGit",
                 LocalDateTime.now(),
                 LocalDateTime.now().plusDays(7)
         );
@@ -151,12 +168,12 @@ public class PostgresUrlRepositoryIntegrationTest extends AbstractContainerBase 
         repository.save(newUrl);
 
         // Assert
-        Optional<Url> foundUrl = repository.findByShortCode("myGitHub");
+        Optional<Url> foundUrl = repository.findByShortCode("myGit");
 
         assertThat(foundUrl).isPresent();
         assertThat(foundUrl.get().getId()).isEqualTo(generatedId);
         assertThat(foundUrl.get().getOriginalUrl()).isEqualTo("https://github.com/PabloTzeliks");
-        assertThat(foundUrl.get().getShortCode()).isEqualTo("myGitHub");
+        assertThat(foundUrl.get().getShortCode()).isEqualTo("myGit");
         assertThat(foundUrl.get().getCreatedAt()).isNotNull();
     }
 
