@@ -44,7 +44,6 @@ public class RedirectUrlUseCase {
         this.mapper = mapper;
     }
 
-    @Transactional(readOnly = true)
     public UrlResponse execute(ResolveUrlRequest request) {
 
         String shortCode = request.shortCode();

@@ -52,6 +52,7 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Url> findByShortCode(String shortCode) {
 
         return repository.findByShortCode(shortCode)
