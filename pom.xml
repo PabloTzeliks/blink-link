@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>pablo.tzeliks</groupId>
 	<artifactId>blinklink</artifactId>
-	<version>3.0.0</version>
+	<version>4.0.0</version>
 	<name>Blink Link</name>
 	<description>An application for an enterprise level URL shortener</description>
 	<packaging>jar</packaging>
