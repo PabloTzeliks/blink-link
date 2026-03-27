@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.domain.url.ports;
+package pablo.tzeliks.blink_link.application.url.ports;
 
 import java.time.Duration;
 import java.util.Optional;
