@@ -114,7 +114,7 @@ public class RedirectUrlUseCaseTest {
         UUID userId = UUID.randomUUID();
         Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
-        long cachingUrlTtl = Math.min(urlFound.getSecondsUntilExpiry(), maxCacheTtlSeconds);
+        long cachingUrlTtl = Math.min(urlFound.getSecondsUntilExpiry(), MAX_CACHE_TTL_SECONDS);
 
         ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
         UrlResponse expectedResponse = new UrlResponse(originalUrl);
