@@ -51,6 +51,8 @@ app:
       batch-size: 5000
       sleep-millis: 100
       cron: "0 0 3 * * *"
+  cache:
+    max-ttl-seconds: 604800
 
 server:
   port: 8080

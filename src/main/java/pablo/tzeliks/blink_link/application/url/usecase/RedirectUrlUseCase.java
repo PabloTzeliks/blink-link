@@ -1,9 +1,10 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
+import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
@@ -12,6 +13,9 @@ import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Optional;
 
 /**
@@ -22,13 +26,16 @@ import java.util.Optional;
  * @see UrlRepositoryPort
  */
 @Service
-public class ResolveUrlUseCase {
+public class RedirectUrlUseCase {
 
     private final UrlRepositoryPort repository;
     private final CachePort cachePort;
     private final UrlDtoMapper mapper;
 
-    public ResolveUrlUseCase(UrlRepositoryPort repository,
+    @Value("${app.cache.max-ttl-seconds:604800}")
+    private long maxCacheTtlSeconds;
+
+    public RedirectUrlUseCase(UrlRepositoryPort repository,
                              CachePort cachePort,
                              UrlDtoMapper mapper) {
 
@@ -38,13 +45,20 @@ public class ResolveUrlUseCase {
     }
 
     @Transactional(readOnly = true)
-    public UrlDetailsResponse execute(ResolveUrlRequest request) {
+    public UrlResponse execute(ResolveUrlRequest request) {
 
         String shortCode = request.shortCode();
 
         // Validates URL format
         if (shortCode == null || shortCode.isEmpty()) {
             throw new InvalidUrlException("Short Code cannot be null or empty");
+        }
+
+        Optional<String> cachedUrl = cachePort.get(shortCode);
+
+        if (cachedUrl.isPresent()) {
+
+            return new UrlResponse(cachedUrl.get());
         }
 
         Url urlDb = repository.findByShortCode(shortCode)
@@ -55,6 +69,11 @@ public class ResolveUrlUseCase {
             throw new UrlExpiredException("URL is expired.");
         }
 
-        return mapper.toDto(urlDb);
+        long domainTtl = urlDb.getSecondsUntilExpiry();
+        Duration finalCacheTtl = Duration.of(Math.min(domainTtl, maxCacheTtlSeconds), ChronoUnit.SECONDS);
+
+        cachePort.put(shortCode, urlDb.getOriginalUrl(), finalCacheTtl);
+
+        return new UrlResponse(urlDb.getOriginalUrl());
     }
 }

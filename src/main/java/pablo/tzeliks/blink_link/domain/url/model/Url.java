@@ -4,6 +4,7 @@ import pablo.tzeliks.blink_link.domain.common.exception.DomainException;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrategy;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -82,6 +83,10 @@ public class Url {
         }
 
         return LocalDateTime.now().isAfter(this.expirationDate);
+    }
+
+    public long getSecondsUntilExpiry() {
+        return Duration.between(LocalDateTime.now(), this.expirationDate).getSeconds();
     }
 
     public Long getId() {

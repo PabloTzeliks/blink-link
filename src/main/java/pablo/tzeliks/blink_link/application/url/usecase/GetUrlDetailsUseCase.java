@@ -22,7 +22,6 @@ public class GetUrlDetailsUseCase {
         this.mapper = mapper;
     }
 
-    @Transactional(readOnly = true)
     public UrlDetailsResponse execute(ResolveUrlRequest request) {
 
         String shortCode = request.shortCode();
