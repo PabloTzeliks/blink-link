@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * @author Pablo Tzeliks
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  */
 public record UrlResponse(
 
+        @JsonProperty("user_id") UUID userId,
         @JsonProperty("original_url") String originalUrl,
         @JsonProperty("short_code") String shortCode,
         @JsonProperty("short_url") String shortUrl,
