@@ -11,5 +11,5 @@ public interface CachePort {
 
     void evict(String key);
 
-    void putIfAbsent(String key, String value, long ttl);
+    void putIfAbsent(String key, String value, long ttlInSeconds);
 }
