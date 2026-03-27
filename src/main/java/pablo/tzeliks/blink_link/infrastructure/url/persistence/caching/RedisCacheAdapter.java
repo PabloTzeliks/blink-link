@@ -4,8 +4,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 
-import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedisCacheAdapter implements CachePort {
@@ -19,8 +19,8 @@ public class RedisCacheAdapter implements CachePort {
     }
 
     @Override
-    public void put(String key, String value, Duration ttl) {
-        redis.opsForValue().set(KEY_PREFIX + key, value, ttl);
+    public void put(String key, String value, long ttl) {
+        redis.opsForValue().set(KEY_PREFIX + key, value, ttl, TimeUnit.SECONDS);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class RedisCacheAdapter implements CachePort {
     }
 
     @Override
-    public void putIfAbsent(String key, String value, Duration ttl) {
-        redis.opsForValue().setIfAbsent(KEY_PREFIX + key, value, ttl);
+    public void putIfAbsent(String key, String value, long ttl) {
+        redis.opsForValue().setIfAbsent(KEY_PREFIX + key, value, ttl, TimeUnit.SECONDS);
     }
 }

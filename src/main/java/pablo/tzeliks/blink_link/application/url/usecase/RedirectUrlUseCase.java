@@ -2,7 +2,6 @@ package pablo.tzeliks.blink_link.application.url.usecase;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
@@ -13,9 +12,6 @@ import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Optional;
 
 /**
@@ -69,7 +65,7 @@ public class RedirectUrlUseCase {
         }
 
         long domainTtl = urlDb.getSecondsUntilExpiry();
-        Duration finalCacheTtl = Duration.of(Math.min(domainTtl, maxCacheTtlSeconds), ChronoUnit.SECONDS);
+        long finalCacheTtl = Math.min(domainTtl, maxCacheTtlSeconds);
 
         cachePort.put(shortCode, urlDb.getOriginalUrl(), finalCacheTtl);
 
