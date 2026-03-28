@@ -1,14 +1,18 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
+import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
@@ -70,6 +74,9 @@ class ShortenUrlUseCaseTest {
     private UrlRepositoryPort repository;
 
     @Mock
+    private CachePort cache;
+
+    @Mock
     private UrlDtoMapper mapper;
 
     @Mock
@@ -78,49 +85,36 @@ class ShortenUrlUseCaseTest {
     @InjectMocks
     private ShortenUrlUseCase shortenUrlUseCase;
 
-    /**
-     * Unit Test: Verifies complete URL shortening workflow orchestration.
-     * <p>
-     * <b>Scenario:</b> Happy Path - All components work together correctly
-     * <p>
-     * <b>Given:</b> A valid long URL to be shortened
-     * <br><b>When:</b> execute() is called
-     * <br><b>Then:</b> The use case orchestrates all steps and returns a complete response
-     * <p>
-     * <b>Workflow Steps Tested:</b>
-     * <ol>
-     *   <li>Repository generates next ID (1000000)</li>
-     *   <li>Shortener encodes ID to Base62 ("HhqS")</li>
-     *   <li>Mapper creates domain model from request + ID + short code</li>
-     *   <li>Repository saves the domain model</li>
-     *   <li>Mapper converts saved model to response DTO</li>
-     * </ol>
-     * <p>
-     * <b>Assertions:</b>
-     * <ul>
-     *   <li>Response is not null</li>
-     *   <li>Response contains correct original URL</li>
-     *   <li>Response contains correct short URL</li>
-     *   <li>Response contains correct short code</li>
-     * </ul>
-     * <p>
-     * <b>Verification:</b>
-     * <ul>
-     *   <li>All mocked methods were called exactly once in the correct order</li>
-     *   <li>Each method received the expected parameters</li>
-     * </ul>
-     * <p>
-     * This test validates the use case's role as an orchestrator, ensuring it
-     * correctly coordinates between the encoder, repository, and mapper layers.
-     */
+    private static final long MAX_CACHE_TTL_SECONDS = 604800L;
+
+    @BeforeEach
+    void setUp() {
+        shortenUrlUseCase = new ShortenUrlUseCase(shortener, repository, userProviderPort, cache, mapper);
+        ReflectionTestUtils.setField(shortenUrlUseCase, "maxCacheTtlSeconds", MAX_CACHE_TTL_SECONDS);
+    }
+
     @Test
-    @DisplayName("Should orchestrate the URL shortening process correctly: Generate ID -> Get Plan -> Encode to Short Code -> Create Domain -> Save -> Map to Response DTO")
+    @DisplayName("Should orchestrate the URL shortening process correctly: Generate ID -> Get Plan -> Encode to Short Code -> Create Domain -> Save -> Add to Cache -> Map to Response DTO")
     void shouldShortAnUrlCorrectly() {
+
         // Arrange
         String originalUrl = "https://github.com/PabloTzeliks";
         Long fakeId = 1000000L;
         String fakeShortCode = "HhqS";
         LocalDateTime now = LocalDateTime.now();
+
+        ArgumentCaptor<Long> ttlCaptor = ArgumentCaptor.forClass(Long.class);
+
+        UUID fakeUserId = UUID.randomUUID();
+
+        Url savedUrl = Url.restore(
+                fakeId,
+                fakeUserId,
+                originalUrl,
+                fakeShortCode,
+                now,
+                now.plusDays(7)
+        );
 
         CreateUrlRequest request = new CreateUrlRequest(originalUrl);
 
@@ -131,13 +125,12 @@ class ShortenUrlUseCaseTest {
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
 
         // 2b. Get current user ID
-        UUID fakeUserId = UUID.randomUUID();
         when(userProviderPort.getCurrentUserId()).thenReturn(fakeUserId);
 
         // 3. Encode ID to Short Code
         when(shortener.encode(fakeId)).thenReturn(fakeShortCode);
 
-        // 4. Save to Repository (Url.create uses LocalDateTime.now() internally)
+        // 4. Save to Repository
         when(repository.save(any(Url.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // 5. Map to Response DTO
@@ -149,6 +142,8 @@ class ShortenUrlUseCaseTest {
                 now,
                 now.plusDays(7)
         );
+
+        long cachingUrlTtl = Math.min(savedUrl.getSecondsUntilExpiry(), MAX_CACHE_TTL_SECONDS);
 
         when(mapper.toDto(any(Url.class))).thenReturn(correctResponse);
 
@@ -166,6 +161,10 @@ class ShortenUrlUseCaseTest {
         verify(userProviderPort).getCurrentUserId();
         verify(shortener).encode(fakeId);
         verify(repository).save(any(Url.class));
+        verify(cache).put(eq(fakeShortCode), eq(originalUrl), ttlCaptor.capture());
+        Long capturedTtl = ttlCaptor.getValue();
+        assertTrue(capturedTtl >= 604790L && capturedTtl <= 604800L,
+                "The TTL cache must be approximately 7 days");
         verify(mapper).toDto(any(Url.class));
     }
 
