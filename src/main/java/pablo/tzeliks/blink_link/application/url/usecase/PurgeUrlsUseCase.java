@@ -36,6 +36,8 @@ public class PurgeUrlsUseCase {
 
             deletedInCurrentBatch = deletedCodes.size();
 
+            totalDeleted += deletedInCurrentBatch;
+
             if (deletedInCurrentBatch > 0 && sleepTime > 0) {
                 sleepForDatabaseRelief();
             }
