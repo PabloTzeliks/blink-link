@@ -59,7 +59,9 @@ public class ShortenUrlUseCase {
         long domainTtl = savedUrl.getSecondsUntilExpiry();
         long finalCacheTtl = Math.min(domainTtl, maxCacheTtlSeconds);
 
-        cachePort.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
+        if (finalCacheTtl > 0) {
+            cachePort.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
+        }
 
         return mapper.toDto(savedUrl);
     }
