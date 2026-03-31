@@ -25,7 +25,7 @@ public class RedisCacheAdapter implements CachePort {
         try {
             redis.opsForValue().set(KEY_PREFIX + key, value, ttl, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.warn("[Redis Fallback] Falha ao salvar (put). Chave: {}. Motivo: {}", key, e.getMessage());
+            log.warn("[Redis Fallback] Fail on saving (put). Key: {}. Reason: {}", key, e.getMessage());
         }
     }
 
@@ -35,8 +35,7 @@ public class RedisCacheAdapter implements CachePort {
             String value = redis.opsForValue().get(KEY_PREFIX + key);
             return Optional.ofNullable(value);
         } catch (Exception e) {
-            // O segredo do fallback: Se falhar, fingimos que foi um "Cache Miss"
-            log.warn("[Redis Fallback] Falha ao buscar (get). Simulando Cache Miss para chave: {}. Motivo: {}", key, e.getMessage());
+            log.warn("[Redis Fallback] Fail on searching (get). Simulates Cache Miss for Key: {}. Reason: {}", key, e.getMessage());
             return Optional.empty();
         }
     }
@@ -46,7 +45,7 @@ public class RedisCacheAdapter implements CachePort {
         try {
             redis.delete(KEY_PREFIX + key);
         } catch (Exception e) {
-            log.warn("[Redis Fallback] Falha ao remover (evict). Chave: {}. Motivo: {}", key, e.getMessage());
+            log.warn("[Redis Fallback] Fail on removing (evict). Key: {}. Reason: {}", key, e.getMessage());
         }
     }
 
@@ -55,7 +54,7 @@ public class RedisCacheAdapter implements CachePort {
         try {
             redis.opsForValue().setIfAbsent(KEY_PREFIX + key, value, ttl, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.warn("[Redis Fallback] Falha ao salvar (putIfAbsent). Chave: {}. Motivo: {}", key, e.getMessage());
+            log.warn("[Redis Fallback] Fail on saving (putIfAbsent). Key: {}. Reason: {}", key, e.getMessage());
         }
     }
 }
