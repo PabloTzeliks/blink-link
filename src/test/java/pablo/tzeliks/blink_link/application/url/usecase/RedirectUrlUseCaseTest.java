@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -20,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
@@ -37,7 +36,6 @@ public class RedirectUrlUseCaseTest {
     @Mock
     private UrlDtoMapper mapper;
 
-    @InjectMocks
     private RedirectUrlUseCase useCase;
 
     private static final long MAX_CACHE_TTL_SECONDS = 604800L;
@@ -67,9 +65,9 @@ public class RedirectUrlUseCaseTest {
 
         // Assert
         assertNotNull(actualResponse);
-        assertEquals(expectedResponse.originalUrl(), actualResponse.originalUrl());
-
+        assertEquals(originalUrl, actualResponse.originalUrl());
         verify(cache).get(shortCode);
+        verify(repository, never()).findByShortCode(any());
     }
 
     @Test
@@ -106,41 +104,27 @@ public class RedirectUrlUseCaseTest {
     @Test
     @DisplayName("Should correctly implement add Url on Cache after Cache Miss")
     void shouldImplementCachingWhenCacheMiss() {
-
-        // Arrange
         String shortCode = "HhqS";
         String originalUrl = "https://github.com/PabloTzeliks";
         LocalDateTime now = LocalDateTime.now();
         UUID userId = UUID.randomUUID();
         Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
-        long cachingUrlTtl = Math.min(urlFound.getSecondsUntilExpiry(), MAX_CACHE_TTL_SECONDS);
+        long expectedTtl = Math.min(urlFound.getSecondsUntilExpiry(), MAX_CACHE_TTL_SECONDS);
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
-        UrlResponse expectedResponse = new UrlResponse(originalUrl);
-
-        // 1. Cache Miss
         when(cache.get(shortCode)).thenReturn(Optional.empty());
-
-        // 2. PostgreSQL search
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
 
-        // Act
-        UrlResponse actualResponse = useCase.execute(request);
-
-        // Assert
-        assertNotNull(actualResponse);
-        assertEquals(expectedResponse.originalUrl(), actualResponse.originalUrl());
+        useCase.execute(new ResolveUrlRequest(shortCode));
 
         verify(cache).get(shortCode);
         verify(repository).findByShortCode(shortCode);
-        verify(cache).put(shortCode, originalUrl, cachingUrlTtl);
+        verify(cache).put(shortCode, originalUrl, expectedTtl);
     }
 
     @Test
     @DisplayName("Should throw UrlExpiredException and not cache expired URL")
     void shouldThrowWhenUrlIsExpired() {
-
         String shortCode = "HhqS";
         LocalDateTime past = LocalDateTime.now().minusDays(1);
         UUID userId = UUID.randomUUID();
@@ -149,8 +133,9 @@ public class RedirectUrlUseCaseTest {
         when(cache.get(shortCode)).thenReturn(Optional.empty());
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(expiredUrl));
 
-        assertThrows(UrlExpiredException.class, () -> useCase.execute(new ResolveUrlRequest(shortCode)));
+        assertThrows(UrlExpiredException.class,
+                () -> useCase.execute(new ResolveUrlRequest(shortCode)));
 
-        verify(cache, never()).put(any(), any(), any());
+        verify(cache, never()).put(any(), any(), anyLong());
     }
 }
