@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 
@@ -24,7 +25,10 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
 
     @BeforeEach
     void setUp() {
-        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
+        redisTemplate.execute((RedisCallback<Object>) connection -> {
+            connection.serverCommands().flushDb();
+            return null;
+        });
     }
 
     @Test
