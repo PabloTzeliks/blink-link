@@ -13,7 +13,6 @@ import java.util.Optional;
  * @since 1.0.0
  */
 public interface UrlRepositoryPort {
-
     Url save(Url url);
 
     Optional<Url> findById(Long id);
@@ -21,4 +20,6 @@ public interface UrlRepositoryPort {
     Optional<Url> findByShortCode(String shortCode);
 
     List<String> deleteExpiredInBatchReturningCodes(LocalDateTime referenceTime, int batchSize);
+
+    Long findMaxId();
 }

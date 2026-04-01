@@ -34,12 +34,6 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
-    public Long nextId() {
-
-        return repository.nextId();
-    }
-
-    @Override
     public Url save(Url url) {
 
         return mapper.toDomain(repository.save(mapper.toEntity(url)));
@@ -81,5 +75,12 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
         query.setParameter("batchSize", batchSize);
 
         return query.getResultList();
+    }
+
+    @Override
+    public Long findMaxId() {
+        return (Long) entityManager
+                .createNativeQuery("SELECT MAX(id) FROM urls")
+                .getSingleResult();
     }
 }
