@@ -53,6 +53,12 @@ app:
       cron: "0 0 3 * * *"
   cache:
     max-ttl-seconds: 604800
+  sequence:
+    redis-key: sequence:url:id
+    fallback-start: 999999
+  url:
+    creation:
+      max-retries: 3
 
 server:
   port: 8080
