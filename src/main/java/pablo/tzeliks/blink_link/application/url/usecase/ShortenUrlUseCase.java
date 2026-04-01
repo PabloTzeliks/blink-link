@@ -82,10 +82,9 @@ public class ShortenUrlUseCase {
 
         try {
             return repository.save(url);
+
         } catch (DataIntegrityViolationException e) {
             log.warn("Collision detected on shortCode {}. Spring will make the Retry.", url.getShortCode());
-
-            sequencePort.resync();
 
             throw new UrlCollisionException("Colisão no banco de dados", e);
         }
