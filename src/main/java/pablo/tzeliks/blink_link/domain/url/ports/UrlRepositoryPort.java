@@ -14,8 +14,6 @@ import java.util.Optional;
  */
 public interface UrlRepositoryPort {
 
-    Long nextId();
-
     Url save(Url url);
 
     Optional<Url> findById(Long id);
