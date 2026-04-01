@@ -20,21 +20,11 @@ import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUs
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Integration tests for the {@code deleteExpiredInBatch} method
- * in {@link PostgresUrlRepositoryAdapter}.
- * <p>
- * Uses {@code @DataJpaTest} with Testcontainers PostgreSQL to validate
- * that the native DELETE query with LIMIT and FOR UPDATE SKIP LOCKED
- * correctly deletes only expired URLs and respects the batch size.
- *
- * @author QA Test Suite
- * @since 3.0.0
- */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({PostgresUrlRepositoryAdapter.class, UrlEntityMapper.class})
@@ -47,6 +37,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
     private JpaUserRepository jpaUserRepository;
 
     private UUID testUserId;
+    private final Random random = new Random(); // Gerador para substituir o SequencePort
 
     @BeforeEach
     void setUp() {
@@ -54,6 +45,11 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         UserEntity userEntity = new UserEntity(testUserId, "batch-test@example.com", "encoded",
                 Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
         jpaUserRepository.saveAndFlush(userEntity);
+    }
+
+    // Método auxiliar para mockar o comportamento do SequencePort
+    private Long generateDummyId() {
+        return Math.abs(random.nextLong());
     }
 
     @Test
@@ -66,14 +62,14 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
 
         // Insert 3 expired URLs
         for (int i = 0; i < 3; i++) {
-            Long id = repository.nextId();
+            Long id = generateDummyId();
             Url expired = Url.restore(id, testUserId, "https://expired-" + i + ".com", "exp" + i, now.minusDays(20), pastDate);
             repository.save(expired);
         }
 
         // Insert 2 valid (non-expired) URLs
         for (int i = 0; i < 2; i++) {
-            Long id = repository.nextId();
+            Long id = generateDummyId();
             Url valid = Url.restore(id, testUserId, "https://valid-" + i + ".com", "val" + i, now, futureDate);
             repository.save(valid);
         }
@@ -94,7 +90,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
 
         // Insert 5 expired URLs
         for (int i = 0; i < 5; i++) {
-            Long id = repository.nextId();
+            Long id = generateDummyId();
             Url expired = Url.restore(id, testUserId, "https://batch-" + i + ".com", "btc" + i, now.minusDays(10), pastDate);
             repository.save(expired);
         }
@@ -113,7 +109,7 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime futureDate = now.plusDays(30);
 
-        Long id = repository.nextId();
+        Long id = generateDummyId();
         Url valid = Url.restore(id, testUserId, "https://valid.com", "noExp", now, futureDate);
         repository.save(valid);
 
@@ -133,12 +129,12 @@ class DeleteExpiredInBatchIntegrationTest extends AbstractContainerBase {
         LocalDateTime futureDate = now.plusDays(30);
 
         // Insert 1 expired URL
-        Long expiredId = repository.nextId();
+        Long expiredId = generateDummyId();
         Url expired = Url.restore(expiredId, testUserId, "https://expired.com", "expd", now.minusDays(10), pastDate);
         repository.save(expired);
 
         // Insert 1 valid URL
-        Long validId = repository.nextId();
+        Long validId = generateDummyId();
         String validShortCode = "valid";
         Url valid = Url.restore(validId, testUserId, "https://valid.com", validShortCode, now, futureDate);
         repository.save(valid);

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import pablo.tzeliks.blink_link.application.url.exception.SequenceGenerationException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
@@ -43,8 +44,13 @@ class RedisSequenceAdapterIntegrationTest extends AbstractContainerBase {
     @Autowired
     private JpaUserRepository userRepository;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("TRUNCATE TABLE urls, users CASCADE");
+
         redisTemplate.getConnectionFactory().getConnection().flushDb();
         redisTemplate.opsForValue().set("sequence:url:id", "1000000");
     }
