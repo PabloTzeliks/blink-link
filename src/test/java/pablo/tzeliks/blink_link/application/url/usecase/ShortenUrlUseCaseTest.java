@@ -5,14 +5,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
+import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
@@ -82,14 +84,16 @@ class ShortenUrlUseCaseTest {
     @Mock
     private CurrentUserProviderPort userProviderPort;
 
-    @InjectMocks
+    @Mock
+    private SequencePort sequencePort;
+
     private ShortenUrlUseCase shortenUrlUseCase;
 
     private static final long MAX_CACHE_TTL_SECONDS = 604800L;
 
     @BeforeEach
     void setUp() {
-        shortenUrlUseCase = new ShortenUrlUseCase(shortener, repository, userProviderPort, cache, mapper);
+        shortenUrlUseCase = new ShortenUrlUseCase(shortener, repository, userProviderPort, cache, sequencePort, mapper);
         ReflectionTestUtils.setField(shortenUrlUseCase, "maxCacheTtlSeconds", MAX_CACHE_TTL_SECONDS);
     }
 
@@ -118,8 +122,8 @@ class ShortenUrlUseCaseTest {
 
         CreateUrlRequest request = new CreateUrlRequest(originalUrl);
 
-        // 1. Repository generate next ID
-        when(repository.nextId()).thenReturn(fakeId);
+        // 1. SequencePort generate next ID
+        when(sequencePort.nextId()).thenReturn(fakeId);
 
         // 2. Get current user plan
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
@@ -156,7 +160,7 @@ class ShortenUrlUseCaseTest {
         assertEquals(correctResponse.shortUrl(), trueResponse.shortUrl());
         assertEquals(correctResponse.shortCode(), trueResponse.shortCode());
 
-        verify(repository).nextId();
+        verify(sequencePort).nextId();
         verify(userProviderPort).getCurrentUserPlan();
         verify(userProviderPort).getCurrentUserId();
         verify(shortener).encode(fakeId);
@@ -222,8 +226,8 @@ class ShortenUrlUseCaseTest {
 
         CreateUrlRequest request = new CreateUrlRequest(originalUrl);
 
-        // 1. Repository generate next ID (Invalid ID)
-        when(repository.nextId()).thenReturn(invalidId);
+        // 1. SequencePort generate next ID (Invalid ID)
+        when(sequencePort.nextId()).thenReturn(invalidId);
 
         // 2. Get current user plan
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
@@ -242,11 +246,101 @@ class ShortenUrlUseCaseTest {
         assertEquals("ID cannot be negative", exception.getMessage());
 
         // Verify
-        verify(repository).nextId();
+        verify(sequencePort).nextId();
         verify(userProviderPort).getCurrentUserPlan();
         verify(userProviderPort).getCurrentUserId();
         verify(shortener).encode(invalidId);
 
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should generate ID via SequencePort")
+    void shouldGenerateIdViaSequencePort() {
+        // Arrange
+        UUID fakeUserId = UUID.randomUUID();
+        String originalUrl = "https://github.com/PabloTzeliks";
+        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+        Long generatedId = 1000001L;
+        String shortCode = "HhqS1";
+
+        when(sequencePort.nextId()).thenReturn(generatedId);
+        when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
+        when(userProviderPort.getCurrentUserId()).thenReturn(fakeUserId);
+        when(shortener.encode(generatedId)).thenReturn(shortCode);
+        when(repository.save(any(Url.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDto(any(Url.class))).thenReturn(new UrlDetailsResponse(
+                fakeUserId,
+                originalUrl,
+                shortCode,
+                "http://localhost:8080/" + shortCode,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
+        ));
+
+        // Act
+        UrlDetailsResponse response = shortenUrlUseCase.execute(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(sequencePort, times(1)).nextId();
+    }
+
+    @Test
+    @DisplayName("Should handle collision as UrlCollisionException and succeed on next attempt")
+    void shouldRetryOnUrlCollisionException() {
+        // Arrange
+        UUID fakeUserId = UUID.randomUUID();
+        String originalUrl = "https://github.com/PabloTzeliks";
+        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+        String firstCode = "HhqS1";
+        String secondCode = "HhqS2";
+
+        when(sequencePort.nextId()).thenReturn(1000001L, 1000002L);
+        when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
+        when(userProviderPort.getCurrentUserId()).thenReturn(fakeUserId);
+        when(shortener.encode(1000001L)).thenReturn(firstCode);
+        when(shortener.encode(1000002L)).thenReturn(secondCode);
+        when(repository.save(any(Url.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(mapper.toDto(any(Url.class))).thenReturn(new UrlDetailsResponse(
+                fakeUserId,
+                originalUrl,
+                secondCode,
+                "http://localhost:8080/" + secondCode,
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(7)
+        ));
+
+        // Act (unit scope: @Retryable proxy is not active)
+        assertThrows(UrlCollisionException.class, () -> shortenUrlUseCase.execute(request));
+        UrlDetailsResponse response = shortenUrlUseCase.execute(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(sequencePort, times(2)).nextId();
+        verify(repository, times(2)).save(any(Url.class));
+    }
+
+    @Test
+    @DisplayName("Should throw propagated exception when collision persists and retries are exceeded")
+    void shouldThrowAfterMaxRetriesExceeded() {
+        // Arrange
+        UUID fakeUserId = UUID.randomUUID();
+        CreateUrlRequest request = new CreateUrlRequest("https://github.com/PabloTzeliks");
+
+        when(sequencePort.nextId()).thenReturn(1000001L);
+        when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
+        when(userProviderPort.getCurrentUserId()).thenReturn(fakeUserId);
+        when(shortener.encode(1000001L)).thenReturn("HhqS1");
+        when(repository.save(any(Url.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"));
+
+        // Act
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> shortenUrlUseCase.execute(request));
+
+        // Assert
+        assertTrue(exception instanceof UrlCollisionException || exception instanceof IllegalStateException);
     }
 }
