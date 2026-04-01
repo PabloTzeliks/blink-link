@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
+import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
@@ -22,11 +23,13 @@ import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 import pablo.tzeliks.blink_link.infrastructure.security.adapter.CustomUserDetails;
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
+import pablo.tzeliks.blink_link.infrastructure.web.common.GlobalExceptionHandler;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -91,6 +94,9 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
     @Autowired
     private UrlRepositoryPort repository;
+
+    @Autowired
+    private SequencePort sequence;
 
     @Autowired
     private JpaUserRepository jpaUserRepository;
@@ -238,7 +244,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
                 Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
         jpaUserRepository.saveAndFlush(userEntity);
 
-        Long id = repository.nextId();
+        Long id = sequence.nextId();
         LocalDateTime now = LocalDateTime.now();
 
         Url savedUrl = Url.restore(
@@ -316,7 +322,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
                 Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
         jpaUserRepository.saveAndFlush(userEntity);
 
-        Long id = repository.nextId();
+        Long id = sequence.nextId();
         LocalDateTime now = LocalDateTime.now();
         Url savedUrl = Url.restore(
                 id,
