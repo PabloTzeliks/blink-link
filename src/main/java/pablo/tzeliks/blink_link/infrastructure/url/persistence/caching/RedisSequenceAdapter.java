@@ -1,24 +1,30 @@
 package pablo.tzeliks.blink_link.infrastructure.url.persistence.caching;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.data.redis.RedisSystemException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.application.url.exception.SequenceGenerationException;
 import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
-import pablo.tzeliks.blink_link.infrastructure.exception.InfraestructureException;
+import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
+@Slf4j
 @Component
 public class RedisSequenceAdapter implements SequencePort {
 
     @Value("${app.sequence.redis-key}")
     private String sequenceKey;
 
-    private final StringRedisTemplate redis;
+    @Value("${app.sequence.fallback-start}")
+    private long fallbackStart;
 
-    public RedisSequenceAdapter(StringRedisTemplate redis) {
+    private final StringRedisTemplate redis;
+    private final UrlRepositoryPort urlRepository;
+
+    public RedisSequenceAdapter(StringRedisTemplate redis, UrlRepositoryPort urlRepository) {
         this.redis = redis;
+        this.urlRepository = urlRepository;
     }
 
     @Override
@@ -32,7 +38,7 @@ public class RedisSequenceAdapter implements SequencePort {
             }
             return id;
 
-        } catch (RedisConnectionFailureException | RedisSystemException e) {
+        } catch (DataAccessException e) {
             throw new SequenceGenerationException("Failed to retrieve next ID due to infrastructure unavailability", e);
         }
     }
