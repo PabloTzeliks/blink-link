@@ -287,7 +287,7 @@ class ShortenUrlUseCaseTest {
     }
 
     @Test
-    @DisplayName("Should handle collision as UrlCollisionException and succeed on next attempt")
+    @DisplayName("Should throw UrlCollisionException on first call and succeed on manual second attempt")
     void shouldRetryOnUrlCollisionException() {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
@@ -313,7 +313,7 @@ class ShortenUrlUseCaseTest {
                 LocalDateTime.now().plusDays(7)
         ));
 
-        // Act (unit scope: @Retryable proxy is not active)
+        // Act (unit scope: @Retryable proxy is not active, so we simulate a manual second attempt)
         assertThrows(UrlCollisionException.class, () -> shortenUrlUseCase.execute(request));
         UrlDetailsResponse response = shortenUrlUseCase.execute(request);
 
@@ -338,9 +338,9 @@ class ShortenUrlUseCaseTest {
                 .thenThrow(new DataIntegrityViolationException("duplicate key"));
 
         // Act
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> shortenUrlUseCase.execute(request));
+        UrlCollisionException exception = assertThrows(UrlCollisionException.class, () -> shortenUrlUseCase.execute(request));
 
         // Assert
-        assertTrue(exception instanceof UrlCollisionException || exception instanceof IllegalStateException);
+        assertEquals("Colisão no banco de dados", exception.getMessage());
     }
 }
