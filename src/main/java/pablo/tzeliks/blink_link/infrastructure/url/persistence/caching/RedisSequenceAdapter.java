@@ -29,31 +29,36 @@ public class RedisSequenceAdapter implements SequencePort {
 
     @Override
     public Long nextId() {
-
         try {
             Long id = redis.opsForValue().increment(sequenceKey);
 
             if (id == null) {
-                throw new SequenceGenerationException("Failed to generate sequence: returned null", null);
+                throw new SequenceGenerationException("Redis INCR returned null", null);
             }
+
+            Long maxId = urlRepository.findMaxId();
+            long safeFloor = maxId != null ? maxId : fallbackStart;
+
+            if (id <= safeFloor) {
+                log.warn("Sequence drift detected. Redis returned {}. PostgreSQL MAX(id) is {}. Resyncing.", id, safeFloor);
+
+                id = resync(safeFloor);
+            }
+
             return id;
 
         } catch (DataAccessException e) {
-            throw new SequenceGenerationException("Failed to retrieve next ID due to infrastructure unavailability", e);
+            throw new SequenceGenerationException("Redis unavailable for sequence generation", e);
         }
     }
 
-    @Override
-    public void resync() {
-        try {
-            Long maxId = urlRepository.findMaxId();
-            long startFrom = maxId != null ? maxId : fallbackStart;
+    private Long resync(long safeFloor) {
 
-            redis.opsForValue().set(sequenceKey, String.valueOf(startFrom));
+        redis.opsForValue().set(sequenceKey, String.valueOf(safeFloor));
+        Long id = redis.opsForValue().increment(sequenceKey);
 
-            log.info("Self-healing: Redis sequence resynchronized to {}", startFrom);
-        } catch (Exception e) {
-            log.error("Failed trying to resynchronize the Redis Sequence", e);
-        }
+        log.info("Sequence resynced. New ID: {}", id);
+
+        return id;
     }
 }
