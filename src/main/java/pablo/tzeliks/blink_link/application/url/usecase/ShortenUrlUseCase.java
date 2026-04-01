@@ -3,11 +3,12 @@ package pablo.tzeliks.blink_link.application.url.usecase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.redis.RedisConnectionFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
+import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
@@ -18,7 +19,6 @@ import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrategy;
 import pablo.tzeliks.blink_link.domain.url.strategy.factory.ExpirationStrategyFactory;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
-import pablo.tzeliks.blink_link.infrastructure.exception.InfraestructureException;
 
 import java.util.UUID;
 
@@ -53,45 +53,38 @@ public class ShortenUrlUseCase {
         this.mapper = mapper;
     }
 
-    @Transactional
+    @Retryable(
+            retryFor = { UrlCollisionException.class },
+            maxAttemptsExpression = "${app.url.creation.max-retries:3}",
+            backoff = @Backoff(delay = 100)
+    )
     public UrlDetailsResponse execute(CreateUrlRequest request) {
 
         Plan userPlan = userProviderPort.getCurrentUserPlan();
         UUID userId = userProviderPort.getCurrentUserId();
         ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
 
+        Long id = sequencePort.nextId();
+        String shortCode = shortener.encode(id);
+        Url url = Url.create(id, userId, request.originalUrl(), shortCode, strategy);
 
-        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        Url savedUrl = saveUrlToDatabase(url);
 
-            try {
-                Long id = sequencePort.nextId();
-
-                String shortCode = shortener.encode(id);
-
-                Url url = Url.create(id, userId, request.originalUrl(), shortCode, strategy);
-                Url savedUrl = repository.save(url);
-
-                long domainTtl = savedUrl.getSecondsUntilExpiry();
-                long finalCacheTtl = Math.min(domainTtl, maxCacheTtlSeconds);
-
-                if (finalCacheTtl > 0) {
-                    cachePort.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
-                }
-
-                return mapper.toDto(savedUrl);
-
-            } catch (DataIntegrityViolationException e) {
-                log.warn("short_code collision on attempt {}. Retrying.", attempt);
-
-            } catch (RedisConnectionFailureException e) {
-                log.error("Redis unavailable on attempt {}.", attempt);
-            }
-
-            if (attempt == maxRetries) {
-                throw new IllegalStateException("Failed after " + maxRetries + " attempts.");
-            }
+        long finalCacheTtl = Math.min(savedUrl.getSecondsUntilExpiry(), maxCacheTtlSeconds);
+        if (finalCacheTtl > 0) {
+            cachePort.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
         }
 
-        throw new InfraestructureException("Redis may be Unavailable.");
+        return mapper.toDto(savedUrl);
+    }
+
+    private Url saveUrlToDatabase(Url url) {
+
+        try {
+            return repository.save(url);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Collision detected on shortCode {}. Spring will make the Retry.", url.getShortCode());
+            throw new UrlCollisionException("Colisão no banco de dados", e);
+        }
     }
 }
