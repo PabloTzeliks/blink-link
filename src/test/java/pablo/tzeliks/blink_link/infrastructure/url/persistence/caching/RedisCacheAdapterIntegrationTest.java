@@ -5,14 +5,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
@@ -85,5 +90,58 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
         cacheAdapter.putIfAbsent("newcode", "https://example.com", 60L);
 
         assertThat(redisTemplate.opsForValue().get("url:newcode")).isEqualTo("https://example.com");
+    }
+
+    @Test
+    @DisplayName("fallback: get returns empty and does not throw exception when Redis fails")
+    void fallback_getReturnsEmptyWhenRedisFails() {
+        // Arrange:
+        StringRedisTemplate brokenRedisTemplate = mock(StringRedisTemplate.class);
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+
+        when(brokenRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(valueOperations.get(anyString())).thenThrow(new RedisConnectionFailureException("Connection refused"));
+
+        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate);
+
+        // Act & Assert:
+        assertThatCode(() -> {
+            Optional<String> result = fallbackAdapter.get("xyz");
+            assertThat(result).isEmpty();
+        }).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("fallback: put fails silently when Redis is down")
+    void fallback_putFailsSilentlyWhenRedisIsDown() {
+        // Arrange
+        StringRedisTemplate brokenRedisTemplate = mock(StringRedisTemplate.class);
+        ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
+
+        when(brokenRedisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(brokenRedisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        doThrow(new RuntimeException("Redis Timeout"))
+                .when(valueOperations).set(anyString(), anyString(), anyLong(), any());
+
+        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate);
+
+        // Act & Assert
+        assertThatCode(() -> fallbackAdapter.put("abc", "https://example.com", 60L))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("fallback: evict fails silently when Redis is down")
+    void fallback_evictFailsSilentlyWhenRedisIsDown() {
+        // Arrange
+        StringRedisTemplate brokenRedisTemplate = mock(StringRedisTemplate.class);
+        when(brokenRedisTemplate.delete(anyString())).thenThrow(new RedisConnectionFailureException("Node unavailable"));
+
+        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate);
+
+        // Act & Assert
+        assertThatCode(() -> fallbackAdapter.evict("abc"))
+                .doesNotThrowAnyException();
     }
 }

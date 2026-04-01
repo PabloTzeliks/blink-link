@@ -42,7 +42,7 @@ public class RedirectUrlUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new RedirectUrlUseCase(repository, cache, mapper);
+        useCase = new RedirectUrlUseCase(repository, cache);
         ReflectionTestUtils.setField(useCase, "maxCacheTtlSeconds", MAX_CACHE_TTL_SECONDS);
     }
 
@@ -119,7 +119,11 @@ public class RedirectUrlUseCaseTest {
 
         verify(cache).get(shortCode);
         verify(repository).findByShortCode(shortCode);
-        verify(cache).put(shortCode, originalUrl, expectedTtl);
+        verify(cache).put(
+                eq("HhqS"),
+                eq("https://github.com/PabloTzeliks"),
+                longThat(ttl -> ttl >= 604795L && ttl <= 604800L)
+        );
     }
 
     @Test

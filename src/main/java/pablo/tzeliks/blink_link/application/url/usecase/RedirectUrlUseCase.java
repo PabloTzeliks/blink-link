@@ -26,18 +26,13 @@ public class RedirectUrlUseCase {
 
     private final UrlRepositoryPort repository;
     private final CachePort cachePort;
-    private final UrlDtoMapper mapper;
 
     @Value("${app.cache.max-ttl-seconds:604800}")
     private long maxCacheTtlSeconds;
 
-    public RedirectUrlUseCase(UrlRepositoryPort repository,
-                             CachePort cachePort,
-                             UrlDtoMapper mapper) {
-
+    public RedirectUrlUseCase(UrlRepositoryPort repository, CachePort cachePort) {
         this.repository = repository;
         this.cachePort = cachePort;
-        this.mapper = mapper;
     }
 
     public UrlResponse execute(ResolveUrlRequest request) {
