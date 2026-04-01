@@ -42,4 +42,18 @@ public class RedisSequenceAdapter implements SequencePort {
             throw new SequenceGenerationException("Failed to retrieve next ID due to infrastructure unavailability", e);
         }
     }
+
+    @Override
+    public void resync() {
+        try {
+            Long maxId = urlRepository.findMaxId();
+            long startFrom = maxId != null ? maxId : fallbackStart;
+
+            redis.opsForValue().set(sequenceKey, String.valueOf(startFrom));
+
+            log.info("Self-healing: Redis sequence resynchronized to {}", startFrom);
+        } catch (Exception e) {
+            log.error("Failed trying to resynchronize the Redis Sequence", e);
+        }
+    }
 }
