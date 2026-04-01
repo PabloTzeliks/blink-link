@@ -79,8 +79,11 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
 
     @Override
     public Long findMaxId() {
-        return (Long) entityManager
-                .createNativeQuery("SELECT MAX(id) FROM urls")
+
+        Object queryResult = entityManager
+                .createNativeQuery("SELECT COALESCE(MAX(id), 0) FROM urls")
                 .getSingleResult();
+
+        return ((Number) queryResult).longValue();
     }
 }
