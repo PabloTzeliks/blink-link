@@ -12,6 +12,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import pablo.tzeliks.blink_link.application.url.exception.SequenceGenerationException;
+import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.domain.common.exception.*;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
@@ -111,6 +113,18 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND,
                 "Resource Not Found",
                 "The requested endpoint or resource does not exist.",
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(SequenceGenerationException.class)
+    public ResponseEntity<ErrorResponse> handleSequenceGenerationError(SequenceGenerationException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "ID Generation Failed",
+                "Service unavailable at this moment. Not able to generate a Short Url.",
                 request.getRequestURI(),
                 null
         );
