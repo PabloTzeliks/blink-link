@@ -32,10 +32,6 @@ public class RedisSequenceAdapter implements SequencePort {
         try {
             Long id = redis.opsForValue().increment(sequenceKey);
 
-            if (id == null) {
-                throw new SequenceGenerationException("Redis INCR returned null", null);
-            }
-
             Long maxId = urlRepository.findMaxId();
             long safeFloor = maxId != null ? maxId : fallbackStart;
 
