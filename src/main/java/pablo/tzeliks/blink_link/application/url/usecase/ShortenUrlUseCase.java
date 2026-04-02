@@ -6,6 +6,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
@@ -50,6 +51,7 @@ public class ShortenUrlUseCase {
         this.mapper = mapper;
     }
 
+    @Transactional
     @Retryable(
             retryFor = { UrlCollisionException.class },
             maxAttemptsExpression = "${app.url.creation.max-retries:3}",
