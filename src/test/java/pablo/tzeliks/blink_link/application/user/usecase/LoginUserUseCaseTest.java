@@ -10,12 +10,12 @@ import pablo.tzeliks.blink_link.application.user.dto.AuthResponse;
 import pablo.tzeliks.blink_link.application.user.dto.LoginUserRequest;
 import pablo.tzeliks.blink_link.application.user.dto.UserResponse;
 import pablo.tzeliks.blink_link.application.user.mapper.UserDtoMapper;
+import pablo.tzeliks.blink_link.application.user.ports.TokenGenerationPort;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidEmailException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
-import pablo.tzeliks.blink_link.application.user.ports.TokenGenerationPort;
 import pablo.tzeliks.blink_link.domain.user.ports.UserPasswordEncoderPort;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 

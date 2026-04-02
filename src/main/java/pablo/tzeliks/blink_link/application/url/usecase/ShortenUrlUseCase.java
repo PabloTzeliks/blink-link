@@ -36,9 +36,6 @@ public class ShortenUrlUseCase {
     @Value("${app.cache.max-ttl-seconds:604800}")
     private long maxCacheTtlSeconds;
 
-    @Value("${app.url.creation.max-retries}")
-    private int maxRetries;
-
     public ShortenUrlUseCase(ShortenerPort shortener,
                              UrlRepositoryPort repository,
                              CurrentUserProviderPort userProviderPort,
