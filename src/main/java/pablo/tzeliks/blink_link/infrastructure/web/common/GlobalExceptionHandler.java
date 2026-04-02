@@ -124,7 +124,7 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "ID Generation Failed",
-                "Service unavailable at this moment. Not able to generate a Short Url.",
+                "The service is temporarily unavailable and cannot generate a short URL.",
                 request.getRequestURI(),
                 null
         );
