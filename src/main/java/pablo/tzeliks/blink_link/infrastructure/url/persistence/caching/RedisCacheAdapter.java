@@ -41,6 +41,17 @@ public class RedisCacheAdapter implements CachePort {
     }
 
     @Override
+    public boolean exists(String key) {
+
+        try {
+            return Boolean.TRUE.equals(redis.hasKey(KEY_PREFIX + key));
+        } catch (Exception e) {
+            log.warn("[Redis Fallback] Fail on checking existence (exists). Key: {}. Reason: {}", key, e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
     public void evict(String key) {
         try {
             redis.delete(KEY_PREFIX + key);
