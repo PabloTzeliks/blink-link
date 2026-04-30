@@ -30,7 +30,7 @@ public class SequenceInitializer {
     public void initialize() {
 
         Long maxId = urlRepository.findMaxId();
-        long startFrom = maxId != null ? maxId : fallbackStart;
+        long startFrom = Math.max(maxId != null ? maxId : 0L, fallbackStart);
 
         Boolean set = redis.opsForValue().setIfAbsent(sequenceKey, String.valueOf(startFrom));
 
