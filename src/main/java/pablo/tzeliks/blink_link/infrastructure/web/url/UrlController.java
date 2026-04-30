@@ -1,13 +1,13 @@
 package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityResponse;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
+import pablo.tzeliks.blink_link.application.url.dto.*;
 import pablo.tzeliks.blink_link.application.url.usecase.CheckCodeAvailabilityUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.GetUrlDetailsUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
@@ -19,6 +19,7 @@ import java.net.URI;
  * @version 4.0.0
  * @since 1.0.0
  */
+@Validated
 @RestController()
 @RequestMapping("api/v3/urls")
 public class UrlController {
@@ -62,6 +63,8 @@ public class UrlController {
     @GetMapping("/codes/{code}/availability")
     public ResponseEntity<CodeAvailabilityResponse> check(@PathVariable String code) {
 
-        return ResponseEntity.ok(checkCodeUseCase.execute(code));
+        CodeAvailabilityRequest request = new CodeAvailabilityRequest(code);
+
+        return ResponseEntity.ok(checkCodeUseCase.execute(request));
     }
 }
