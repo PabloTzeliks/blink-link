@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
@@ -80,7 +80,7 @@ class GetUrlDetailsUseCaseTest {
         UUID userId = UUID.randomUUID();
         Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
         UrlDetailsResponse expectedResponse = new UrlDetailsResponse(userId, originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
 
         // 1. Repository finds URL by short code
@@ -130,7 +130,7 @@ class GetUrlDetailsUseCaseTest {
     void shouldThrowExceptionWhenRequestEmpty() {
         // Arrange
         String blankCode = "";
-        ResolveUrlRequest request = new ResolveUrlRequest(blankCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(blankCode);
 
         // Act & Assert
         assertThrows(InvalidUrlException.class,
@@ -175,7 +175,7 @@ class GetUrlDetailsUseCaseTest {
     void shouldThrowExceptionWhenUrlNotFound() {
         // Arrange
         String nonExistentCode = "ghost";
-        ResolveUrlRequest request = new ResolveUrlRequest(nonExistentCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(nonExistentCode);
 
         // 1. Repository returns empty when searching for non-existent short code
         when(repository.findByShortCode(nonExistentCode)).thenReturn(Optional.empty());

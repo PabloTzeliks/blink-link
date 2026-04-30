@@ -2,7 +2,7 @@ package pablo.tzeliks.blink_link.application.url.usecase;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.ports.CachePort;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
@@ -34,7 +34,7 @@ public class RedirectUrlUseCase {
         this.cachePort = cachePort;
     }
 
-    public UrlResponse execute(ResolveUrlRequest request) {
+    public UrlResponse execute(ResolveShortCodeRequest request) {
 
         String shortCode = request.shortCode();
 

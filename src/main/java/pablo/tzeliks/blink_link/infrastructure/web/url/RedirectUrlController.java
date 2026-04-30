@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.usecase.RedirectUrlUseCase;
 
 import java.net.URI;
@@ -28,7 +28,7 @@ public class RedirectUrlController {
     @GetMapping("/{shortUrl}")
     public ResponseEntity<Void> redirect(@PathVariable String shortUrl) {
 
-        var request = new ResolveUrlRequest(shortUrl);
+        var request = new ResolveShortCodeRequest(shortUrl);
         var response = resolveUrl.execute(request);
 
         return ResponseEntity
