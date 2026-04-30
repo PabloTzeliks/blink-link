@@ -4,9 +4,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
+import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityResponse;
 import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
+import pablo.tzeliks.blink_link.application.url.usecase.CheckCodeAvailabilityUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.GetUrlDetailsUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
 
@@ -23,10 +25,15 @@ public class UrlController {
 
     private final ShortenUrlUseCase shortenUrl;
     private final GetUrlDetailsUseCase urlDetailsUseCase;
+    private final CheckCodeAvailabilityUseCase checkCodeUseCase;
 
-    public UrlController(ShortenUrlUseCase shortenUrl, GetUrlDetailsUseCase urlDetailsUseCase) {
+    public UrlController(ShortenUrlUseCase shortenUrl,
+                         GetUrlDetailsUseCase urlDetailsUseCase,
+                         CheckCodeAvailabilityUseCase checkCodeUseCase) {
+
         this.shortenUrl = shortenUrl;
         this.urlDetailsUseCase = urlDetailsUseCase;
+        this.checkCodeUseCase = checkCodeUseCase;
     }
 
     @PostMapping("/shorten")
@@ -50,5 +57,11 @@ public class UrlController {
 
         UrlDetailsResponse response = urlDetailsUseCase.execute(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/codes/{code}/availability")
+    public ResponseEntity<CodeAvailabilityResponse> check(@PathVariable String code) {
+
+        return ResponseEntity.ok(checkCodeUseCase.execute(code));
     }
 }
