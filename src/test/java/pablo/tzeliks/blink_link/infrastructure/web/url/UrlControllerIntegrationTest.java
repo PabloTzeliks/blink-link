@@ -2,10 +2,12 @@ package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,6 +102,9 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
     @Autowired
     private JpaUserRepository jpaUserRepository;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     /**
      * Integration Test: Verifies successful URL shortening via POST endpoint.
@@ -364,5 +369,92 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         mockMvc.perform(get("/nao-existe"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Resource Not Found"));
+    }
+
+    @Nested
+    @DisplayName("GET /api/v3/urls/codes/{code}/availability")
+    class CheckCodeAvailabilityTests {
+
+        @Test
+        @DisplayName("Should return 200 with available true when the code is free")
+        void shouldReturn200_available_whenCodeIsFree() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/freecode/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(true))
+                    .andExpect(jsonPath("$.code").value("freecode"));
+        }
+
+        @Test
+        @DisplayName("Should return 200 with available false when the code exists in the database")
+        void shouldReturn200_unavailable_whenCodeExistsInDb() throws Exception {
+            UUID userId = UUID.randomUUID();
+            UserEntity userEntity = new UserEntity(userId, "avail-db@test.com", "encoded",
+                    Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+            jpaUserRepository.saveAndFlush(userEntity);
+
+            Long id = sequence.nextId();
+            Url savedUrl = Url.restore(id, userId, "https://example.com", "taken", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+            repository.save(savedUrl);
+
+            mockMvc.perform(get("/api/v3/urls/codes/taken/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(false));
+        }
+
+        @Test
+        @DisplayName("Should return 200 with available false when the code exists in Redis")
+        void shouldReturn200_unavailable_whenCodeExistsInRedis() throws Exception {
+            redisTemplate.opsForValue().set("url:taken2", "https://example.com");
+
+            mockMvc.perform(get("/api/v3/urls/codes/taken2/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(false));
+        }
+
+        @Test
+        @DisplayName("Should return 401 when the request is not authenticated")
+        void shouldReturn401_whenNotAuthenticated() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/somecode/availability"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Should return 422 when the code is shorter than 4 characters")
+        void shouldReturn422_whenCodeTooShort() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abc/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.title").value("Validation Failed"));
+        }
+
+        @Test
+        @DisplayName("Should return 422 when the code contains an invalid character (space)")
+        void shouldReturn422_whenCodeHasInvalidCharacter() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/{code}/availability", "my link")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isUnprocessableEntity())
+                    .andExpect(jsonPath("$.title").value("Validation Failed"));
+        }
+
+        @Test
+        @DisplayName("Should return 200 when the code is exactly at minimum length (4 characters)")
+        void shouldReturn200_whenCodeIsAtMinLength() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abcd/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").exists());
+        }
+
+        @Test
+        @DisplayName("Should return 200 when the code is exactly at maximum length (20 characters)")
+        void shouldReturn200_whenCodeIsAtMaxLength() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abcdefghij1234567890/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").exists());
+        }
     }
 }
