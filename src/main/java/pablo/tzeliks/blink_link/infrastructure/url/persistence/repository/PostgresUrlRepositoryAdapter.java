@@ -55,6 +55,12 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
+    public boolean existsByShortCode(String shortCode) {
+
+        return repository.existsByShortCode(shortCode);
+    }
+
+    @Override
     @Transactional
     public List<String> deleteExpiredInBatchReturningCodes(LocalDateTime referenceTime, int batchSize) {
 

@@ -19,6 +19,8 @@ public interface UrlRepositoryPort {
 
     Optional<Url> findByShortCode(String shortCode);
 
+    boolean existsByShortCode(String shortCode);
+
     List<String> deleteExpiredInBatchReturningCodes(LocalDateTime referenceTime, int batchSize);
 
     Long findMaxId();
