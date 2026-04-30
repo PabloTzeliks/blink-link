@@ -7,7 +7,7 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
@@ -57,7 +57,7 @@ public class ShortenUrlUseCase {
             maxAttemptsExpression = "${app.url.creation.max-retries:3}",
             backoff = @Backoff(delay = 100)
     )
-    public UrlDetailsResponse execute(CreateUrlRequest request) {
+    public UrlDetailsResponse execute(CreateShortCodeRequest request) {
 
         Plan userPlan = userProviderPort.getCurrentUserPlan();
         UUID userId = userProviderPort.getCurrentUserId();

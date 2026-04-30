@@ -1,8 +1,6 @@
 package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -38,23 +36,24 @@ public class UrlController {
     }
 
     @PostMapping("/shorten")
-    public ResponseEntity<UrlDetailsResponse> encode(@Valid @RequestBody CreateUrlRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<UrlDetailsResponse> encode(@Valid @RequestBody CreateShortCodeRequest request, UriComponentsBuilder uriBuilder) {
 
-        UrlDetailsResponse response = shortenUrl.execute(request);
+        UrlDetailsResponse response = request.customCode() != null
+                ? createCustomCode.execute(request)
+                : shortenUrl.execute(request);
 
-        URI pathLocation = uriBuilder.path("/api/v2/urls/{shortCode}")
+        URI location = uriBuilder
+                .path("/api/v3/urls/{shortCode}")
                 .buildAndExpand(response.shortCode())
                 .toUri();
 
-        return ResponseEntity
-                .created(pathLocation)
-                .body(response);
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping("/{shortCode}")
     public ResponseEntity<UrlDetailsResponse> access(@PathVariable String shortCode) {
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
 
         UrlDetailsResponse response = urlDetailsUseCase.execute(request);
         return ResponseEntity.ok(response);

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.application.url.ports.CachePort;
@@ -52,7 +52,7 @@ public class RedirectUrlUseCaseTest {
         String shortCode = "HhqS";
         String originalUrl = "https://github.com/PabloTzeliks";
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
         UrlResponse expectedResponse = new UrlResponse(originalUrl);
 
         // 1. Cache Hit
@@ -79,7 +79,7 @@ public class RedirectUrlUseCaseTest {
         UUID userId = UUID.randomUUID();
         Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
         UrlResponse expectedResponse = new UrlResponse(originalUrl);
 
         // 1. Cache Miss
@@ -113,7 +113,7 @@ public class RedirectUrlUseCaseTest {
         when(cache.get(shortCode)).thenReturn(Optional.empty());
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
 
-        useCase.execute(new ResolveUrlRequest(shortCode));
+        useCase.execute(new ResolveShortCodeRequest(shortCode));
 
         verify(cache).get(shortCode);
         verify(repository).findByShortCode(shortCode);
@@ -136,7 +136,7 @@ public class RedirectUrlUseCaseTest {
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(expiredUrl));
 
         assertThrows(UrlExpiredException.class,
-                () -> useCase.execute(new ResolveUrlRequest(shortCode)));
+                () -> useCase.execute(new ResolveShortCodeRequest(shortCode)));
 
         verify(cache, never()).put(any(), any(), anyLong());
     }

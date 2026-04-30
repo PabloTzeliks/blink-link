@@ -9,7 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
@@ -120,7 +120,7 @@ class ShortenUrlUseCaseTest {
                 now.plusDays(7)
         );
 
-        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
 
         // 1. SequencePort generate next ID
         when(sequencePort.nextId()).thenReturn(fakeId);
@@ -224,7 +224,7 @@ class ShortenUrlUseCaseTest {
         String originalUrl = "https://github.com/PabloTzeliks";
         Long invalidId = -1L;
 
-        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
 
         // 1. SequencePort generate next ID (Invalid ID)
         when(sequencePort.nextId()).thenReturn(invalidId);
@@ -260,7 +260,7 @@ class ShortenUrlUseCaseTest {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
         String originalUrl = "https://github.com/PabloTzeliks";
-        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
         Long generatedId = 1000001L;
         String shortCode = "HhqS1";
 
@@ -292,7 +292,7 @@ class ShortenUrlUseCaseTest {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
         String originalUrl = "https://github.com/PabloTzeliks";
-        CreateUrlRequest request = new CreateUrlRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
         String firstCode = "HhqS1";
         String secondCode = "HhqS2";
 
@@ -328,7 +328,7 @@ class ShortenUrlUseCaseTest {
     void shouldThrowAfterMaxRetriesExceeded() {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
-        CreateUrlRequest request = new CreateUrlRequest("https://github.com/PabloTzeliks");
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://github.com/PabloTzeliks");
 
         when(sequencePort.nextId()).thenReturn(1000001L);
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);

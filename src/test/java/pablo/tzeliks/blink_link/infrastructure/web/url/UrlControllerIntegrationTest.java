@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
@@ -129,7 +129,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @DisplayName("POST /shorten - Should create a short URL successfully (Happy Path)")
     void shouldCreateShortUrl() throws Exception {
         // Arrange
-        CreateUrlRequest request = new CreateUrlRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/");
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/");
         String jsonRequest = objectMapper.writeValueAsString(request);
 
         User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),
