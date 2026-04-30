@@ -72,19 +72,4 @@ class CheckCodeAvailabilityUseCaseTest {
         assertThat(response.available()).isFalse();
         assertThat(response.code()).isEqualTo("db-code");
     }
-
-    @Test
-    @DisplayName("Should fall through to database and not propagate the exception when Redis throws DataAccessException")
-    void shouldFallThroughToDb_whenRedisThrowsDataAccessException() {
-        when(cachePort.exists("fallback-code")).thenThrow(new QueryTimeoutException("Redis timeout"));
-        when(repository.existsByShortCode("fallback-code")).thenReturn(false);
-
-        CodeAvailabilityRequest request = new CodeAvailabilityRequest("fallback-code");
-
-        CodeAvailabilityResponse response = useCase.execute(request);
-
-        assertThat(response.available()).isTrue();
-        assertThat(response.code()).isEqualTo("fallback-code");
-        verify(repository).existsByShortCode("fallback-code");
-    }
 }

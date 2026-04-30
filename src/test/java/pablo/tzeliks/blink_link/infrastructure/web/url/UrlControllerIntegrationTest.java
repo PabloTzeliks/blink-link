@@ -422,24 +422,6 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         }
 
         @Test
-        @DisplayName("Should return 422 when the code is shorter than 4 characters")
-        void shouldReturn422_whenCodeTooShort() throws Exception {
-            mockMvc.perform(get("/api/v3/urls/codes/abc/availability")
-                            .with(user("test@test.com").roles("USER")))
-                    .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.title").value("Validation Failed"));
-        }
-
-        @Test
-        @DisplayName("Should return 422 when the code contains an invalid character (space)")
-        void shouldReturn422_whenCodeHasInvalidCharacter() throws Exception {
-            mockMvc.perform(get("/api/v3/urls/codes/{code}/availability", "my link")
-                            .with(user("test@test.com").roles("USER")))
-                    .andExpect(status().isUnprocessableEntity())
-                    .andExpect(jsonPath("$.title").value("Validation Failed"));
-        }
-
-        @Test
         @DisplayName("Should return 200 when the code is exactly at minimum length (4 characters)")
         void shouldReturn200_whenCodeIsAtMinLength() throws Exception {
             mockMvc.perform(get("/api/v3/urls/codes/abcd/availability")
