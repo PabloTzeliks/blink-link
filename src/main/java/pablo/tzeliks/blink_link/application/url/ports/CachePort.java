@@ -8,6 +8,8 @@ public interface CachePort {
 
     Optional<String> get(String key);
 
+    boolean exists(String key);
+
     void evict(String key);
 
     void putIfAbsent(String key, String value, long ttlInSeconds);
