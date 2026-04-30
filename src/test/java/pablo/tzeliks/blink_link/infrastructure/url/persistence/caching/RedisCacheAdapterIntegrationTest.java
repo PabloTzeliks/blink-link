@@ -2,6 +2,7 @@ package pablo.tzeliks.blink_link.infrastructure.url.persistence.caching;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,6 +14,8 @@ import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -143,5 +146,34 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
         // Act & Assert
         assertThatCode(() -> fallbackAdapter.evict("abc"))
                 .doesNotThrowAnyException();
+    }
+
+    @Nested
+    @DisplayName("exists()")
+    class ExistsTests {
+
+        @Test
+        @DisplayName("Should return true when key exists in Redis")
+        void shouldReturnTrue_whenKeyExists() {
+            redisTemplate.opsForValue().set("url:present-key", "https://example.com");
+
+            assertThat(cacheAdapter.exists("present-key")).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should return false when key does not exist in Redis")
+        void shouldReturnFalse_whenKeyDoesNotExist() {
+            assertThat(cacheAdapter.exists("missing-key")).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return false after key TTL expires")
+        void shouldReturnFalse_afterTtlExpires() throws InterruptedException {
+            redisTemplate.opsForValue().set("url:expiring-key", "https://example.com", 1, SECONDS);
+
+            Thread.sleep(1100);
+
+            assertThat(cacheAdapter.exists("expiring-key")).isFalse();
+        }
     }
 }
