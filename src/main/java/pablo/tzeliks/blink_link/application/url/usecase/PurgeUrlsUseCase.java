@@ -9,17 +9,17 @@ import java.util.List;
 public class PurgeUrlsUseCase {
 
     private final UrlRepositoryPort repository;
-    private final CachePort cachePort;
+    private final CachePort cache;
     private final int batchSize;
     private final long sleepTime;
 
     public PurgeUrlsUseCase(UrlRepositoryPort repository,
-                            CachePort cachePort,
+                            CachePort cache,
                             int batchSize,
                             long sleepTime) {
 
         this.repository = repository;
-        this.cachePort = cachePort;
+        this.cache = cache;
         this.batchSize = batchSize;
         this.sleepTime = sleepTime;
     }
@@ -32,7 +32,7 @@ public class PurgeUrlsUseCase {
 
         do {
             List<String> deletedCodes = repository.deleteExpiredInBatchReturningCodes(now, batchSize);
-            deletedCodes.forEach(cachePort::evict);
+            deletedCodes.forEach(cache::evict);
 
             deletedInCurrentBatch = deletedCodes.size();
 

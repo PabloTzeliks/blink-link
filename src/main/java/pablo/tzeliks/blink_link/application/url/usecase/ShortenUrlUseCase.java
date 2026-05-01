@@ -29,9 +29,9 @@ public class ShortenUrlUseCase {
 
     private final ShortenerPort shortener;
     private final UrlRepositoryPort repository;
-    private final CurrentUserProviderPort userProviderPort;
-    private final CachePort cachePort;
-    private final SequencePort sequencePort;
+    private final CurrentUserProviderPort userProvider;
+    private final CachePort cache;
+    private final SequencePort sequence;
     private final UrlDtoMapper mapper;
 
     @Value("${app.cache.max-ttl-seconds:604800}")
@@ -39,15 +39,15 @@ public class ShortenUrlUseCase {
 
     public ShortenUrlUseCase(ShortenerPort shortener,
                              UrlRepositoryPort repository,
-                             CurrentUserProviderPort userProviderPort,
-                             CachePort cachePort, SequencePort sequencePort,
+                             CurrentUserProviderPort userProvider,
+                             CachePort cache, SequencePort sequence,
                              UrlDtoMapper mapper) {
 
         this.shortener = shortener;
         this.repository = repository;
-        this.userProviderPort = userProviderPort;
-        this.cachePort = cachePort;
-        this.sequencePort = sequencePort;
+        this.userProvider = userProvider;
+        this.cache = cache;
+        this.sequence = sequence;
         this.mapper = mapper;
     }
 
@@ -59,11 +59,11 @@ public class ShortenUrlUseCase {
     )
     public UrlDetailsResponse execute(CreateShortCodeRequest request) {
 
-        Plan userPlan = userProviderPort.getCurrentUserPlan();
-        UUID userId = userProviderPort.getCurrentUserId();
+        Plan userPlan = userProvider.getCurrentUserPlan();
+        UUID userId = userProvider.getCurrentUserId();
         ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
 
-        Long id = sequencePort.nextId();
+        Long id = sequence.nextId();
         String shortCode = shortener.encode(id);
         Url url = Url.create(id, userId, request.originalUrl(), shortCode, strategy);
 
@@ -71,7 +71,7 @@ public class ShortenUrlUseCase {
 
         long finalCacheTtl = Math.min(savedUrl.getSecondsUntilExpiry(), maxCacheTtlSeconds);
         if (finalCacheTtl > 0) {
-            cachePort.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
+            cache.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
         }
 
         return mapper.toDto(savedUrl);

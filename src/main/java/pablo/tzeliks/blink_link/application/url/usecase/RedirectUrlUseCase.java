@@ -24,14 +24,14 @@ import java.util.Optional;
 public class RedirectUrlUseCase {
 
     private final UrlRepositoryPort repository;
-    private final CachePort cachePort;
+    private final CachePort cache;
 
     @Value("${app.cache.max-ttl-seconds:604800}")
     private long maxCacheTtlSeconds;
 
-    public RedirectUrlUseCase(UrlRepositoryPort repository, CachePort cachePort) {
+    public RedirectUrlUseCase(UrlRepositoryPort repository, CachePort cache) {
         this.repository = repository;
-        this.cachePort = cachePort;
+        this.cache = cache;
     }
 
     public UrlResponse execute(ResolveShortCodeRequest request) {
@@ -43,7 +43,7 @@ public class RedirectUrlUseCase {
             throw new InvalidUrlException("Short Code cannot be null or empty");
         }
 
-        Optional<String> cachedUrl = cachePort.get(shortCode);
+        Optional<String> cachedUrl = cache.get(shortCode);
 
         if (cachedUrl.isPresent()) {
 
@@ -61,7 +61,7 @@ public class RedirectUrlUseCase {
         long domainTtl = urlDb.getSecondsUntilExpiry();
         long finalCacheTtl = Math.min(domainTtl, maxCacheTtlSeconds);
 
-        cachePort.put(shortCode, urlDb.getOriginalUrl(), finalCacheTtl);
+        cache.put(shortCode, urlDb.getOriginalUrl(), finalCacheTtl);
 
         return new UrlResponse(urlDb.getOriginalUrl());
     }
