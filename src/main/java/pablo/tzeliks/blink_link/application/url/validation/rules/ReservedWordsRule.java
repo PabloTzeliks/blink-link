@@ -18,10 +18,6 @@ public class ReservedWordsRule implements CodeValidationRule {
 
     private final Set<String> reserved;
 
-    public ReservedWordsRule(Set<String> reserved) {
-        this.reserved = reserved;
-    }
-
     public ReservedWordsRule(
             @Value("classpath:validation/reserved-codes.txt") Resource file) throws IOException {
 
