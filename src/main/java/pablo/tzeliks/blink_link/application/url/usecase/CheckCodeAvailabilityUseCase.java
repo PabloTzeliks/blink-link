@@ -1,6 +1,5 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityRequest;
 import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityResponse;
@@ -12,11 +11,11 @@ import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 public class CheckCodeAvailabilityUseCase {
 
     private final UrlRepositoryPort repository;
-    private final CachePort cachePort;
+    private final CachePort cache;
 
-    public CheckCodeAvailabilityUseCase(UrlRepositoryPort repository, CachePort cachePort) {
+    public CheckCodeAvailabilityUseCase(UrlRepositoryPort repository, CachePort cache) {
         this.repository = repository;
-        this.cachePort = cachePort;
+        this.cache = cache;
     }
 
     public CodeAvailabilityResponse execute(CodeAvailabilityRequest request) {
@@ -27,7 +26,7 @@ public class CheckCodeAvailabilityUseCase {
             throw new InvalidUrlException("Custom Code cannot be null or empty");
         }
 
-        if (cachePort.exists(code)) {
+        if (cache.exists(code)) {
             return new CodeAvailabilityResponse(code, false);
         }
 
