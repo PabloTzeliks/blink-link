@@ -3,6 +3,7 @@ package pablo.tzeliks.blink_link.application.url.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.URL;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Pablo Tzeliks
@@ -17,5 +18,6 @@ public record CreateShortCodeRequest(
         String originalUrl,
 
         @JsonProperty("custom_code")
+        @Nullable
         String customCode
 ) { }
