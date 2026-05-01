@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import pablo.tzeliks.blink_link.application.url.dto.*;
 import pablo.tzeliks.blink_link.application.url.usecase.CheckCodeAvailabilityUseCase;
+import pablo.tzeliks.blink_link.application.url.usecase.CreateCustomCodeUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.GetUrlDetailsUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
 
@@ -24,16 +25,20 @@ public class UrlController {
 
     private final ShortenUrlUseCase shortenUrl;
     private final GetUrlDetailsUseCase urlDetailsUseCase;
+    private final CreateCustomCodeUseCase createCustomCode;
     private final CheckCodeAvailabilityUseCase checkCodeUseCase;
 
     public UrlController(ShortenUrlUseCase shortenUrl,
                          GetUrlDetailsUseCase urlDetailsUseCase,
+                         CreateCustomCodeUseCase createCustomCode,
                          CheckCodeAvailabilityUseCase checkCodeUseCase) {
 
         this.shortenUrl = shortenUrl;
         this.urlDetailsUseCase = urlDetailsUseCase;
+        this.createCustomCode = createCustomCode;
         this.checkCodeUseCase = checkCodeUseCase;
     }
+
 
     @PostMapping("/shorten")
     public ResponseEntity<UrlDetailsResponse> encode(@Valid @RequestBody CreateShortCodeRequest request, UriComponentsBuilder uriBuilder) {
