@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import pablo.tzeliks.blink_link.application.url.exception.InvalidCustomCodeException;
 import pablo.tzeliks.blink_link.application.url.exception.SequenceGenerationException;
 import pablo.tzeliks.blink_link.domain.common.exception.*;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
@@ -85,6 +86,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.GONE,
                 "Url Expired",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null
+        );
+    }
+
+    @ExceptionHandler(InvalidCustomCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCustomCode(InvalidCustomCodeException ex, HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "Invalid Custom Code",
                 ex.getMessage(),
                 request.getRequestURI(),
                 null
