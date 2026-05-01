@@ -27,7 +27,7 @@ public class UrlEntity implements Persistable<Long> {
     @Column(name = "original_url", nullable = false)
     private String originalUrl;
 
-    @Column(name = "short_code", length = 7, nullable = false, unique = true)
+    @Column(name = "short_code", length = 20, nullable = false, unique = true)
     private String shortCode;
 
     @CreationTimestamp
