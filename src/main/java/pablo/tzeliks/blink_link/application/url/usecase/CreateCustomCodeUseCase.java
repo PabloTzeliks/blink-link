@@ -61,6 +61,8 @@ public class CreateCustomCodeUseCase {
 
         String shortCode = request.customCode();
 
+        validator.validate(shortCode);
+
         if (cache.exists(shortCode)) {
             throw new DuplicateCodeException("Code '" + shortCode + "' is already taken.");
         }
@@ -68,8 +70,6 @@ public class CreateCustomCodeUseCase {
         if (repository.existsByShortCode(shortCode)) {
             throw new DuplicateCodeException("Code '" + shortCode + "' is already taken.");
         }
-
-        validator.validate(shortCode);
 
         ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
 
