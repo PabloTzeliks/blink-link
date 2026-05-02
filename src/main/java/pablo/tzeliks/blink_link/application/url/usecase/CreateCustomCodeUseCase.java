@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityResponse;
 import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.DuplicateCodeException;
@@ -60,6 +61,15 @@ public class CreateCustomCodeUseCase {
         }
 
         String shortCode = request.customCode();
+
+        if (cache.exists(shortCode)) {
+            throw new DuplicateCodeException("Code '" + shortCode + "' is already taken.");
+        }
+
+        if (repository.existsByShortCode(shortCode)) {
+            throw new DuplicateCodeException("Code '" + shortCode + "' is already taken.");
+        }
+
         validator.validate(shortCode);
 
         ExpirationCalculationStrategy strategy =
