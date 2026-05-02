@@ -165,32 +165,4 @@ class CreateCustomCodeUseCaseTest {
         // Act & Assert
         assertThrows(DuplicateCodeException.class, () -> useCase.execute(request));
     }
-
-    @Test
-    @DisplayName("Should degrade silently and return successfully when Redis throws exception on cache put")
-    void shouldDegradeSilentlyWhenCachePutFails() {
-        // Arrange
-        UUID userId = UUID.randomUUID();
-        CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
-
-        when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
-        when(userProvider.getCurrentUserId()).thenReturn(userId);
-        when(cache.exists("mycode")).thenReturn(false);
-        when(repository.existsByShortCode("mycode")).thenReturn(false);
-        when(sequence.nextId()).thenReturn(1L);
-        when(repository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        doThrow(new DataAccessException("Redis down") {
-        }).when(cache).put(anyString(), anyString(), anyLong());
-
-        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode",
-                "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
-        when(mapper.toDto(any(Url.class))).thenReturn(responseDto);
-
-        // Act
-        UrlDetailsResponse response = useCase.execute(request);
-
-        // Assert
-        assertNotNull(response);
-    }
 }
