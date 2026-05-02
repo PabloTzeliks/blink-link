@@ -21,19 +21,19 @@ class BlocklistRuleTest {
 
     @Test
     @DisplayName("Should throw exception when code contains a blocked term")
-    void should_ThrowException_When_ContainsBlockedTerm() {
+    void shouldThrowExceptionWhenContainsBlockedTerm() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("porn"));
     }
 
     @Test
     @DisplayName("Should pass when code is clean")
-    void should_Pass_When_CleanCode() {
+    void shouldPassWhenCleanCode() {
         assertDoesNotThrow(() -> rule.validate("promo25"));
     }
 
     @Test
     @DisplayName("Should pass when code is clean with hyphen")
-    void should_Pass_When_CleanCodeWithHyphen() {
+    void shouldPassWhenCleanCodeWithHyphen() {
         assertDoesNotThrow(() -> rule.validate("best-deal"));
     }
 }

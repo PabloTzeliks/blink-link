@@ -56,7 +56,7 @@ class CreateCustomCodeUseCaseTest {
 
     @Test
     @DisplayName("Should create custom code successfully when user is VIP")
-    void should_CreateSuccessfully_When_PlanVIP() {
+    void shouldCreateSuccessfullyWhenPlanVIP() {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
@@ -86,7 +86,7 @@ class CreateCustomCodeUseCaseTest {
 
     @Test
     @DisplayName("Should create custom code successfully when user is ENTERPRISE")
-    void should_CreateSuccessfully_When_PlanEnterprise() {
+    void shouldCreateSuccessfullyWhenPlanEnterprise() {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
@@ -116,7 +116,7 @@ class CreateCustomCodeUseCaseTest {
 
     @Test
     @DisplayName("Should throw InvalidPlanException when user is FREE")
-    void should_ThrowException_When_PlanFree() {
+    void shouldThrowExceptionWhenPlanFree() {
         // Arrange
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
         when(userProvider.getCurrentUserPlan()).thenReturn(Plan.FREE);
@@ -131,7 +131,7 @@ class CreateCustomCodeUseCaseTest {
 
     @Test
     @DisplayName("Should propagate InvalidCustomCodeException when validator fails")
-    void should_PropagateException_When_ValidatorFails() {
+    void shouldPropagateExceptionWhenValidatorFails() {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "invalid-");
@@ -150,7 +150,7 @@ class CreateCustomCodeUseCaseTest {
 
     @Test
     @DisplayName("Should throw DuplicateCodeException on database unique constraint violation")
-    void should_ThrowDuplicateCodeException_When_UniqueViolation() {
+    void shouldThrowDuplicateCodeExceptionWhenUniqueViolation() {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
@@ -168,7 +168,7 @@ class CreateCustomCodeUseCaseTest {
 
     @Test
     @DisplayName("Should degrade silently and return successfully when Redis throws exception on cache put")
-    void should_DegradeSilently_When_CachePutFails() {
+    void shouldDegradeSilentlyWhenCachePutFails() {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");

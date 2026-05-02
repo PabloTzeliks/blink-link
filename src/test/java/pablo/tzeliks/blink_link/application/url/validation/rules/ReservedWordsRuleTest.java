@@ -21,31 +21,31 @@ class ReservedWordsRuleTest {
 
     @Test
     @DisplayName("Should throw exception when code is a reserved word - exact match")
-    void should_ThrowException_When_ReservedWord_ExactMatch() {
+    void shouldThrowExceptionWhenReservedWordExactMatch() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("api"));
     }
 
     @Test
     @DisplayName("Should throw exception when code is a reserved word - case insensitive")
-    void should_ThrowException_When_ReservedWord_CaseInsensitive() {
+    void shouldThrowExceptionWhenReservedWordCaseInsensitive() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("API"));
     }
 
     @Test
     @DisplayName("Should throw exception when code is 'admin'")
-    void should_ThrowException_When_ReservedWord_Admin() {
+    void shouldThrowExceptionWhenReservedWordAdmin() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("admin"));
     }
 
     @Test
     @DisplayName("Should pass when code is clean")
-    void should_Pass_When_CleanCode() {
+    void shouldPassWhenCleanCode() {
         assertDoesNotThrow(() -> rule.validate("meulink"));
     }
 
     @Test
     @DisplayName("Should pass when code is clean with numbers")
-    void should_Pass_When_CleanCodeWithNumbers() {
+    void shouldPassWhenCleanCodeWithNumbers() {
         assertDoesNotThrow(() -> rule.validate("promo25"));
     }
 }

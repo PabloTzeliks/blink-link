@@ -41,40 +41,34 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for the URL controller REST API endpoints.
  * <p>
  * This test class validates the complete HTTP request-response cycle for both
- * {@link UrlController} and {@link RedirectUrlController}, testing the
- * controllers
- * along with the entire application stack including service layer, repository
- * layer,
+ * {@link UrlController} and {@link RedirectUrlController}, testing the controllers
+ * along with the entire application stack including service layer, repository layer,
  * and database operations.
  * <p>
  * <b>Test Strategy:</b>
  * <p>
  * These are full integration tests that:
  * <ul>
- * <li>Use a real PostgreSQL database via Testcontainers</li>
- * <li>Load the complete Spring application context</li>
- * <li>Simulate HTTP requests using MockMvc</li>
- * <li>Validate HTTP responses, status codes, and JSON payloads</li>
- * <li>Test both happy paths and error scenarios</li>
+ *   <li>Use a real PostgreSQL database via Testcontainers</li>
+ *   <li>Load the complete Spring application context</li>
+ *   <li>Simulate HTTP requests using MockMvc</li>
+ *   <li>Validate HTTP responses, status codes, and JSON payloads</li>
+ *   <li>Test both happy paths and error scenarios</li>
  * </ul>
  * <p>
  * <b>Testcontainers:</b>
  * <p>
  * By extending {@link AbstractContainerBase}, these tests run against a real
- * PostgreSQL 17 container, providing high confidence that the code works
- * correctly
- * with the actual database. This is more reliable than using in-memory
- * databases
+ * PostgreSQL 17 container, providing high confidence that the code works correctly
+ * with the actual database. This is more reliable than using in-memory databases
  * (like H2) that may behave differently from production.
  * <p>
  * <b>Test Coverage:</b>
  * <ul>
- * <li>URL creation (POST /api/v3/urls/shorten) - Happy path and validation
- * errors</li>
- * <li>URL retrieval (GET /api/v3/urls/{shortCode}) - Success and 404
- * scenarios</li>
- * <li>URL redirection (GET /{shortCode}) - Success and 404 scenarios</li>
- * <li>Malformed JSON handling</li>
+ *   <li>URL creation (POST /api/v3/urls/shorten) - Happy path and validation errors</li>
+ *   <li>URL retrieval (GET /api/v3/urls/{shortCode}) - Success and 404 scenarios</li>
+ *   <li>URL redirection (GET /{shortCode}) - Success and 404 scenarios</li>
+ *   <li>Malformed JSON handling</li>
  * </ul>
  * <p>
  * <b>Transaction Rollback:</b>
@@ -95,376 +89,354 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 public class UrlControllerIntegrationTest extends AbstractContainerBase {
 
-        @Autowired
-        private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-        private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-        @Autowired
-        private UrlRepositoryPort repository;
+    @Autowired
+    private UrlRepositoryPort repository;
 
-        @Autowired
-        private SequencePort sequence;
+    @Autowired
+    private SequencePort sequence;
 
-        @Autowired
-        private JpaUserRepository jpaUserRepository;
+    @Autowired
+    private JpaUserRepository jpaUserRepository;
 
-        @Autowired
-        private StringRedisTemplate redisTemplate;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
-        /**
-         * Integration Test: Verifies successful URL shortening via POST endpoint.
-         * <p>
-         * <b>Scenario:</b> Happy Path - Valid URL submission
-         * <p>
-         * <b>Given:</b> A valid long URL (LinkedIn profile)
-         * <br>
-         * <b>When:</b> POST request is made to /api/v3/urls/shorten
-         * <br>
-         * <b>Then:</b> API returns 201 Created with complete URL response including
-         * original URL, short code, full short URL, and creation timestamp. The
-         * Location
-         * header contains the URI of the newly created resource.
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 201 (Created)</li>
-         * <li>Location header is present</li>
-         * <li>Response contains all expected fields</li>
-         * <li>Short code is generated and is a non-empty string</li>
-         * </ul>
-         */
-        @Test
-        @DisplayName("POST /shorten - Should create a short URL successfully (Happy Path)")
-        void shouldCreateShortUrl() throws Exception {
-                // Arrange
-                CreateShortCodeRequest request = new CreateShortCodeRequest(
-                                "https://www.linkedin.com/in/pablo-ruan-tzeliks/", null);
-                String jsonRequest = objectMapper.writeValueAsString(request);
+    /**
+     * Integration Test: Verifies successful URL shortening via POST endpoint.
+     * <p>
+     * <b>Scenario:</b> Happy Path - Valid URL submission
+     * <p>
+     * <b>Given:</b> A valid long URL (LinkedIn profile)
+     * <br><b>When:</b> POST request is made to /api/v3/urls/shorten
+     * <br><b>Then:</b> API returns 201 Created with complete URL response including
+     * original URL, short code, full short URL, and creation timestamp. The Location
+     * header contains the URI of the newly created resource.
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 201 (Created)</li>
+     *   <li>Location header is present</li>
+     *   <li>Response contains all expected fields</li>
+     *   <li>Short code is generated and is a non-empty string</li>
+     * </ul>
+     */
+    @Test
+    @DisplayName("POST /shorten - Should create a short URL successfully (Happy Path)")
+    void shouldCreateShortUrl() throws Exception {
+        // Arrange
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/", null);
+        String jsonRequest = objectMapper.writeValueAsString(request);
 
-                User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),
-                                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
-                CustomUserDetails userDetails = new CustomUserDetails(domainUser);
+        User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        CustomUserDetails userDetails = new CustomUserDetails(domainUser);
 
-                // Act & Assert
-                mockMvc.perform(post("/api/v3/urls/shorten")
-                                .with(user(userDetails))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(jsonRequest))
-                                .andExpect(status().isCreated())
-                                .andExpect(header().exists("Location"))
-                                .andExpect(jsonPath("$.original_url")
-                                                .value("https://www.linkedin.com/in/pablo-ruan-tzeliks/"))
-                                .andExpect(jsonPath("$.short_code").exists())
-                                .andExpect(jsonPath("$.short_code").isString())
-                                .andExpect(jsonPath("$.created_at").exists());
-        }
+        // Act & Assert
+        mockMvc.perform(post("/api/v3/urls/shorten")
+                        .with(user(userDetails))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.original_url").value("https://www.linkedin.com/in/pablo-ruan-tzeliks/"))
+                .andExpect(jsonPath("$.short_code").exists())
+                .andExpect(jsonPath("$.short_code").isString())
+                .andExpect(jsonPath("$.created_at").exists());
+    }
 
-        /**
-         * Integration Test: Verifies validation error handling for invalid URLs.
-         * <p>
-         * <b>Scenario:</b> Validation Failure - Empty URL parameter
-         * <p>
-         * <b>Given:</b> A request with an empty originalUrl field
-         * <br>
-         * <b>When:</b> POST request is made to /api/v3/urls/shorten
-         * <br>
-         * <b>Then:</b> API returns 422 Unprocessable Content with validation error
-         * details
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 422 (Unprocessable Content)</li>
-         * <li>Error response title is "Validation Failed"</li>
-         * <li>Error response includes at least one validation error</li>
-         * </ul>
-         * <p>
-         * This tests the {@code @Valid} annotation on the controller and the
-         * {@code @NotBlank} constraint on the DTO.
-         */
-        @Test
-        @DisplayName("POST /shorten - Should return 422 when URL is invalid (Sad Path: Validation)")
-        void shouldReturn422ForInvalidUrl() throws Exception {
-                // Arrange: Empty parameter
-                String invalidJson = """
-                                {
-                                    "originalUrl": ""
-                                }
-                                """;
-
-                // Act & Assert
-                mockMvc.perform(post("/api/v3/urls/shorten")
-                                .with(user("test@test.com").roles("USER"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(invalidJson))
-                                .andExpect(status().isUnprocessableEntity()) // 422
-                                .andExpect(jsonPath("$.title").value("Validation Failed"))
-                                .andExpect(jsonPath("$.errors", hasSize(greaterThan(0))));
-        }
-
-        /**
-         * Integration Test: Verifies malformed JSON error handling.
-         * <p>
-         * <b>Scenario:</b> Malformed JSON - Syntax error in request body
-         * <p>
-         * <b>Given:</b> A JSON string with syntax errors (missing closing quote)
-         * <br>
-         * <b>When:</b> POST request is made to /api/v3/urls/shorten
-         * <br>
-         * <b>Then:</b> API returns 400 Bad Request with malformed JSON error message
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 400 (Bad Request)</li>
-         * <li>Error response title is "Malformed JSON Request"</li>
-         * </ul>
-         * <p>
-         * This tests the {@link GlobalExceptionHandler}'s handling of
-         * {@code HttpMessageNotReadableException}.
-         */
-        @Test
-        @DisplayName("POST /shorten - Should return 400 when JSON is malformed (Sad Path: JSON Error)")
-        void shouldReturn400ForMalformedJson() throws Exception {
-                // Arrange: broken JSON (missing quote)
-                String brokenJson = "{ \"original_url\": \"https://google.com }";
-
-                // Act & Assert
-                mockMvc.perform(post("/api/v3/urls/shorten")
-                                .with(user("test@test.com").roles("USER"))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(brokenJson))
-                                .andExpect(status().isBadRequest()) // 400
-                                .andExpect(jsonPath("$.title").value("Malformed JSON Request"));
-        }
-
-        /**
-         * Integration Test: Verifies URL details retrieval by short code.
-         * <p>
-         * <b>Scenario:</b> Happy Path - Retrieve existing URL information
-         * <p>
-         * <b>Given:</b> A URL has been pre-inserted into the database with short code
-         * "rocket"
-         * <br>
-         * <b>When:</b> GET request is made to /api/v3/urls/rocket
-         * <br>
-         * <b>Then:</b> API returns 200 OK with complete URL details
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 200 (OK)</li>
-         * <li>Response contains the correct original URL</li>
-         * <li>Response contains the correct short code</li>
-         * </ul>
-         * <p>
-         * This test validates the informational endpoint that returns URL metadata
-         * without performing a redirect.
-         */
-        @Test
-        @DisplayName("GET /api/v3/urls/{ShortCode} - Should return URL details (Happy Path)")
-        void shouldReturnUrlDetails() throws Exception {
-                // Arrange: Create a real user to satisfy FK constraint on urls.user_id
-                UUID userId = UUID.randomUUID();
-                UserEntity userEntity = new UserEntity(userId, "detail-user@test.com", "encoded",
-                                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
-                jpaUserRepository.saveAndFlush(userEntity);
-
-                Long id = sequence.nextId();
-                LocalDateTime now = LocalDateTime.now();
-
-                Url savedUrl = Url.restore(
-                                id,
-                                userId,
-                                "https://rocketseat.com.br",
-                                "rocket",
-                                now,
-                                now.plusDays(7));
-
-                repository.save(savedUrl);
-
-                // Act & Assert
-                mockMvc.perform(get("/api/v3/urls/" + savedUrl.getShortCode())
-                                .with(user("test@test.com").roles("USER")))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.original_url").value("https://rocketseat.com.br"))
-                                .andExpect(jsonPath("$.short_code").value("rocket"));
-        }
-
-        /**
-         * Integration Test: Verifies 404 response for non-existent short code.
-         * <p>
-         * <b>Scenario:</b> Error Case - Short code does not exist in database
-         * <p>
-         * <b>Given:</b> A short code "ghost-code-123" that doesn't exist
-         * <br>
-         * <b>When:</b> GET request is made to /api/v3/urls/ghost-code-123
-         * <br>
-         * <b>Then:</b> API returns 404 Not Found with error details
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 404 (Not Found)</li>
-         * <li>Error response title is "Resource Not Found"</li>
-         * </ul>
-         * <p>
-         * This tests the {@link GlobalExceptionHandler}'s handling of
-         * {@code UrlNotFoundException}.
-         */
-        @Test
-        @DisplayName("GET /api/v3/urls/{ShortCode} - Should return 404 for non-existent code (Sad Path)")
-        void shouldReturn404ForDetailsOfGhostCode() throws Exception {
-                mockMvc.perform(get("/api/v3/urls/ghost-code-123")
-                                .with(user("test@test.com").roles("USER")))
-                                .andExpect(status().isNotFound())
-                                .andExpect(jsonPath("$.title").value("Resource Not Found"));
-        }
-
-        // RedirectUrlController Tests
-
-        /**
-         * Integration Test: Verifies successful URL redirection via short code.
-         * <p>
-         * <b>Scenario:</b> Happy Path - Redirect to original URL
-         * <p>
-         * <b>Given:</b> A URL has been pre-inserted with short code "myGit"
-         * <br>
-         * <b>When:</b> GET request is made to /myGit
-         * <br>
-         * <b>Then:</b> API returns 302 Found with Location header pointing to original
-         * URL
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 302 (Found - Temporary Redirect)</li>
-         * <li>Location header contains the original URL</li>
-         * </ul>
-         * <p>
-         * This is the primary user-facing functionality: when someone clicks a
-         * shortened
-         * URL, they are transparently redirected to the original destination.
-         */
-        @Test
-        @DisplayName("GET /{shortUrl} - Should redirect to original URL (Happy Path)")
-        void shouldRedirectSuccessfully() throws Exception {
-                // Arrange: Create a real user to satisfy FK constraint on urls.user_id
-                UUID userId = UUID.randomUUID();
-                UserEntity userEntity = new UserEntity(userId, "redirect-user@test.com", "encoded",
-                                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
-                jpaUserRepository.saveAndFlush(userEntity);
-
-                Long id = sequence.nextId();
-                LocalDateTime now = LocalDateTime.now();
-                Url savedUrl = Url.restore(
-                                id,
-                                userId,
-                                "https://github.com/PabloTzeliks",
-                                "myGit",
-                                now,
-                                now.plusDays(7));
-                repository.save(savedUrl);
-
-                // Act & Assert
-                mockMvc.perform(get("/myGit"))
-                                .andExpect(status().isFound()) // 302
-                                .andExpect(header().string("Location", "https://github.com/PabloTzeliks"));
-        }
-
-        /**
-         * Integration Test: Verifies 404 response when redirecting non-existent short
-         * code.
-         * <p>
-         * <b>Scenario:</b> Error Case - Attempt to redirect using invalid short code
-         * <p>
-         * <b>Given:</b> A short code "nao-existe" that doesn't exist in the database
-         * <br>
-         * <b>When:</b> GET request is made to /nao-existe
-         * <br>
-         * <b>Then:</b> API returns 404 Not Found instead of attempting a redirect
-         * <p>
-         * <b>Assertions:</b>
-         * <ul>
-         * <li>HTTP status is 404 (Not Found)</li>
-         * <li>Error response title is "Resource Not Found"</li>
-         * </ul>
-         * <p>
-         * This ensures users get clear feedback when clicking on invalid or expired
-         * shortened URLs rather than being redirected to an error page or broken link.
-         */
-        @Test
-        @DisplayName("GET /{shortUrl} - Should return 404 when redirecting non-existent code (Sad Path)")
-        void shouldReturn404ForRedirectingGhostCode() throws Exception {
-                mockMvc.perform(get("/nao-existe"))
-                                .andExpect(status().isNotFound())
-                                .andExpect(jsonPath("$.title").value("Resource Not Found"));
-        }
-
-        @Nested
-        @DisplayName("GET /api/v3/urls/codes/{code}/availability")
-        class CheckCodeAvailabilityTests {
-
-                @Test
-                @DisplayName("Should return 200 with available true when the code is free")
-                void shouldReturn200_available_whenCodeIsFree() throws Exception {
-                        mockMvc.perform(get("/api/v3/urls/codes/freecode/availability")
-                                        .with(user("test@test.com").roles("USER")))
-                                        .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.available").value(true))
-                                        .andExpect(jsonPath("$.code").value("freecode"));
+    /**
+     * Integration Test: Verifies validation error handling for invalid URLs.
+     * <p>
+     * <b>Scenario:</b> Validation Failure - Empty URL parameter
+     * <p>
+     * <b>Given:</b> A request with an empty originalUrl field
+     * <br><b>When:</b> POST request is made to /api/v3/urls/shorten
+     * <br><b>Then:</b> API returns 422 Unprocessable Content with validation error details
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 422 (Unprocessable Content)</li>
+     *   <li>Error response title is "Validation Failed"</li>
+     *   <li>Error response includes at least one validation error</li>
+     * </ul>
+     * <p>
+     * This tests the {@code @Valid} annotation on the controller and the
+     * {@code @NotBlank} constraint on the DTO.
+     */
+    @Test
+    @DisplayName("POST /shorten - Should return 422 when URL is invalid (Sad Path: Validation)")
+    void shouldReturn422ForInvalidUrl() throws Exception {
+        // Arrange: Empty parameter
+        String invalidJson = """
+                {
+                    "originalUrl": ""
                 }
+                """;
 
-                @Test
-                @DisplayName("Should return 200 with available false when the code exists in the database")
-                void shouldReturn200_unavailable_whenCodeExistsInDb() throws Exception {
-                        UUID userId = UUID.randomUUID();
-                        UserEntity userEntity = new UserEntity(userId, "avail-db@test.com", "encoded",
-                                        Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(),
-                                        LocalDateTime.now());
-                        jpaUserRepository.saveAndFlush(userEntity);
+        // Act & Assert
+        mockMvc.perform(post("/api/v3/urls/shorten")
+                        .with(user("test@test.com").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(invalidJson))
+                .andExpect(status().isUnprocessableEntity()) // 422
+                .andExpect(jsonPath("$.title").value("Validation Failed"))
+                .andExpect(jsonPath("$.errors", hasSize(greaterThan(0))));
+    }
 
-                        Long id = sequence.nextId();
-                        Url savedUrl = Url.restore(id, userId, "https://example.com", "taken", LocalDateTime.now(),
-                                        LocalDateTime.now().plusDays(7));
-                        repository.save(savedUrl);
+    /**
+     * Integration Test: Verifies malformed JSON error handling.
+     * <p>
+     * <b>Scenario:</b> Malformed JSON - Syntax error in request body
+     * <p>
+     * <b>Given:</b> A JSON string with syntax errors (missing closing quote)
+     * <br><b>When:</b> POST request is made to /api/v3/urls/shorten
+     * <br><b>Then:</b> API returns 400 Bad Request with malformed JSON error message
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 400 (Bad Request)</li>
+     *   <li>Error response title is "Malformed JSON Request"</li>
+     * </ul>
+     * <p>
+     * This tests the {@link GlobalExceptionHandler}'s handling of
+     * {@code HttpMessageNotReadableException}.
+     */
+    @Test
+    @DisplayName("POST /shorten - Should return 400 when JSON is malformed (Sad Path: JSON Error)")
+    void shouldReturn400ForMalformedJson() throws Exception {
+        // Arrange: broken JSON (missing quote)
+        String brokenJson = "{ \"original_url\": \"https://google.com }";
 
-                        mockMvc.perform(get("/api/v3/urls/codes/taken/availability")
-                                        .with(user("test@test.com").roles("USER")))
-                                        .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.available").value(false));
-                }
+        // Act & Assert
+        mockMvc.perform(post("/api/v3/urls/shorten")
+                        .with(user("test@test.com").roles("USER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(brokenJson))
+                .andExpect(status().isBadRequest()) // 400
+                .andExpect(jsonPath("$.title").value("Malformed JSON Request"));
+    }
 
-                @Test
-                @DisplayName("Should return 200 with available false when the code exists in Redis")
-                void shouldReturn200_unavailable_whenCodeExistsInRedis() throws Exception {
-                        redisTemplate.opsForValue().set("url:taken2", "https://example.com");
+    /**
+     * Integration Test: Verifies URL details retrieval by short code.
+     * <p>
+     * <b>Scenario:</b> Happy Path - Retrieve existing URL information
+     * <p>
+     * <b>Given:</b> A URL has been pre-inserted into the database with short code "rocket"
+     * <br><b>When:</b> GET request is made to /api/v3/urls/rocket
+     * <br><b>Then:</b> API returns 200 OK with complete URL details
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 200 (OK)</li>
+     *   <li>Response contains the correct original URL</li>
+     *   <li>Response contains the correct short code</li>
+     * </ul>
+     * <p>
+     * This test validates the informational endpoint that returns URL metadata
+     * without performing a redirect.
+     */
+    @Test
+    @DisplayName("GET /api/v3/urls/{ShortCode} - Should return URL details (Happy Path)")
+    void shouldReturnUrlDetails() throws Exception {
+        // Arrange: Create a real user to satisfy FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "detail-user@test.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
 
-                        mockMvc.perform(get("/api/v3/urls/codes/taken2/availability")
-                                        .with(user("test@test.com").roles("USER")))
-                                        .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.available").value(false));
-                }
+        Long id = sequence.nextId();
+        LocalDateTime now = LocalDateTime.now();
 
-                @Test
-                @DisplayName("Should return 401 when the request is not authenticated")
-                void shouldReturn401_whenNotAuthenticated() throws Exception {
-                        mockMvc.perform(get("/api/v3/urls/codes/somecode/availability"))
-                                        .andExpect(status().isUnauthorized());
-                }
+        Url savedUrl = Url.restore(
+                id,
+                userId,
+                "https://rocketseat.com.br",
+                "rocket",
+                now,
+                now.plusDays(7)
+        );
 
-                @Test
-                @DisplayName("Should return 200 when the code is exactly at minimum length (4 characters)")
-                void shouldReturn200_whenCodeIsAtMinLength() throws Exception {
-                        mockMvc.perform(get("/api/v3/urls/codes/abcd/availability")
-                                        .with(user("test@test.com").roles("USER")))
-                                        .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.available").exists());
-                }
+        repository.save(savedUrl);
 
-                @Test
-                @DisplayName("Should return 200 when the code is exactly at maximum length (20 characters)")
-                void shouldReturn200_whenCodeIsAtMaxLength() throws Exception {
-                        mockMvc.perform(get("/api/v3/urls/codes/abcdefghij1234567890/availability")
-                                        .with(user("test@test.com").roles("USER")))
-                                        .andExpect(status().isOk())
-                                        .andExpect(jsonPath("$.available").exists());
-                }
+        // Act & Assert
+        mockMvc.perform(get("/api/v3/urls/" + savedUrl.getShortCode())
+                        .with(user("test@test.com").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.original_url").value("https://rocketseat.com.br"))
+                .andExpect(jsonPath("$.short_code").value("rocket"));
+    }
+
+    /**
+     * Integration Test: Verifies 404 response for non-existent short code.
+     * <p>
+     * <b>Scenario:</b> Error Case - Short code does not exist in database
+     * <p>
+     * <b>Given:</b> A short code "ghost-code-123" that doesn't exist
+     * <br><b>When:</b> GET request is made to /api/v3/urls/ghost-code-123
+     * <br><b>Then:</b> API returns 404 Not Found with error details
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 404 (Not Found)</li>
+     *   <li>Error response title is "Resource Not Found"</li>
+     * </ul>
+     * <p>
+     * This tests the {@link GlobalExceptionHandler}'s handling of
+     * {@code UrlNotFoundException}.
+     */
+    @Test
+    @DisplayName("GET /api/v3/urls/{ShortCode} - Should return 404 for non-existent code (Sad Path)")
+    void shouldReturn404ForDetailsOfGhostCode() throws Exception {
+        mockMvc.perform(get("/api/v3/urls/ghost-code-123")
+                        .with(user("test@test.com").roles("USER")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Resource Not Found"));
+    }
+
+    // RedirectUrlController Tests
+
+    /**
+     * Integration Test: Verifies successful URL redirection via short code.
+     * <p>
+     * <b>Scenario:</b> Happy Path - Redirect to original URL
+     * <p>
+     * <b>Given:</b> A URL has been pre-inserted with short code "myGit"
+     * <br><b>When:</b> GET request is made to /myGit
+     * <br><b>Then:</b> API returns 302 Found with Location header pointing to original URL
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 302 (Found - Temporary Redirect)</li>
+     *   <li>Location header contains the original URL</li>
+     * </ul>
+     * <p>
+     * This is the primary user-facing functionality: when someone clicks a shortened
+     * URL, they are transparently redirected to the original destination.
+     */
+    @Test
+    @DisplayName("GET /{shortUrl} - Should redirect to original URL (Happy Path)")
+    void shouldRedirectSuccessfully() throws Exception {
+        // Arrange: Create a real user to satisfy FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "redirect-user@test.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+
+        Long id = sequence.nextId();
+        LocalDateTime now = LocalDateTime.now();
+        Url savedUrl = Url.restore(
+                id,
+                userId,
+                "https://github.com/PabloTzeliks",
+                "myGit",
+                now,
+                now.plusDays(7)
+        );
+        repository.save(savedUrl);
+
+        // Act & Assert
+        mockMvc.perform(get("/myGit"))
+                .andExpect(status().isFound()) // 302
+                .andExpect(header().string("Location", "https://github.com/PabloTzeliks"));
+    }
+
+    /**
+     * Integration Test: Verifies 404 response when redirecting non-existent short code.
+     * <p>
+     * <b>Scenario:</b> Error Case - Attempt to redirect using invalid short code
+     * <p>
+     * <b>Given:</b> A short code "nao-existe" that doesn't exist in the database
+     * <br><b>When:</b> GET request is made to /nao-existe
+     * <br><b>Then:</b> API returns 404 Not Found instead of attempting a redirect
+     * <p>
+     * <b>Assertions:</b>
+     * <ul>
+     *   <li>HTTP status is 404 (Not Found)</li>
+     *   <li>Error response title is "Resource Not Found"</li>
+     * </ul>
+     * <p>
+     * This ensures users get clear feedback when clicking on invalid or expired
+     * shortened URLs rather than being redirected to an error page or broken link.
+     */
+    @Test
+    @DisplayName("GET /{shortUrl} - Should return 404 when redirecting non-existent code (Sad Path)")
+    void shouldReturn404ForRedirectingGhostCode() throws Exception {
+        mockMvc.perform(get("/nao-existe"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Resource Not Found"));
+    }
+
+    @Nested
+    @DisplayName("GET /api/v3/urls/codes/{code}/availability")
+    class CheckCodeAvailabilityTests {
+
+        @Test
+        @DisplayName("Should return 200 with available true when the code is free")
+        void shouldReturn200_available_whenCodeIsFree() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/freecode/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(true))
+                    .andExpect(jsonPath("$.code").value("freecode"));
         }
+
+        @Test
+        @DisplayName("Should return 200 with available false when the code exists in the database")
+        void shouldReturn200_unavailable_whenCodeExistsInDb() throws Exception {
+            UUID userId = UUID.randomUUID();
+            UserEntity userEntity = new UserEntity(userId, "avail-db@test.com", "encoded",
+                    Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+            jpaUserRepository.saveAndFlush(userEntity);
+
+            Long id = sequence.nextId();
+            Url savedUrl = Url.restore(id, userId, "https://example.com", "taken", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+            repository.save(savedUrl);
+
+            mockMvc.perform(get("/api/v3/urls/codes/taken/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(false));
+        }
+
+        @Test
+        @DisplayName("Should return 200 with available false when the code exists in Redis")
+        void shouldReturn200_unavailable_whenCodeExistsInRedis() throws Exception {
+            redisTemplate.opsForValue().set("url:taken2", "https://example.com");
+
+            mockMvc.perform(get("/api/v3/urls/codes/taken2/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(false));
+        }
+
+        @Test
+        @DisplayName("Should return 401 when the request is not authenticated")
+        void shouldReturn401_whenNotAuthenticated() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/somecode/availability"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Should return 200 when the code is exactly at minimum length (4 characters)")
+        void shouldReturn200_whenCodeIsAtMinLength() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abcd/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").exists());
+        }
+
+        @Test
+        @DisplayName("Should return 200 when the code is exactly at maximum length (20 characters)")
+        void shouldReturn200_whenCodeIsAtMaxLength() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abcdefghij1234567890/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").exists());
+        }
+    }
 }
