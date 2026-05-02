@@ -33,12 +33,18 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CreateCustomCodeUseCaseTest {
 
-    @Mock private UrlRepositoryPort repository;
-    @Mock private CurrentUserProviderPort userProvider;
-    @Mock private CachePort cache;
-    @Mock private CustomCodeValidator validator;
-    @Mock private SequencePort sequence;
-    @Mock private UrlDtoMapper mapper;
+    @Mock
+    private UrlRepositoryPort repository;
+    @Mock
+    private CurrentUserProviderPort userProvider;
+    @Mock
+    private CachePort cache;
+    @Mock
+    private CustomCodeValidator validator;
+    @Mock
+    private SequencePort sequence;
+    @Mock
+    private UrlDtoMapper mapper;
 
     private CreateCustomCodeUseCase useCase;
 
@@ -54,7 +60,7 @@ class CreateCustomCodeUseCaseTest {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
-        
+
         when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
         when(userProvider.getCurrentUserId()).thenReturn(userId);
         when(cache.exists("mycode")).thenReturn(false);
@@ -62,8 +68,9 @@ class CreateCustomCodeUseCaseTest {
         doNothing().when(validator).validate("mycode");
         when(sequence.nextId()).thenReturn(1L);
         when(repository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
-        
-        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode", "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+
+        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode",
+                "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
         when(mapper.toDto(any(Url.class))).thenReturn(responseDto);
 
         // Act
@@ -83,7 +90,7 @@ class CreateCustomCodeUseCaseTest {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
-        
+
         when(userProvider.getCurrentUserPlan()).thenReturn(Plan.ENTERPRISE);
         when(userProvider.getCurrentUserId()).thenReturn(userId);
         when(cache.exists("mycode")).thenReturn(false);
@@ -91,8 +98,9 @@ class CreateCustomCodeUseCaseTest {
         doNothing().when(validator).validate("mycode");
         when(sequence.nextId()).thenReturn(1L);
         when(repository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
-        
-        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode", "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+
+        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode",
+                "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
         when(mapper.toDto(any(Url.class))).thenReturn(responseDto);
 
         // Act
@@ -116,7 +124,7 @@ class CreateCustomCodeUseCaseTest {
 
         // Act & Assert
         assertThrows(InvalidPlanException.class, () -> useCase.execute(request));
-        
+
         verify(validator, never()).validate(any());
         verify(repository, never()).save(any());
     }
@@ -127,7 +135,7 @@ class CreateCustomCodeUseCaseTest {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "invalid-");
-        
+
         when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
         when(userProvider.getCurrentUserId()).thenReturn(userId);
         when(cache.exists("invalid-")).thenReturn(false);
@@ -136,7 +144,7 @@ class CreateCustomCodeUseCaseTest {
 
         // Act & Assert
         assertThrows(InvalidCustomCodeException.class, () -> useCase.execute(request));
-        
+
         verify(repository, never()).save(any());
     }
 
@@ -146,7 +154,7 @@ class CreateCustomCodeUseCaseTest {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
-        
+
         when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
         when(userProvider.getCurrentUserId()).thenReturn(userId);
         when(cache.exists("mycode")).thenReturn(false);
@@ -164,17 +172,19 @@ class CreateCustomCodeUseCaseTest {
         // Arrange
         UUID userId = UUID.randomUUID();
         CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
-        
+
         when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
         when(userProvider.getCurrentUserId()).thenReturn(userId);
         when(cache.exists("mycode")).thenReturn(false);
         when(repository.existsByShortCode("mycode")).thenReturn(false);
         when(sequence.nextId()).thenReturn(1L);
         when(repository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
-        
-        doThrow(new DataAccessException("Redis down") {}).when(cache).put(anyString(), anyString(), anyLong());
-        
-        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode", "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+
+        doThrow(new DataAccessException("Redis down") {
+        }).when(cache).put(anyString(), anyString(), anyLong());
+
+        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode",
+                "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
         when(mapper.toDto(any(Url.class))).thenReturn(responseDto);
 
         // Act
