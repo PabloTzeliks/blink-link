@@ -129,7 +129,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @DisplayName("POST /shorten - Should create a short URL successfully (Happy Path)")
     void shouldCreateShortUrl() throws Exception {
         // Arrange
-        CreateShortCodeRequest request = new CreateShortCodeRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/");
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/", null);
         String jsonRequest = objectMapper.writeValueAsString(request);
 
         User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),

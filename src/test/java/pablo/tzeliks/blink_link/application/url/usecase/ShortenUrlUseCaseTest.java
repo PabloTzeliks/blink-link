@@ -120,7 +120,7 @@ class ShortenUrlUseCaseTest {
                 now.plusDays(7)
         );
 
-        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl, null);
 
         // 1. SequencePort generate next ID
         when(sequencePort.nextId()).thenReturn(fakeId);
@@ -224,7 +224,7 @@ class ShortenUrlUseCaseTest {
         String originalUrl = "https://github.com/PabloTzeliks";
         Long invalidId = -1L;
 
-        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl, null);
 
         // 1. SequencePort generate next ID (Invalid ID)
         when(sequencePort.nextId()).thenReturn(invalidId);
@@ -260,7 +260,7 @@ class ShortenUrlUseCaseTest {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
         String originalUrl = "https://github.com/PabloTzeliks";
-        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl, null);
         Long generatedId = 1000001L;
         String shortCode = "HhqS1";
 
@@ -292,7 +292,7 @@ class ShortenUrlUseCaseTest {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
         String originalUrl = "https://github.com/PabloTzeliks";
-        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl);
+        CreateShortCodeRequest request = new CreateShortCodeRequest(originalUrl, null);
         String firstCode = "HhqS1";
         String secondCode = "HhqS2";
 
@@ -328,7 +328,7 @@ class ShortenUrlUseCaseTest {
     void shouldThrowAfterMaxRetriesExceeded() {
         // Arrange
         UUID fakeUserId = UUID.randomUUID();
-        CreateShortCodeRequest request = new CreateShortCodeRequest("https://github.com/PabloTzeliks");
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://github.com/PabloTzeliks", null);
 
         when(sequencePort.nextId()).thenReturn(1000001L);
         when(userProviderPort.getCurrentUserPlan()).thenReturn(Plan.FREE);
