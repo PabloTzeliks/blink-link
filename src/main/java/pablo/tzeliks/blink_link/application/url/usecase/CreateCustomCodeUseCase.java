@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityResponse;
 import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.DuplicateCodeException;
@@ -36,11 +35,11 @@ public class CreateCustomCodeUseCase {
     private long maxCacheTtlSeconds;
 
     public CreateCustomCodeUseCase(UrlRepositoryPort repository,
-                                   CurrentUserProviderPort userProvider,
-                                   CachePort cache,
-                                   CustomCodeValidator validator,
-                                   SequencePort sequence,
-                                   UrlDtoMapper mapper) {
+            CurrentUserProviderPort userProvider,
+            CachePort cache,
+            CustomCodeValidator validator,
+            SequencePort sequence,
+            UrlDtoMapper mapper) {
 
         this.repository = repository;
         this.userProvider = userProvider;
@@ -72,8 +71,7 @@ public class CreateCustomCodeUseCase {
 
         validator.validate(shortCode);
 
-        ExpirationCalculationStrategy strategy =
-                ExpirationStrategyFactory.getStrategyForPlan(userPlan);
+        ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
 
         Long id = sequence.nextId();
         Url url = Url.create(id, userId, request.originalUrl(), shortCode, strategy);
