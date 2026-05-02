@@ -78,13 +78,9 @@ public class CreateCustomCodeUseCase {
 
         Url saved = saveUrlToDatabase(url);
 
-        try {
-            long ttl = Math.min(saved.getSecondsUntilExpiry(), maxCacheTtlSeconds);
-            if (ttl > 0) {
-                cache.put(shortCode, saved.getOriginalUrl(), ttl);
-            }
-        } catch (org.springframework.dao.DataAccessException e) {
-            // Silently degrade
+        long ttl = Math.min(saved.getSecondsUntilExpiry(), maxCacheTtlSeconds);
+        if (ttl > 0) {
+            cache.put(shortCode, saved.getOriginalUrl(), ttl);
         }
 
         return mapper.toDto(saved);
