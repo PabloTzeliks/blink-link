@@ -18,73 +18,73 @@ class FormatValidationRuleTest {
 
     @Test
     @DisplayName("Should pass when code has minimum length (4 chars)")
-    void should_ReturnValid_When_MinLength() {
+    void shouldReturnValidWhenMinLength() {
         assertDoesNotThrow(() -> rule.validate("abcd"));
     }
 
     @Test
     @DisplayName("Should pass when code has maximum length (20 chars)")
-    void should_ReturnValid_When_MaxLength() {
+    void shouldReturnValidWhenMaxLength() {
         assertDoesNotThrow(() -> rule.validate("abcdefghij1234567890"));
     }
 
     @Test
     @DisplayName("Should pass when code contains hyphen in the middle")
-    void should_ReturnValid_When_ContainsHyphen() {
+    void shouldReturnValidWhenContainsHyphen() {
         assertDoesNotThrow(() -> rule.validate("my-link"));
     }
 
     @Test
     @DisplayName("Should pass when code contains underscore in the middle")
-    void should_ReturnValid_When_ContainsUnderscore() {
+    void shouldReturnValidWhenContainsUnderscore() {
         assertDoesNotThrow(() -> rule.validate("my_link"));
     }
 
     @Test
     @DisplayName("Should throw exception when code is too short (3 chars)")
-    void should_ThrowException_When_TooShort() {
+    void shouldThrowExceptionWhenTooShort() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("abc"));
     }
 
     @Test
     @DisplayName("Should throw exception when code is too long (21 chars)")
-    void should_ThrowException_When_TooLong() {
+    void shouldThrowExceptionWhenTooLong() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("abcdefghij12345678901"));
     }
 
     @Test
     @DisplayName("Should throw exception when code starts with hyphen")
-    void should_ThrowException_When_StartsWithHyphen() {
+    void shouldThrowExceptionWhenStartsWithHyphen() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("-mylink"));
     }
 
     @Test
     @DisplayName("Should throw exception when code ends with hyphen")
-    void should_ThrowException_When_EndsWithHyphen() {
+    void shouldThrowExceptionWhenEndsWithHyphen() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("mylink-"));
     }
 
     @Test
     @DisplayName("Should throw exception when code starts with underscore")
-    void should_ThrowException_When_StartsWithUnderscore() {
+    void shouldThrowExceptionWhenStartsWithUnderscore() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("_mylink"));
     }
 
     @Test
     @DisplayName("Should throw exception when code contains space")
-    void should_ThrowException_When_ContainsSpace() {
+    void shouldThrowExceptionWhenContainsSpace() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("my link"));
     }
 
     @Test
     @DisplayName("Should throw exception when code contains special character")
-    void should_ThrowException_When_ContainsSpecialChar() {
+    void shouldThrowExceptionWhenContainsSpecialChar() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate("my@link"));
     }
 
     @Test
     @DisplayName("Should throw exception when code is null")
-    void should_ThrowException_When_Null() {
+    void shouldThrowExceptionWhenNull() {
         assertThrows(InvalidCustomCodeException.class, () -> rule.validate(null));
     }
 }

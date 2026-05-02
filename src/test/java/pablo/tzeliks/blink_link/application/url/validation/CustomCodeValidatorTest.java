@@ -32,7 +32,7 @@ class CustomCodeValidatorTest {
 
     @Test
     @DisplayName("Should pass when all rules pass")
-    void should_Pass_When_AllRulesPass() {
+    void shouldPassWhenAllRulesPass() {
         assertDoesNotThrow(() -> validator.validate("mycode"));
         verify(rule1).validate("mycode");
         verify(rule2).validate("mycode");
@@ -40,7 +40,7 @@ class CustomCodeValidatorTest {
 
     @Test
     @DisplayName("Should fail fast when first rule fails")
-    void should_FailFast_When_FirstRuleFails() {
+    void shouldFailFastWhenFirstRuleFails() {
         doThrow(new InvalidCustomCodeException("Invalid format")).when(rule1).validate("mycode");
 
         assertThrows(InvalidCustomCodeException.class, () -> validator.validate("mycode"));
@@ -51,7 +51,7 @@ class CustomCodeValidatorTest {
 
     @Test
     @DisplayName("Should fail when second rule fails")
-    void should_Fail_When_SecondRuleFails() {
+    void shouldFailWhenSecondRuleFails() {
         doThrow(new InvalidCustomCodeException("Reserved word")).when(rule2).validate("mycode");
 
         assertThrows(InvalidCustomCodeException.class, () -> validator.validate("mycode"));
