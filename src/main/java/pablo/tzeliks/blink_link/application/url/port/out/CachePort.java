@@ -1,10 +1,10 @@
-package pablo.tzeliks.blink_link.application.url.ports;
+package pablo.tzeliks.blink_link.application.url.port.out;
 
 import java.util.Optional;
 
 public interface CachePort {
 
-    void put(String key, String value, long ttl);
+    void put(String shortCode, UrlContext payload, long ttl);
 
     Optional<String> get(String key);
 
@@ -13,4 +13,6 @@ public interface CachePort {
     void evict(String key);
 
     void putIfAbsent(String key, String value, long ttlInSeconds);
+
+    Optional<UrlContext> getUrlContext(String shortCode);
 }
