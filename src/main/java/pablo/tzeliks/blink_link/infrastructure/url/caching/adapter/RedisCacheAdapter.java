@@ -1,9 +1,9 @@
-package pablo.tzeliks.blink_link.infrastructure.url.persistence.caching;
+package pablo.tzeliks.blink_link.infrastructure.url.caching.adapter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;

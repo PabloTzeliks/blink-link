@@ -10,7 +10,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;

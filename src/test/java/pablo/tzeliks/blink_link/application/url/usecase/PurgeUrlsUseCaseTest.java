@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
 import java.time.LocalDateTime;

@@ -16,6 +16,7 @@ import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
 import pablo.tzeliks.blink_link.domain.user.model.Role;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.url.caching.adapter.RedisSequenceAdapter;
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
 import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
 

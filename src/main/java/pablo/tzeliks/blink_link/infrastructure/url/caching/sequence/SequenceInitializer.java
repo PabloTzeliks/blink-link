@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.url.persistence.caching;
+package pablo.tzeliks.blink_link.infrastructure.url.caching.sequence;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

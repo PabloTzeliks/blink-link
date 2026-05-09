@@ -1,6 +1,6 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
 import java.time.LocalDateTime;

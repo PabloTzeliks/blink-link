@@ -1,4 +1,4 @@
-package pablo.tzeliks.blink_link.infrastructure.url.persistence.caching;
+package pablo.tzeliks.blink_link.infrastructure.url.caching.adapter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -6,7 +6,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import pablo.tzeliks.blink_link.application.url.exception.SequenceGenerationException;
-import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
 @Slf4j

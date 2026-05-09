@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.url.caching.adapter.RedisCacheAdapter;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
