@@ -4,10 +4,10 @@
 
 ## Project Identity
 
-BlinkLink v4.0.0 — Production URL Shortener. Java 21 · Spring Boot 4 · PostgreSQL 17 · Redis · Kafka · DynamoDB.
+BlinkLink v4.0.0 — Production URL Shortener. Java 21 · Spring Boot 4 · PostgreSQL 17 · Redis (+ Redis Streams) · ClickHouse.
 Single developer (Pablo Tzeliks). Clean + Hexagonal Architecture. Pure DDD domain.
 
-**Current phase: v4.1** — Redis cache-aside, rate limiting, custom short codes. Kafka/DynamoDB are v4.2+.
+**Current phase: v4.1** — Redis cache-aside (delivered), Redis sequence (delivered), custom short codes (delivered), **rate limiting (IN DEVELOPMENT)**. Spring Modulith + Redis Streams + ClickHouse are v4.2+. Kafka and DynamoDB were dropped (see ADR-002).
 
 ---
 
@@ -22,9 +22,9 @@ Schedulers       DTOs          Strategies
 ```
 
 - Domain is **framework-agnostic**. Zero Spring imports inside `domain/`.
-- All external concerns (JPA, Redis, JWT, Kafka) live exclusively in `infrastructure/`.
+- All external concerns (JPA, Redis, Redis Streams, JWT, ClickHouse) live exclusively in `infrastructure/`.
 - Use cases orchestrate via **ports** (interfaces). Adapters implement ports.
-- No class in `domain/` or `application/` may import from `org.springframework.kafka`, `org.springframework.data.redis`, or any JPA annotation.
+- No class in `domain/` or `application/` may import from `org.springframework.data.redis` (incl. Redis Streams) or any JPA annotation. Event publish/consume is exclusively an infrastructure concern behind `EventStreamPort` (ADR-006).
 
 **Package structure:**
 ```
@@ -60,10 +60,10 @@ pablo.tzeliks.blink_link/
 ### Url
 Fields: `id (Long)`, `originalUrl`, `shortCode`, `userId (UUID)`, `createdAt`, `expirationDate`
 Factory methods:
-- `Url.create(id, originalUrl, shortCode, userId, strategy)` — generated code
-- `Url.createWithCustomCode(id, originalUrl, customCode, userId, strategy)` — VIP/Enterprise only
+- `Url.create(id, userId, originalUrl, shortCode, strategy)` — used for both generated and custom codes (custom code is passed as `shortCode`)
+- `Url.restore(...)` — rehydrate from persistence
 
-`userId` is **mandatory** as of v4.1 (FR-1.7). Do not create Url without it.
+`userId` is **mandatory** as of v4.1 (FR-1.8). Do not create Url without it.
 
 ### User
 Fields: `id (UUID)`, `email (Email VO)`, `password (Password VO)`, `role (Role)`, `plan (Plan)`, `authProvider`, `createdAt`, `updatedAt`
@@ -82,26 +82,30 @@ Plans: `FREE | VIP | ENTERPRISE`. Roles: `USER | ADMIN`.
 | `UrlRepositoryPort` | domain/url/ports | `PostgresUrlRepositoryAdapter` |
 | `UserRepositoryPort` | domain/user/ports | `PostgresUserRepositoryAdapter` |
 | `ShortenerPort` | domain/url/ports | `Base62Encoder` |
-| `SequencePort` | application/url/ports | `RedisSequenceAdapter` *(v4.1 new)* |
-| `CachePort` | application/url/ports | `RedisCacheAdapter` *(v4.1 new)* |
-| `RateLimitPort` | application/url/ports | `RedisRateLimitAdapter` *(v4.1 new)* |
-| `CurrentUserProviderPort` | domain/user/ports | `SpringSecurityCurrentUserProvider` |
-| `TokenGenerationPort` | domain/user/ports | `TokenService` |
+| `SequencePort` | application/url/port/out | `RedisSequenceAdapter` *(v4.1 delivered)* |
+| `CachePort` | application/url/port/out | `RedisCacheAdapter` *(v4.1, mid-refactor to `UrlContext` payload)* |
+| `CurrentUserProviderPort` | application/user/ports | `SpringSecurityCurrentUserProvider` |
+| `TokenGenerationPort` | application/user/ports | `TokenService` |
 | `UserPasswordEncoderPort` | domain/user/ports | `BCryptPasswordEncoderAdapter` |
 
-**v4.2 ports (DO NOT implement yet):** `EventPublisherPort`
+**v4.1 IN DEVELOPMENT (not yet implemented):** `RateLimitPort` (no `RedisRateLimitAdapter`, no filter/interceptor yet). Only the `RateLimitResult` and `UrlContext` records exist under `application/url/port/out`.
+
+**v4.2 ports (DO NOT implement yet):** `EventStreamPort` (Redis Streams — ADR-006)
 
 ---
 
-## Redis Key Schema (v4.1)
+## Redis Key Schema
 
 | Key | Type | TTL | Purpose |
 |---|---|---|---|
-| `blinklink:url:{code}` | String | min(remainingUrlTTL, 7d) | Cache-aside redirect lookup |
-| `blinklink:rate:{userId}` | String/ZSet | sliding window | Rate limit counter |
+| `url:{shortCode}` | Hash (target: `UrlContext` = destination/ownerId/rateLimit) | min(remainingUrlTTL, 7d) | Cache-aside redirect lookup |
+| `ratelimit:user:{ownerId}` | ZSet | sliding window | Per-user rate limit (IN DEVELOPMENT) |
 | `sequence:url:id` | String | none | ID sequence counter |
+| `blinklink:events:clicks` | Stream | n/a | Click event delivery to analytics (v4.2 — ADR-006) |
 
-**Security rule:** No PII in Redis keys or values. Cached values = `original_url` only.
+> Current code uses a plain `url:` String value (`originalUrl` only); the migration to the `UrlContext` hash payload is mid-refactor. The `ratelimit:user:{ownerId}` ZSet and the events stream are not implemented yet.
+
+**Security rule:** No PII and no tokens in Redis keys or values (NFR-4.1). Cached `UrlContext` carries only `destination`, `ownerId` (UUID) and `rateLimit`.
 
 ---
 
@@ -118,14 +122,16 @@ Rate limit key = `userId` (authenticated) or IP (anonymous). Never URL code.
 
 ---
 
-## Custom Short Code Flow (v4.1)
+## Custom Short Code Flow (v4.1 — delivered, see ADR-004)
 
-1. Request includes optional `custom_code` field
-2. Use case checks: user plan must be VIP or ENTERPRISE
-3. Validate format: `[a-zA-Z0-9_-]`, length 4–20 chars
-4. Redis `SETNX blinklink:url:{code}` — if 0: reject with `ShortCodeAlreadyTakenException`
-5. PostgreSQL INSERT — if UNIQUE violation: reject (no retry for custom codes)
-6. For generated codes: retry with new ID on UNIQUE violation (up to 3x)
+PostgreSQL UNIQUE on `short_code` is the **sole** uniqueness arbiter. `SETNX` was rejected (it cannot distinguish "taken" from "Redis down" and leaves phantom keys on INSERT failure).
+
+1. Request includes optional `customCode` field
+2. Plan gate: user plan must be VIP or ENTERPRISE → else 403
+3. `CustomCodeValidator.validate()`: format `[a-zA-Z0-9_-]` 4–20 chars, reserved words, blocklist → else 422
+4. Best-effort pre-checks: `cache.exists(code)` and `repository.existsByShortCode(code)` → fast-fail 409 if taken
+5. PostgreSQL INSERT — UNIQUE violation → 409 `DuplicateCodeException` (no retry for custom codes)
+6. For *generated* codes (ShortenUrlUseCase): retry with new ID on UNIQUE violation (up to 3x)
 
 ---
 
@@ -172,12 +178,14 @@ Read the relevant ADR file when a task touches that decision area.
 
 | File | Covers |
 |---|---|
-| `docs/ADR-003-jpa-optimistic-lock.md` | v3: JPA impedance mismatch, `@Version` on UserEntity |
-| `docs/ADR-004-url-lifecycle-purge.md` | v3: Expiration strategy pattern, `FOR UPDATE SKIP LOCKED` purge |
-| `docs/ADR-001-monolith-structure.md` | v4: Why no Modular Monolith refactor |
-| `docs/ADR-002-phased-rollout.md` | v4: v4.1/v4.2/v4.3 phased delivery, Kafka placement |
-| `docs/ADR-005-redis-sequence.md` | v4: Redis INCR replaces PostgreSQL nextval() |
-| `docs/ADR-006-dynamodb-analytics.md` | v4: DynamoDB key design for analytics (v4.2) |
+| `docs/ADR-01.md` | v4: Retain layered monolith for v4.1; **adopt Spring Modulith from v4.2** |
+| `docs/ADR-02.md` | v4: Revised phased rollout (v4.1→v4.4); Kafka & DynamoDB dropped |
+| `docs/ADR-03.md` | v4: Redis `INCR` as distributed sequence server (replaces PostgreSQL `nextval()`) |
+| `docs/ADR-04.md` | v4: Custom code uniqueness — PostgreSQL UNIQUE as final arbiter (SETNX rejected) |
+| `docs/ADR-05.md` | v4.2: **ClickHouse** for analytics storage (replaces DynamoDB) |
+| `docs/ADR-06.md` | v4.2: **Redis Streams** for click event delivery (replaces Kafka) |
+| `docs/ADR-07.md` | v3: JPA impedance mismatch, `@Version` on UserEntity, `Persistable` |
+| `docs/ADR-08.md` | v3: URL lifecycle, expiration strategy, `FOR UPDATE SKIP LOCKED` async purge |
 
 ---
 
@@ -185,7 +193,8 @@ Read the relevant ADR file when a task touches that decision area.
 
 - Do not add Spring annotations to `domain/` classes
 - Do not call repositories directly from controllers
-- Do not implement Kafka or DynamoDB adapters — that is v4.2
+- Do not implement the Redis Streams event pipeline or ClickHouse analytics adapters — that is v4.2
+- Do not reintroduce Kafka or DynamoDB — both were dropped (ADR-002, ADR-005, ADR-006)
 - Do not bypass the port interface to call adapters directly
 - Do not commit sensitive values (secrets, tokens, passwords) to any file
 - Do not delete or modify Flyway migration files already applied
