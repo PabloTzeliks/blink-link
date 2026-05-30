@@ -1,4 +1,4 @@
-# ADR-003 — JPA Impedance Mismatch and Optimistic Locking
+# ADR-007 — JPA Impedance Mismatch and Optimistic Locking
 
 | | |
 |---|---|
