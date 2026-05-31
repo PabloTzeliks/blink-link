@@ -10,6 +10,7 @@ import pablo.tzeliks.blink_link.application.url.exception.DuplicateCodeException
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
 import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
 import pablo.tzeliks.blink_link.application.url.validation.CustomCodeValidator;
 import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
@@ -18,6 +19,7 @@ import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrateg
 import pablo.tzeliks.blink_link.domain.url.strategy.factory.ExpirationStrategyFactory;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPlanException;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.policy.PlanRateLimitPolicy;
 
 import java.util.UUID;
 
@@ -53,6 +55,7 @@ public class CreateCustomCodeUseCase {
     public UrlDetailsResponse execute(CreateShortCodeRequest request) {
 
         Plan userPlan = userProvider.getCurrentUserPlan();
+        int userRateLimit = PlanRateLimitPolicy.requestsPerMinuteForPlan(userPlan);
         UUID userId = userProvider.getCurrentUserId();
 
         if (userPlan != Plan.VIP && userPlan != Plan.ENTERPRISE) {
@@ -79,8 +82,10 @@ public class CreateCustomCodeUseCase {
         Url saved = saveUrlToDatabase(url);
 
         long ttl = Math.min(saved.getSecondsUntilExpiry(), maxCacheTtlSeconds);
+        UrlContext payload = new UrlContext(saved.getOriginalUrl(), saved.getUserId().toString(), userRateLimit);
+
         if (ttl > 0) {
-            cache.put(shortCode, saved.getOriginalUrl(), ttl);
+            cache.put(shortCode, payload, ttl);
         }
 
         return mapper.toDto(saved);
