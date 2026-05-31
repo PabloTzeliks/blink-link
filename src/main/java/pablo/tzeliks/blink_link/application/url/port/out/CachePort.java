@@ -6,13 +6,9 @@ public interface CachePort {
 
     void put(String shortCode, UrlContext payload, long ttl);
 
-    Optional<String> get(String key);
+    Optional<UrlContext> getUrlContext(String shortCode);
 
     boolean exists(String key);
 
     void evict(String key);
-
-    void putIfAbsent(String key, String value, long ttlInSeconds);
-
-    Optional<UrlContext> getUrlContext(String shortCode);
 }
