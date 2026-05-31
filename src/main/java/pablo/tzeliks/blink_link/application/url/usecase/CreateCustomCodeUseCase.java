@@ -55,7 +55,6 @@ public class CreateCustomCodeUseCase {
     public UrlDetailsResponse execute(CreateShortCodeRequest request) {
 
         Plan userPlan = userProvider.getCurrentUserPlan();
-        int userRateLimit = PlanRateLimitPolicy.requestsPerMinuteForPlan(userPlan);
         UUID userId = userProvider.getCurrentUserId();
 
         if (userPlan != Plan.VIP && userPlan != Plan.ENTERPRISE) {
@@ -75,6 +74,7 @@ public class CreateCustomCodeUseCase {
         }
 
         ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
+        int userRateLimit = PlanRateLimitPolicy.requestsPerMinuteForPlan(userPlan);
 
         Long id = sequence.nextId();
         Url url = Url.create(id, userId, request.originalUrl(), shortCode, strategy);
