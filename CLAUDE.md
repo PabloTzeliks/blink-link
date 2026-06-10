@@ -7,7 +7,7 @@
 BlinkLink v4.0.0 — Production URL Shortener. Java 21 · Spring Boot 4 · PostgreSQL 17 · Redis (+ Redis Streams) · ClickHouse.
 Single developer (Pablo Tzeliks). Clean + Hexagonal Architecture. Pure DDD domain.
 
-**Current phase: v4.1** — Redis cache-aside (delivered), Redis sequence (delivered), custom short codes (delivered), **rate limiting (IN DEVELOPMENT)**. Spring Modulith + Redis Streams + ClickHouse are v4.2+. Kafka and DynamoDB were dropped (see ADR-002).
+**Current phase: v4.1 (complete)** — Redis cache-aside (delivered), Redis sequence (delivered), custom short codes (delivered), **rate limiting (delivered)**. Spring Modulith + Redis Streams + ClickHouse are v4.2+ (next). Kafka and DynamoDB were dropped (see ADR-002).
 
 ---
 
@@ -83,12 +83,13 @@ Plans: `FREE | VIP | ENTERPRISE`. Roles: `USER | ADMIN`.
 | `UserRepositoryPort` | domain/user/ports | `PostgresUserRepositoryAdapter` |
 | `ShortenerPort` | domain/url/ports | `Base62Encoder` |
 | `SequencePort` | application/url/port/out | `RedisSequenceAdapter` *(v4.1 delivered)* |
-| `CachePort` | application/url/port/out | `RedisCacheAdapter` *(v4.1, mid-refactor to `UrlContext` payload)* |
+| `CachePort` | application/url/port/out | `RedisCacheAdapter` *(v4.1 delivered — `UrlContext` JSON payload)* |
+| `RateLimitPort` | application/url/port/out | `RedisRateLimitAdapter` *(v4.1 delivered — sliding-window counter)* |
 | `CurrentUserProviderPort` | application/user/ports | `SpringSecurityCurrentUserProvider` |
 | `TokenGenerationPort` | application/user/ports | `TokenService` |
 | `UserPasswordEncoderPort` | domain/user/ports | `BCryptPasswordEncoderAdapter` |
 
-**v4.1 IN DEVELOPMENT (not yet implemented):** `RateLimitPort` (no `RedisRateLimitAdapter`, no filter/interceptor yet). Only the `RateLimitResult` and `UrlContext` records exist under `application/url/port/out`.
+**v4.1 note:** `RateLimitPort` is enforced inside `RedirectUrlUseCase` (not a web filter), because the limit comes from the resolved `UrlContext` (owner + plan limit) — a generic filter would not have that data. The check runs on both cache hit and miss.
 
 **v4.2 ports (DO NOT implement yet):** `EventStreamPort` (Redis Streams — ADR-006)
 
@@ -98,12 +99,12 @@ Plans: `FREE | VIP | ENTERPRISE`. Roles: `USER | ADMIN`.
 
 | Key | Type | TTL | Purpose |
 |---|---|---|---|
-| `url:{shortCode}` | Hash (target: `UrlContext` = destination/ownerId/rateLimit) | min(remainingUrlTTL, 7d) | Cache-aside redirect lookup |
-| `ratelimit:user:{ownerId}` | ZSet | sliding window | Per-user rate limit (IN DEVELOPMENT) |
+| `url:{shortCode}` | String (JSON `UrlContext` = destination/ownerId/rateLimit) | min(remainingUrlTTL, 7d) | Cache-aside redirect lookup |
+| `rate:{ownerId}:{windowId}` | String counter (`INCR`) | 2× window (120s) | Per-owner sliding-window rate limit |
 | `sequence:url:id` | String | none | ID sequence counter |
 | `blinklink:events:clicks` | Stream | n/a | Click event delivery to analytics (v4.2 — ADR-006) |
 
-> Current code uses a plain `url:` String value (`originalUrl` only); the migration to the `UrlContext` hash payload is mid-refactor. The `ratelimit:user:{ownerId}` ZSet and the events stream are not implemented yet.
+> The cache stores `UrlContext` as a JSON string under `url:{shortCode}`. Rate limiting keeps two `rate:{ownerId}:{windowId}` counters (current + previous window, `windowId = epochSeconds / 60`) read atomically by a Lua script for the sliding-window-counter algorithm. The events stream is not implemented yet (v4.2).
 
 **Security rule:** No PII and no tokens in Redis keys or values (NFR-4.1). Cached `UrlContext` carries only `destination`, `ownerId` (UUID) and `rateLimit`.
 
@@ -117,8 +118,8 @@ Plans: `FREE | VIP | ENTERPRISE`. Roles: `USER | ADMIN`.
 | VIP | 500 req/min |
 | ENTERPRISE | 2000 req/min |
 
-429 response must include `Retry-After` header.
-Rate limit key = `userId` (authenticated) or IP (anonymous). Never URL code.
+429 response must include `Retry-After` header (mapped in `GlobalExceptionHandler`).
+Rate limit key = the URL **owner's** `userId` on the redirect hot path (delivered). The limit value is derived from the owner's plan via `PlanRateLimitPolicy` (domain). IP-based limiting for anonymous traffic is deferred. Never the URL code.
 
 ---
 
