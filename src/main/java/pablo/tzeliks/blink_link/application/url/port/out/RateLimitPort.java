@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface RateLimitPort {
 
-    RateLimitResult check(UUID ownerId, int limit);
+    RateLimitResult check(String ownerId, int limit);
 }

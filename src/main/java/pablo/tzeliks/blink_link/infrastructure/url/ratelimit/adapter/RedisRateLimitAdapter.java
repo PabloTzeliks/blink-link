@@ -27,7 +27,7 @@ public class RedisRateLimitAdapter implements RateLimitPort {
     }
 
     @Override
-    public RateLimitResult check(UUID ownerId, int limit) {
+    public RateLimitResult check(String ownerId, int limit) {
 
         try {
             long now = Instant.now().getEpochSecond();
