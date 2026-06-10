@@ -3,6 +3,7 @@ package pablo.tzeliks.blink_link.infrastructure.web.common;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,10 +13,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import pablo.tzeliks.blink_link.application.url.exception.DuplicateCodeException;
-import pablo.tzeliks.blink_link.application.url.exception.InvalidCustomCodeException;
-import pablo.tzeliks.blink_link.application.url.exception.OrphanedUrlException;
-import pablo.tzeliks.blink_link.application.url.exception.SequenceGenerationException;
+import pablo.tzeliks.blink_link.application.url.exception.*;
 import pablo.tzeliks.blink_link.domain.common.exception.*;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ErrorResponse;
@@ -150,6 +148,22 @@ public class GlobalExceptionHandler {
                 "The service is temporarily unavailable and cannot generate a short URL.",
                 request.getRequestURI(),
                 null);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException ex,
+                                                                 HttpServletRequest request) {
+
+        ResponseEntity<ErrorResponse> base = buildErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "Too Many Requests",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null);
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .body(base.getBody());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
