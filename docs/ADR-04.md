@@ -1,54 +1,35 @@
-# ADR-004 — URL Lifecycle and Async Purge Engine
+# ADR-004 — Custom Code Uniqueness: PostgreSQL UNIQUE as Final Arbiter
 
 | | |
 |---|---|
-| **Status** | ACCEPTED |
-| **Date** | v3.0.0 |
+| **Status** | ACCEPTED (replaces original ADR-004 on DynamoDB) |
+| **Date** | 2026-05 |
 | **Author** | PabloTzeliks |
+| **Scope** | v4.1 (DELIVERED) |
 
 ## Context
 
-URL expiration is plan-driven (7 days FREE, 1 year VIP, 10 years ENTERPRISE). Expired links must be deleted without blocking traffic or causing table-level lock contention. Multiple app instances may run simultaneously.
+Custom short codes (FR-1.5, FR-1.6) require uniqueness enforcement. The original ADR-002 referenced Redis `SETNX` as the uniqueness gate. During implementation, `SETNX` was rejected in favour of the PostgreSQL UNIQUE constraint as the sole arbiter.
 
 ## Decision
 
-- **Strategy Pattern** (`ExpirationCalculationStrategy`) computes TTL at creation time and stores as `expiration_date`.
-- `PurgeUrlsUseCase` runs in batches with configurable size and sleep interval.
-- PostgreSQL native DELETE with `FOR UPDATE SKIP LOCKED` for safe concurrent purge across instances.
-- `ExpiredUrlCleanUpScheduler` triggers via cron (default: `0 0 3 * * *`).
+The PostgreSQL UNIQUE constraint on the `short_code` column is the authoritative uniqueness gate for custom codes. Redis is used only for cache warming after successful persistence, not for uniqueness checking.
 
-## Implementation Detail
+## Rationale
 
-```sql
-DELETE FROM urls
-WHERE id IN (
-    SELECT id FROM urls
-    WHERE expiration_date < :refTime
-    ORDER BY id
-    FOR UPDATE SKIP LOCKED
-    LIMIT :batchSize
-)
-```
+`SETNX` returns boolean false for two distinct conditions: code already taken, or Redis unavailable. The use case cannot distinguish between them without a try/catch that leaks infrastructure concerns into application logic. This violates the port/adapter contract.
 
-`SKIP LOCKED` means: if another instance is deleting a row, skip it — don't wait. Prevents deadlocks and serialisation under concurrent cleanup.
+The PostgreSQL UNIQUE constraint is unambiguous: `DataIntegrityViolationException` means duplicate, period. The use case handles exactly one failure mode with exactly one exception type.
 
-## v4.1 Addition
+`SETNX` before persistence creates phantom Redis keys: if the INSERT fails for any reason after `SETNX` succeeds, the key remains in Redis until TTL expiry. During that window, the code appears unavailable even though it does not exist in the database.
 
-`PurgeUrlsUseCase` must also evict the Redis key `blinklink:url:{code}` on hard-delete (FR-1.3). Add `CachePort.evict(code)` call after batch delete.
+## Implementation Flow
 
-## Configuration (application.yml)
-
-```yaml
-app.job.purge-urls:
-  batch-size: 5000
-  sleep-millis: 100
-  cron: "0 0 3 * * *"
-```
-
-## Consequences
-
-- ✅ TTL rules isolated and independently testable per plan
-- ✅ Concurrent purge across instances with no deadlock risk
-- ✅ DB load controlled via batch size + sleep
-- ❌ Scheduler tuning required (batch size, sleep, cron) — operational burden
-- ❌ v4.1: purge must also evict Redis or stale cached URLs will redirect after deletion
+| Step | Action | Failure Response |
+|---|---|---|
+| 1 | Plan gate: VIP or ENTERPRISE check | 403 Forbidden if FREE |
+| 2 | `CustomCodeValidator.validate()` | 422 Unprocessable Entity if invalid format, reserved, or blocklisted |
+| 3 | `SequencePort.nextId()` | Proceeds to next step |
+| 4 | `Url.create()` with customCode as `short_code` | Domain entity created |
+| 5 | `repository.save()` | 409 `DuplicateCodeException` on UNIQUE violation |
+| 6 | `cache.put()` | Silent degradation on Redis failure (FR-1.4 policy) |

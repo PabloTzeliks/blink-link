@@ -9,11 +9,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
-import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.exception.RateLimitExceededException;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.RateLimitPort;
+import pablo.tzeliks.blink_link.application.url.port.out.RateLimitResult;
+import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.model.User;
+import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -29,10 +35,13 @@ public class RedirectUrlUseCaseTest {
     private UrlRepositoryPort repository;
 
     @Mock
-    private CachePort cache;
+    private UserRepositoryPort userRepository;
 
     @Mock
-    private UrlDtoMapper mapper;
+    private RateLimitPort rateLimit;
+
+    @Mock
+    private CachePort cache;
 
     private RedirectUrlUseCase useCase;
 
@@ -40,7 +49,7 @@ public class RedirectUrlUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new RedirectUrlUseCase(repository, cache);
+        useCase = new RedirectUrlUseCase(repository, userRepository, rateLimit, cache);
         ReflectionTestUtils.setField(useCase, "maxCacheTtlSeconds", MAX_CACHE_TTL_SECONDS);
     }
 
@@ -53,10 +62,11 @@ public class RedirectUrlUseCaseTest {
         String originalUrl = "https://github.com/PabloTzeliks";
 
         ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
-        UrlResponse expectedResponse = new UrlResponse(originalUrl);
 
         // 1. Cache Hit
-        when(cache.get(shortCode)).thenReturn(Optional.of(originalUrl));
+        UrlContext cachedContext = new UrlContext(originalUrl, UUID.randomUUID().toString(), 100);
+        when(cache.getUrlContext(shortCode)).thenReturn(Optional.of(cachedContext));
+        when(rateLimit.check(anyString(), anyInt())).thenReturn(new RateLimitResult(true, 99, 100));
 
         // Act
         UrlResponse actualResponse = useCase.execute(request);
@@ -64,8 +74,10 @@ public class RedirectUrlUseCaseTest {
         // Assert
         assertNotNull(actualResponse);
         assertEquals(originalUrl, actualResponse.originalUrl());
-        verify(cache).get(shortCode);
+        verify(cache).getUrlContext(shortCode);
+        verify(rateLimit).check(cachedContext.ownerId(), cachedContext.rateLimit());
         verify(repository, never()).findByShortCode(any());
+        verify(userRepository, never()).findById(any());
     }
 
     @Test
@@ -83,10 +95,19 @@ public class RedirectUrlUseCaseTest {
         UrlResponse expectedResponse = new UrlResponse(originalUrl);
 
         // 1. Cache Miss
-        when(cache.get(shortCode)).thenReturn(Optional.empty());
+        when(cache.getUrlContext(shortCode)).thenReturn(Optional.empty());
 
         // 2. PostgreSQL search
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
+
+        // 3. Owner lookup (to resolve the plan rate limit)
+        User owner = mock(User.class);
+        when(owner.getId()).thenReturn(userId);
+        when(owner.getPlan()).thenReturn(Plan.FREE);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(owner));
+
+        // 4. Rate limit allowed
+        when(rateLimit.check(anyString(), anyInt())).thenReturn(new RateLimitResult(true, 99, 100));
 
         // Act
         UrlResponse actualResponse = useCase.execute(request);
@@ -95,8 +116,10 @@ public class RedirectUrlUseCaseTest {
         assertNotNull(actualResponse);
         assertEquals(expectedResponse.originalUrl(), actualResponse.originalUrl());
 
-        verify(cache).get(shortCode);
+        verify(cache).getUrlContext(shortCode);
         verify(repository).findByShortCode(shortCode);
+        verify(userRepository).findById(userId);
+        verify(rateLimit).check(userId.toString(), 100);
     }
 
     @Test
@@ -108,20 +131,39 @@ public class RedirectUrlUseCaseTest {
         UUID userId = UUID.randomUUID();
         Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
-        long expectedTtl = Math.min(urlFound.getSecondsUntilExpiry(), MAX_CACHE_TTL_SECONDS);
-
-        when(cache.get(shortCode)).thenReturn(Optional.empty());
+        when(cache.getUrlContext(shortCode)).thenReturn(Optional.empty());
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
+
+        User owner = mock(User.class);
+        when(owner.getId()).thenReturn(userId);
+        when(owner.getPlan()).thenReturn(Plan.FREE);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(owner));
+
+        when(rateLimit.check(anyString(), anyInt())).thenReturn(new RateLimitResult(true, 99, 100));
 
         useCase.execute(new ResolveShortCodeRequest(shortCode));
 
-        verify(cache).get(shortCode);
+        verify(cache).getUrlContext(shortCode);
         verify(repository).findByShortCode(shortCode);
         verify(cache).put(
                 eq("HhqS"),
-                eq("https://github.com/PabloTzeliks"),
+                eq(new UrlContext(originalUrl, userId.toString(), 100)),
                 longThat(ttl -> ttl >= 604795L && ttl <= 604800L)
         );
+    }
+
+    @Test
+    @DisplayName("Should throw RateLimitExceededException when the owner's limit is exceeded")
+    void shouldThrowWhenRateLimitExceeded() {
+        String shortCode = "HhqS";
+        String originalUrl = "https://github.com/PabloTzeliks";
+        UrlContext cachedContext = new UrlContext(originalUrl, UUID.randomUUID().toString(), 100);
+
+        when(cache.getUrlContext(shortCode)).thenReturn(Optional.of(cachedContext));
+        when(rateLimit.check(anyString(), anyInt())).thenReturn(new RateLimitResult(false, 0, 100));
+
+        assertThrows(RateLimitExceededException.class,
+                () -> useCase.execute(new ResolveShortCodeRequest(shortCode)));
     }
 
     @Test
@@ -132,12 +174,14 @@ public class RedirectUrlUseCaseTest {
         UUID userId = UUID.randomUUID();
         Url expiredUrl = Url.restore(1L, userId, "https://example.com", shortCode, past.minusDays(7), past);
 
-        when(cache.get(shortCode)).thenReturn(Optional.empty());
+        when(cache.getUrlContext(shortCode)).thenReturn(Optional.empty());
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(expiredUrl));
 
         assertThrows(UrlExpiredException.class,
                 () -> useCase.execute(new ResolveShortCodeRequest(shortCode)));
 
+        verify(userRepository, never()).findById(any());
+        verify(rateLimit, never()).check(any(), anyInt());
         verify(cache, never()).put(any(), any(), anyLong());
     }
 }

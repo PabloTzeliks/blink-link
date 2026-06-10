@@ -1,61 +1,74 @@
-# ADR-006 — DynamoDB for Analytics Storage
+# ADR-006 — Redis Streams for Click Event Delivery (Replaces Kafka)
 
 | | |
 |---|---|
 | **Status** | ACCEPTED |
-| **Date** | 2026-03 |
+| **Date** | 2026-05 |
 | **Author** | PabloTzeliks |
-| **Scope** | v4.2 — DO NOT implement in v4.1 |
+| **Scope** | v4.2 |
 
 ## Context
 
-Analytics click events require high write throughput (one write per redirect) and time-range reads (clicks per URL over N days). PostgreSQL cannot sustain 500 rows/second append with aggregate queries at scale.
+Click events must be delivered from the redirect path to the analytics storage (ClickHouse) asynchronously. The redirect must return 302 before the analytics write completes. The original plan used Kafka (MSK on AWS) for this delivery.
+
+## Kafka Rejection Rationale
+
+Kafka inside a monolith delivers the operational complexity of a distributed system without its core benefit: decoupling between physically separate services. Within a single JAR, an `ApplicationEventPublisher` with a dedicated thread pool achieves the same async fan-out.
+
+Kafka's genuine advantages — long retention, compacted topics, exactly-once semantics, replay from arbitrary offset — are not required at BlinkLink's current scale and architecture. Paying MSK costs and operational overhead for capabilities that are not needed is architecturally premature.
 
 ## Decision
 
-DynamoDB is the exclusive storage layer for analytics click events. PostgreSQL stores zero analytics data.
+Use **Redis Streams with Consumer Groups** as the event delivery mechanism for click events. Redis is already in the stack and already deployed on ElastiCache.
 
-## Access Patterns (drive all key decisions)
+## Stream Design
 
-| ID | Pattern |
+| Component | Value |
 |---|---|
-| AP-1 | Total clicks for a URL — COUNT where urlCode = X |
-| AP-2 | Clicks per day over date range — GROUP BY date WHERE urlCode = X AND date BETWEEN A AND B |
-| AP-3 | Top countries for a URL — COUNT GROUP BY countryCode WHERE urlCode = X |
-| AP-4 | Top devices for a URL — COUNT GROUP BY deviceType WHERE urlCode = X |
+| Stream key | `blinklink:events:clicks` |
+| Consumer group | `analytics-consumer-group` |
+| Message fields | `url_code`, `user_id`, `clicked_at`, `country_code`, `device_type`, `user_agent_hash` |
 
-## Key Design
+## Delivery Contract
 
-| Key | Value | Rationale |
-|---|---|---|
-| Partition Key (PK) | `urlCode` | All queries for a URL land in the same partition. Enables AP-1 through AP-4 without cross-partition scans. |
-| Sort Key (SK) | `timestamp#eventId` (ISO-8601 UTC + UUID) | Enables range queries for AP-2. UUID suffix ensures uniqueness on same-millisecond clicks. |
-| Attributes | `userId`, `countryCode` (nullable), `deviceType`, `userAgentHash` | All analytics dimensions stored inline. |
+### Producer (`RedirectUrlUseCase` via `EventStreamPort`)
 
-## ClickEvent Schema (FR-3.2)
+- `XADD blinklink:events:clicks * url_code X user_id Y clicked_at Z ...`
+- Fire-and-forget: redirect returns 302 before XADD completes
+- If Redis unavailable: event dropped, WARN log, redirect succeeds (FR-1.4 policy)
 
-```
-urlCode       String  (PK)
-timestamp     String  (ISO-8601 UTC, part of SK)
-eventId       UUID    (part of SK)
-userId        UUID
-countryCode   String? (nullable in v4.2 — GeoIP strategy deferred)
-deviceType    String
-userAgentHash String
-```
+### Consumer (`AnalyticsStreamConsumer` — dedicated thread, analytics module)
 
-## Cross-User Isolation (NFR-4.4)
+- `XREADGROUP GROUP analytics-consumer-group consumer-1 COUNT 100 STREAMS ...`
+- Writes batch to ClickHouse
+- `XACK` on successful write (at-least-once delivery)
+- On ClickHouse failure: WARN log, message remains pending for retry
 
-PK is `urlCode`, not `userId`. Ownership enforced in application layer before query. Cross-user access is architecturally impossible: `urlCode` uniqueness enforced by PostgreSQL UNIQUE constraint → `urlCode` is inherently user-scoped.
+## Port Contract
 
-## Capacity Mode
+| Component | Responsibility |
+|---|---|
+| `EventStreamPort` (application layer, url module) | `publish(ClickEvent)` |
+| `RedisEventStreamAdapter` (infrastructure) | `XADD` to Redis Streams |
+| `AnalyticsStreamConsumer` (infrastructure, analytics module) | `XREADGROUP` + ClickHouse write |
 
-On-demand. No provisioned throughput. DynamoDB auto-scales on burst. Review at v5 if sustained load warrants reserved capacity for cost.
+**Architecture rule:** No class in the domain or application layer may reference Redis Streams directly. Event publishing and consuming are exclusively infrastructure concerns behind ports.
 
-## Trade-offs
+## Migration Path to Kafka
+
+If BlinkLink is extracted to microservices in v5 and Kafka becomes justified:
+
+- `EventStreamPort` contract does not change
+- `RedisEventStreamAdapter` is replaced by `KafkaEventStreamAdapter`
+- `AnalyticsStreamConsumer` is replaced by `KafkaAnalyticsConsumer`
+- The analytics module and ClickHouse are unaffected
+- The url module and redirect path are unaffected
+
+## Trade-offs vs Kafka
 
 | Gain | Cost |
 |---|---|
-| Write throughput scales to 500+/s without schema changes | Key design irreversible once data exists — must be correct before v4.2 ships |
-| Time-range queries on SK are natively efficient | Aggregate queries (GROUP BY country) require application-side aggregation |
-| On-demand mode eliminates capacity planning | countryCode is nullable in v4.2 — analytics queries must handle missing values |
+| No additional AWS service (MSK) — Redis already deployed on ElastiCache | No long-term event retention — Redis Streams hold events until acknowledged |
+| No broker management, topic configuration, or consumer group rebalancing at broker level | No replay from arbitrary historical offset (Kafka's strongest advantage) |
+| Simpler local development — one less Docker container | Less battle-tested at very high throughput vs Kafka — not relevant at current scale |
+| Consistent with existing Redis investment and operational knowledge | If replay or long retention become requirements, Kafka is the correct migration |

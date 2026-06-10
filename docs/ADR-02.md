@@ -1,34 +1,40 @@
-# ADR-002 — Redis as First v4 Technology; Phased Rollout
+# ADR-002 — Revised Phased Rollout; Kafka and DynamoDB Replaced
 
 | | |
 |---|---|
-| **Status** | ACCEPTED |
-| **Date** | 2026-03 |
+| **Status** | REVISED (original: ACCEPTED 2026-03) |
+| **Date** | 2026-05 |
 | **Author** | PabloTzeliks |
-| **Scope** | v4.1 first |
+| **Scope** | v4.1 → v4.4 |
 
-## Context
+## Original Plan
 
-v4.0.0 scope: Redis caching, custom short URLs, Kafka event streaming, DynamoDB analytics, AWS deployment. Simultaneous delivery = long cycle with no working milestones and shallow learning.
+- v4.1 — Redis + ElastiCache
+- v4.2 — Kafka (MSK) + DynamoDB
+- v4.3 — Analytics read API
 
-## Decision
+## Problems Identified with Original Plan
 
-Deliver v4.0.0 in three sequential sub-versions. Each must be fully working and deployed before the next begins.
+Kafka inside a monolith solves the wrong problem. Kafka's value is decoupling between physically separate services. Inside the same JAR, an `ApplicationEventPublisher` with a dedicated thread pool achieves the same async fan-out without the operational cost of a broker. The original plan introduced Kafka's full operational complexity — broker management, topic configuration, consumer group rebalancing, MSK on AWS — to solve a problem that Spring Modulith events and Redis Streams resolve at a fraction of the cost.
 
-| Phase | Technology | Feature | Done When |
+DynamoDB is a key-value store optimised for single-item lookups by primary key. Analytics access patterns (aggregations over time ranges, GROUP BY country, GROUP BY device) are OLAP queries, not key-value lookups. DynamoDB forces application-side aggregation for every analytics query, which is expensive and complex. The tool was chosen for write throughput — a problem that does not exist at BlinkLink's current scale.
+
+URL shorteners have a read/write ratio of approximately 1000:1. Every technology decision must protect the redirect path above all else. Neither Kafka nor DynamoDB meaningfully improves the redirect path.
+
+## Revised Phased Plan
+
+| Phase | Technology | Feature Delivered | Done When |
 |---|---|---|---|
-| **v4.1** | Redis + ElastiCache | Cache-aside · Rate limiting · Custom short URLs | ElastiCache deployed, redirect p95 < 20ms on cache hit |
-| **v4.2** | Kafka (MSK) + DynamoDB | Click event streaming · Analytics writes | Events confirmed in DynamoDB, redirect never blocks on analytics |
-| **v4.3** | Analytics read API | GET /urls/{code}/stats · Plan-gated | VIP users can query click history by day and country |
+| **v4.1 — IN PROGRESS** | Redis + ElastiCache | Cache-aside on redirect · Rate limiting · Custom short codes | ElastiCache deployed, redirect p95 < 20ms; rate limiting still in development |
+| **v4.2** | Spring Modulith + Redis Streams + ClickHouse | Adopt Spring Modulith · Redis Streams for click events · ClickHouse storage | Click events confirmed in ClickHouse, redirect never blocks |
+| **v4.3** | Analytics read API | `GET /api/v3/urls/{code}/stats` · Timeseries endpoint · Plan-gated | Queries return correct aggregations from ClickHouse < 300ms |
+| **v4.4** | AWS full deployment + observability | RDS · ElastiCache · Aiven ClickHouse · Micrometer · Tracing | All services deployed, p95 redirect < 20ms in production |
 
-## Domain Pre-condition (before any v4.1 work)
+> Status note (2026-05): cache-aside, Redis sequence (ADR-003) and custom short codes (ADR-004) are delivered. **Rate limiting is still IN DEVELOPMENT** (no `RateLimitPort`/adapter wired yet) and the redirect cache is mid-refactor toward a richer `UrlContext` payload.
 
-`Url` domain entity must carry `userId (UUID)`. Required for rate limiting, custom URL ownership validation, and future analytics. This is a targeted domain change, not an architectural refactor.
+## Technology Replacements
 
-## Kafka Placement Decision
-
-Kafka lives inside the monolith as an infrastructure adapter (`KafkaAdapter` implementing `EventPublisherPort`). The `@KafkaListener` consumer that writes to DynamoDB is a Spring bean within the same JAR.
-
-**Architecture rule:** No class in `domain/` or `application/` may import from `org.springframework.kafka`. Kafka is exclusively an infrastructure concern in `infrastructure.adapters.messaging`. This boundary ensures the consumer can be physically extracted in v5 without domain changes.
-
-**Thread isolation:** `@KafkaListener` consumer must run on a dedicated `ThreadPoolTaskExecutor`, isolated from Tomcat HTTP thread pool. Consumer backpressure must not impact the redirect path.
+| Removed | Replaced By | Decision Reference |
+|---|---|---|
+| Amazon MSK (Kafka) | Redis Streams | ADR-006 |
+| Amazon DynamoDB | ClickHouse (Aiven) | ADR-005 |

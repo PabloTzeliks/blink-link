@@ -1,56 +1,72 @@
-# ADR-005 — Redis as Distributed Sequence Server for ID Generation
+# ADR-005 — ClickHouse for Analytics Storage
 
 | | |
 |---|---|
-| **Status** | ACCEPTED |
-| **Date** | 2026-03 |
+| **Status** | ACCEPTED (replaces original ADR-006 on DynamoDB) |
+| **Date** | 2026-05 |
 | **Author** | PabloTzeliks |
-| **Scope** | v4.1 |
+| **Scope** | v4.2 |
 
 ## Context
 
-v3.0.0 generates IDs via PostgreSQL `nextval('urls_id_seq')`. Under horizontal scaling, every ID generation call serialises through PostgreSQL, adding latency to the URL creation path.
+Analytics click events require a storage model optimised for write throughput (one write per redirect) and OLAP-style reads (aggregations over time ranges, GROUP BY country, GROUP BY device). BlinkLink has an approximate read/write ratio of 1000:1 on the redirect path.
+
+PostgreSQL is unsuitable for analytics at scale: aggregate queries over large click tables compete with the OLTP workload that serves redirects, creating I/O contention on the same instance. This violates the core architectural principle that the redirect path must never be blocked by secondary workloads.
+
+DynamoDB (original plan) is a key-value store optimised for single-item lookups. Analytics access patterns require aggregations that DynamoDB cannot execute server-side, forcing expensive application-side aggregation. It is the wrong tool for the access pattern.
 
 ## Decision
 
-Replace `PostgreSQL nextval()` with `Redis INCR` as primary ID generation. Redis acts as a dedicated sequence server, not a cache.
+Use **ClickHouse** as the exclusive storage layer for analytics click events. PostgreSQL stores no analytics data. ClickHouse is deployed as a separate instance from PostgreSQL, providing full workload isolation.
 
-## Port Contract
+## Rationale
 
-| Component | Responsibility |
-|---|---|
-| `SequencePort` (application layer) | `nextId() → Long` — only interface use case calls |
-| `RedisSequenceAdapter` (infrastructure) | Executes `INCR sequence:url:id` |
-| `SequenceInitializer` (infrastructure) | Startup sync: PostgreSQL MAX(id) → Redis SET NX |
-| `ShortenUrlUseCase` | Calls `SequencePort.nextId()`; handles UNIQUE violation with retry (max 3x) |
+ClickHouse is a columnar OLAP database built for exactly this access pattern:
 
-## Initialization Protocol (on every startup)
+- Stores data by column, not by row — reads only the columns a query needs
+- Compresses time-series data dramatically (repeated values per column)
+- Executes GROUP BY and COUNT aggregations server-side with vectorised processing
+- MergeTree engine is optimised for high-frequency inserts + range queries
+- Used in production at this access pattern by Cloudflare, Uber, Spotify, Contentsquare
 
-1. Query PostgreSQL: `SELECT MAX(id) FROM urls`
-2. `SET sequence:url:id {max_id} NX` — only if key does not exist
-3. If key already exists: leave it — another instance already initialized
-4. Begin serving traffic via `INCR sequence:url:id`
+## Access Patterns
 
-PostgreSQL = source of truth for init. Redis = live counter during operation.
+| ID | Pattern | Query |
+|---|---|---|
+| AP-1 | Total clicks for a URL | `SELECT COUNT(*) WHERE url_code = X` |
+| AP-2 | Clicks per day over range | `GROUP BY toDate(clicked_at) WHERE url_code = X AND clicked_at BETWEEN A AND B` |
+| AP-3 | Top countries | `GROUP BY country_code WHERE url_code = X` |
+| AP-4 | Top devices | `GROUP BY device_type WHERE url_code = X` |
 
-## Failure Contract (Redis restart scenario)
+## Table Design
 
-1. Redis generates ID N → returns to application
-2. Before INSERT to PostgreSQL, Redis restarts
-3. Redis re-initializes from PostgreSQL MAX(id) = N-1
-4. Redis re-issues ID N to next request
-5. **Resolution:** PostgreSQL UNIQUE on `short_code` fires → `ShortenUrlUseCase` catches → retry with new ID
+```sql
+CREATE TABLE clicks (
+    url_code        String,
+    user_id         UUID,
+    clicked_at      DateTime64(3, 'UTC'),
+    country_code    Nullable(String),
+    device_type     String,
+    user_agent_hash String
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(clicked_at)
+ORDER BY (url_code, clicked_at);
+```
 
-This transforms silent data corruption into a handled exception.
+Partition by month: old partitions can be dropped by TTL without full table scan. Order by `(url_code, clicked_at)`: primary index matches AP-1 through AP-4.
+
+## AWS Deployment
+
+| Option | Description | Recommendation |
+|---|---|---|
+| Option A — EC2 + ClickHouse | Full control, no managed overhead, higher operational burden | Fallback if cost/control requirements change at v5 |
+| Option B — Aiven for ClickHouse | Managed service, free tier available, automated backups and monitoring, minimal ops burden | Recommended for v4.2 |
 
 ## Trade-offs
 
 | Gain | Cost |
 |---|---|
-| ID generation scales horizontally | Redis becomes runtime dependency for URL creation (not for redirects) |
-| Sub-millisecond ID generation | Startup init logic adds complexity; must be tested |
-| Decouples sequence from relational writes | Rare ID collision on Redis restart requires retry in use case |
-
-## Key
-
-`sequence:url:id` — no TTL, no PII, integer only.
+| OLAP queries execute server-side, sub-300ms for 90 days of data | No native AWS managed service — requires Aiven or self-hosted EC2 |
+| Workload isolation — analytics queries never impact redirect OLTP | ClickHouse SQL dialect differs from PostgreSQL — learning curve |
+| Columnar compression — click data compresses 10-100x vs row storage | Separate instance to monitor, back up, and secure |
+| No application-side aggregation required | Eventual consistency between Redis Streams and ClickHouse — acceptable for analytics |

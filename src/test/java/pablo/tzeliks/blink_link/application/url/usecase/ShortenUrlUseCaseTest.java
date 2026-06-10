@@ -13,8 +13,9 @@ import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
-import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
 import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
@@ -165,7 +166,7 @@ class ShortenUrlUseCaseTest {
         verify(userProviderPort).getCurrentUserId();
         verify(shortener).encode(fakeId);
         verify(repository).save(any(Url.class));
-        verify(cache).put(eq(fakeShortCode), eq(originalUrl), ttlCaptor.capture());
+        verify(cache).put(eq(fakeShortCode), eq(new UrlContext(originalUrl, fakeUserId.toString(), 100)), ttlCaptor.capture());
         Long capturedTtl = ttlCaptor.getValue();
         assertTrue(capturedTtl >= 604790L && capturedTtl <= 604800L,
                 "The TTL cache must be approximately 7 days");

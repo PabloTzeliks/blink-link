@@ -10,13 +10,15 @@ import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
+import pablo.tzeliks.blink_link.infrastructure.url.caching.adapter.RedisCacheAdapter;
+import tools.jackson.databind.ObjectMapper;
 
-import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.*;
@@ -31,6 +33,13 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private static String ownerId() {
+        return UUID.randomUUID().toString();
+    }
+
     @BeforeEach
     void setUp() {
         redisTemplate.execute((RedisCallback<Object>) connection -> {
@@ -40,78 +49,66 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
     }
 
     @Test
-    @DisplayName("put stores value and TTL is applied")
+    @DisplayName("put stores the UrlContext and TTL is applied")
     void put_storesValueAndTtlIsApplied() {
-        cacheAdapter.put("abc", "https://example.com", 60L);
+        UrlContext context = new UrlContext("https://example.com", ownerId(), 100);
 
-        assertThat(redisTemplate.opsForValue().get("url:abc")).isEqualTo("https://example.com");
+        cacheAdapter.put("abc", context, 60L);
+
+        assertThat(cacheAdapter.getUrlContext("abc")).contains(context);
         Long ttl = redisTemplate.getExpire("url:abc", TimeUnit.SECONDS);
         assertThat(ttl).isGreaterThan(0).isLessThanOrEqualTo(60);
     }
 
     @Test
-    @DisplayName("get returns present value")
-    void get_returnsPresentValue() {
-        redisTemplate.opsForValue().set("url:xyz", "https://stored.com");
+    @DisplayName("getUrlContext returns present value")
+    void getUrlContext_returnsPresentValue() {
+        UrlContext context = new UrlContext("https://stored.com", ownerId(), 500);
+        cacheAdapter.put("xyz", context, 60L);
 
-        Optional<String> result = cacheAdapter.get("xyz");
-
-        assertThat(result).contains("https://stored.com");
+        assertThat(cacheAdapter.getUrlContext("xyz")).contains(context);
     }
 
     @Test
-    @DisplayName("get returns empty for missing key")
-    void get_returnsEmptyForMissingKey() {
-        Optional<String> result = cacheAdapter.get("nonexistent");
+    @DisplayName("getUrlContext returns empty for missing key")
+    void getUrlContext_returnsEmptyForMissingKey() {
+        assertThat(cacheAdapter.getUrlContext("nonexistent")).isEmpty();
+    }
 
-        assertThat(result).isEmpty();
+    @Test
+    @DisplayName("getUrlContext returns empty for corrupted (non-JSON) value")
+    void getUrlContext_returnsEmptyForCorruptedValue() {
+        redisTemplate.opsForValue().set("url:broken", "not-a-json-payload");
+
+        assertThat(cacheAdapter.getUrlContext("broken")).isEmpty();
     }
 
     @Test
     @DisplayName("evict removes the key")
     void evict_removesTheKey() {
-        redisTemplate.opsForValue().set("url:del", "https://todelete.com");
+        cacheAdapter.put("del", new UrlContext("https://todelete.com", ownerId(), 100), 60L);
 
         cacheAdapter.evict("del");
 
-        assertThat(redisTemplate.opsForValue().get("url:del")).isNull();
+        assertThat(cacheAdapter.getUrlContext("del")).isEmpty();
     }
 
     @Test
-    @DisplayName("putIfAbsent does not overwrite existing key")
-    void putIfAbsent_doesNotOverwriteExistingKey() {
-        redisTemplate.opsForValue().set("url:custom", "https://original.com");
-
-        cacheAdapter.putIfAbsent("custom", "https://new.com", 60L);
-
-        assertThat(redisTemplate.opsForValue().get("url:custom")).isEqualTo("https://original.com");
-    }
-
-    @Test
-    @DisplayName("putIfAbsent writes when key is absent")
-    void putIfAbsent_writesWhenKeyIsAbsent() {
-        cacheAdapter.putIfAbsent("newcode", "https://example.com", 60L);
-
-        assertThat(redisTemplate.opsForValue().get("url:newcode")).isEqualTo("https://example.com");
-    }
-
-    @Test
-    @DisplayName("fallback: get returns empty and does not throw exception when Redis fails")
+    @DisplayName("fallback: getUrlContext returns empty and does not throw when Redis fails")
     void fallback_getReturnsEmptyWhenRedisFails() {
-        // Arrange:
+        // Arrange
         StringRedisTemplate brokenRedisTemplate = mock(StringRedisTemplate.class);
         ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
 
         when(brokenRedisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get(anyString())).thenThrow(new RedisConnectionFailureException("Connection refused"));
 
-        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate);
+        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate, objectMapper);
 
-        // Act & Assert:
-        assertThatCode(() -> {
-            Optional<String> result = fallbackAdapter.get("xyz");
-            assertThat(result).isEmpty();
-        }).doesNotThrowAnyException();
+        // Act & Assert
+        assertThatCode(() ->
+                assertThat(fallbackAdapter.getUrlContext("xyz")).isEmpty()
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -122,16 +119,15 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
         ValueOperations<String, String> valueOperations = mock(ValueOperations.class);
 
         when(brokenRedisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(brokenRedisTemplate.opsForValue()).thenReturn(valueOperations);
-
         doThrow(new RuntimeException("Redis Timeout"))
                 .when(valueOperations).set(anyString(), anyString(), anyLong(), any());
 
-        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate);
+        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate, objectMapper);
 
         // Act & Assert
-        assertThatCode(() -> fallbackAdapter.put("abc", "https://example.com", 60L))
-                .doesNotThrowAnyException();
+        assertThatCode(() ->
+                fallbackAdapter.put("abc", new UrlContext("https://example.com", ownerId(), 100), 60L)
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -141,7 +137,7 @@ class RedisCacheAdapterIntegrationTest extends AbstractContainerBase {
         StringRedisTemplate brokenRedisTemplate = mock(StringRedisTemplate.class);
         when(brokenRedisTemplate.delete(anyString())).thenThrow(new RedisConnectionFailureException("Node unavailable"));
 
-        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate);
+        RedisCacheAdapter fallbackAdapter = new RedisCacheAdapter(brokenRedisTemplate, objectMapper);
 
         // Act & Assert
         assertThatCode(() -> fallbackAdapter.evict("abc"))

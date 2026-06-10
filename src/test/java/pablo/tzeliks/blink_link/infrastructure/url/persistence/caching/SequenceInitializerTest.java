@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.infrastructure.url.caching.sequence.SequenceInitializer;
 
 import static org.mockito.Mockito.*;
 

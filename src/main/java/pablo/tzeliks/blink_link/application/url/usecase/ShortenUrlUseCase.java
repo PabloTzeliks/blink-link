@@ -11,8 +11,9 @@ import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.exception.UrlCollisionException;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
-import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
 import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.ShortenerPort;
@@ -20,6 +21,7 @@ import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.domain.url.strategy.ExpirationCalculationStrategy;
 import pablo.tzeliks.blink_link.domain.url.strategy.factory.ExpirationStrategyFactory;
 import pablo.tzeliks.blink_link.domain.user.model.Plan;
+import pablo.tzeliks.blink_link.domain.user.policy.PlanRateLimitPolicy;
 
 import java.util.UUID;
 
@@ -60,6 +62,7 @@ public class ShortenUrlUseCase {
     public UrlDetailsResponse execute(CreateShortCodeRequest request) {
 
         Plan userPlan = userProvider.getCurrentUserPlan();
+        int userRateLimit = PlanRateLimitPolicy.requestsPerMinuteForPlan(userPlan);
         UUID userId = userProvider.getCurrentUserId();
         ExpirationCalculationStrategy strategy = ExpirationStrategyFactory.getStrategyForPlan(userPlan);
 
@@ -69,9 +72,12 @@ public class ShortenUrlUseCase {
 
         Url savedUrl = saveUrlToDatabase(url);
 
+        UrlContext payload = new UrlContext(savedUrl.getOriginalUrl(), savedUrl.getUserId().toString(), userRateLimit);
+
         long finalCacheTtl = Math.min(savedUrl.getSecondsUntilExpiry(), maxCacheTtlSeconds);
+
         if (finalCacheTtl > 0) {
-            cache.put(shortCode, savedUrl.getOriginalUrl(), finalCacheTtl);
+            cache.put(shortCode, payload, finalCacheTtl);
         }
 
         return mapper.toDto(savedUrl);

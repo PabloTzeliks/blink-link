@@ -3,7 +3,7 @@ package pablo.tzeliks.blink_link.application.url.usecase;
 import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityRequest;
 import pablo.tzeliks.blink_link.application.url.dto.CodeAvailabilityResponse;
-import pablo.tzeliks.blink_link.application.url.ports.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 

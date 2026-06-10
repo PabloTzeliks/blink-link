@@ -12,7 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
-import pablo.tzeliks.blink_link.application.url.ports.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
