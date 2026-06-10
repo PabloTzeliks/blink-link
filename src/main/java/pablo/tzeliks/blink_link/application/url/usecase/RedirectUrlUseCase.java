@@ -19,8 +19,6 @@ import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.policy.PlanRateLimitPolicy;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 
-import java.util.Optional;
-
 /**
  *
  * @author Pablo Tzeliks
