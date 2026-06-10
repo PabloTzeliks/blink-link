@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
 import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
 import pablo.tzeliks.blink_link.application.url.exception.OrphanedUrlException;
+import pablo.tzeliks.blink_link.application.url.exception.RateLimitExceededException;
 import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.RateLimitPort;
+import pablo.tzeliks.blink_link.application.url.port.out.RateLimitResult;
 import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
@@ -30,36 +33,43 @@ public class RedirectUrlUseCase {
 
     private final UrlRepositoryPort urlRepository;
     private final UserRepositoryPort userRepository;
+    private final RateLimitPort rateLimit;
     private final CachePort cache;
 
     @Value("${app.cache.max-ttl-seconds:604800}")
     private long maxCacheTtlSeconds;
 
-    public RedirectUrlUseCase(UrlRepositoryPort urlRepository, UserRepositoryPort userRepository, CachePort cache) {
+    public RedirectUrlUseCase(UrlRepositoryPort urlRepository, UserRepositoryPort userRepository, RateLimitPort rateLimit, CachePort cache) {
         this.urlRepository = urlRepository;
         this.userRepository = userRepository;
+        this.rateLimit = rateLimit;
         this.cache = cache;
     }
+
 
     public UrlResponse execute(ResolveShortCodeRequest request) {
 
         String shortCode = request.shortCode();
-
-        // Validates URL format
         if (shortCode == null || shortCode.isEmpty()) {
             throw new InvalidUrlException("Short Code cannot be null or empty");
         }
 
-        Optional<UrlContext> cachedUrl = cache.getUrlContext(shortCode);
+        UrlContext context = cache.getUrlContext(shortCode)
+                .orElseGet(() -> loadAndCache(shortCode));
 
-        if (cachedUrl.isPresent()) {
+        RateLimitResult result = rateLimit.check(context.ownerId(), context.rateLimit());
 
-            return new UrlResponse(cachedUrl.get().destination());
+        if (!result.isAllowed()) {
+            throw new RateLimitExceededException("Rate limit exceeded", 60);
         }
 
+        return new UrlResponse(context.destination());
+    }
+
+    private UrlContext loadAndCache(String shortCode) {
+
         Url urlDb = urlRepository.findByShortCode(shortCode)
-                .orElseThrow(() ->
-                        new UrlNotFoundException("URL not found for the provided short code: " + shortCode));
+                .orElseThrow(() -> new UrlNotFoundException("URL not found for the provided short code: " + shortCode));
 
         if (urlDb.isExpired()) {
             throw new UrlExpiredException("URL is expired.");
@@ -69,15 +79,13 @@ public class RedirectUrlUseCase {
                 .orElseThrow(() -> new OrphanedUrlException("Owner User not found for URL with short code: " + shortCode));
 
         int ownerRateLimit = PlanRateLimitPolicy.requestsPerMinuteForPlan(ownerUser.getPlan());
+        UrlContext context = new UrlContext(urlDb.getOriginalUrl(), ownerUser.getId().toString(), ownerRateLimit);
 
-        UrlContext payload = new UrlContext(urlDb.getOriginalUrl(), ownerUser.getId().toString(), ownerRateLimit);
-        long domainTtl = urlDb.getSecondsUntilExpiry();
-        long finalCacheTtl = Math.min(domainTtl, maxCacheTtlSeconds);
-
-        if (finalCacheTtl > 0) {
-            cache.put(shortCode, payload, finalCacheTtl);
+        long ttl = Math.min(urlDb.getSecondsUntilExpiry(), maxCacheTtlSeconds);
+        if (ttl > 0) {
+            cache.put(shortCode, context, ttl);
         }
 
-        return new UrlResponse(urlDb.getOriginalUrl());
+        return context;
     }
 }
