@@ -51,8 +51,8 @@ public class RedisRateLimitAdapter implements RateLimitPort {
                     String.valueOf(limit), String.valueOf(WINDOW_SECONDS), String.valueOf(elapsed));
 
             boolean allowed = r.get(0) == 1L;
-            long used = r.get(1);
-            int remaining = (int) Math.max(0, limit - used);
+            long effectiveUsed = r.get(1);
+            int remaining = (int) Math.max(0, limit - effectiveUsed);
 
             return new RateLimitResult(allowed, remaining, limit);
         } catch (Exception e) {
