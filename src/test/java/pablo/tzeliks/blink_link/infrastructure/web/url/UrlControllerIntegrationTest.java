@@ -2,14 +2,17 @@ package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
+import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
+import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.domain.user.model.AuthProvider;
@@ -20,11 +23,15 @@ import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Password;
 import pablo.tzeliks.blink_link.infrastructure.AbstractContainerBase;
 import pablo.tzeliks.blink_link.infrastructure.security.adapter.CustomUserDetails;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.entity.UserEntity;
+import pablo.tzeliks.blink_link.infrastructure.user.persistence.repository.JpaUserRepository;
+import pablo.tzeliks.blink_link.infrastructure.web.common.GlobalExceptionHandler;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -90,6 +97,15 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Autowired
     private UrlRepositoryPort repository;
 
+    @Autowired
+    private SequencePort sequence;
+
+    @Autowired
+    private JpaUserRepository jpaUserRepository;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
     /**
      * Integration Test: Verifies successful URL shortening via POST endpoint.
      * <p>
@@ -113,7 +129,7 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @DisplayName("POST /shorten - Should create a short URL successfully (Happy Path)")
     void shouldCreateShortUrl() throws Exception {
         // Arrange
-        CreateUrlRequest request = new CreateUrlRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/");
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://www.linkedin.com/in/pablo-ruan-tzeliks/", null);
         String jsonRequest = objectMapper.writeValueAsString(request);
 
         User domainUser = User.restore(UUID.randomUUID(), new Email("test@test.com"), new Password("encoded"),
@@ -227,12 +243,18 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Test
     @DisplayName("GET /api/v3/urls/{ShortCode} - Should return URL details (Happy Path)")
     void shouldReturnUrlDetails() throws Exception {
-        // Arrange: Pre-insert an URL into the database
-        Long id = repository.nextId();
+        // Arrange: Create a real user to satisfy FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "detail-user@test.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+
+        Long id = sequence.nextId();
         LocalDateTime now = LocalDateTime.now();
 
         Url savedUrl = Url.restore(
                 id,
+                userId,
                 "https://rocketseat.com.br",
                 "rocket",
                 now,
@@ -299,11 +321,17 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
     @Test
     @DisplayName("GET /{shortUrl} - Should redirect to original URL (Happy Path)")
     void shouldRedirectSuccessfully() throws Exception {
-        // Arrange
-        Long id = repository.nextId();
+        // Arrange: Create a real user to satisfy FK constraint on urls.user_id
+        UUID userId = UUID.randomUUID();
+        UserEntity userEntity = new UserEntity(userId, "redirect-user@test.com", "encoded",
+                Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+        jpaUserRepository.saveAndFlush(userEntity);
+
+        Long id = sequence.nextId();
         LocalDateTime now = LocalDateTime.now();
         Url savedUrl = Url.restore(
                 id,
+                userId,
                 "https://github.com/PabloTzeliks",
                 "myGit",
                 now,
@@ -341,5 +369,74 @@ public class UrlControllerIntegrationTest extends AbstractContainerBase {
         mockMvc.perform(get("/nao-existe"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.title").value("Resource Not Found"));
+    }
+
+    @Nested
+    @DisplayName("GET /api/v3/urls/codes/{code}/availability")
+    class CheckCodeAvailabilityTests {
+
+        @Test
+        @DisplayName("Should return 200 with available true when the code is free")
+        void shouldReturn200_available_whenCodeIsFree() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/freecode/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(true))
+                    .andExpect(jsonPath("$.code").value("freecode"));
+        }
+
+        @Test
+        @DisplayName("Should return 200 with available false when the code exists in the database")
+        void shouldReturn200_unavailable_whenCodeExistsInDb() throws Exception {
+            UUID userId = UUID.randomUUID();
+            UserEntity userEntity = new UserEntity(userId, "avail-db@test.com", "encoded",
+                    Role.USER, Plan.FREE, AuthProvider.LOCAL, LocalDateTime.now(), LocalDateTime.now());
+            jpaUserRepository.saveAndFlush(userEntity);
+
+            Long id = sequence.nextId();
+            Url savedUrl = Url.restore(id, userId, "https://example.com", "taken", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+            repository.save(savedUrl);
+
+            mockMvc.perform(get("/api/v3/urls/codes/taken/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(false));
+        }
+
+        @Test
+        @DisplayName("Should return 200 with available false when the code exists in Redis")
+        void shouldReturn200_unavailable_whenCodeExistsInRedis() throws Exception {
+            redisTemplate.opsForValue().set("url:taken2", "https://example.com");
+
+            mockMvc.perform(get("/api/v3/urls/codes/taken2/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").value(false));
+        }
+
+        @Test
+        @DisplayName("Should return 401 when the request is not authenticated")
+        void shouldReturn401_whenNotAuthenticated() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/somecode/availability"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("Should return 200 when the code is exactly at minimum length (4 characters)")
+        void shouldReturn200_whenCodeIsAtMinLength() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abcd/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").exists());
+        }
+
+        @Test
+        @DisplayName("Should return 200 when the code is exactly at maximum length (20 characters)")
+        void shouldReturn200_whenCodeIsAtMaxLength() throws Exception {
+            mockMvc.perform(get("/api/v3/urls/codes/abcdefghij1234567890/availability")
+                            .with(user("test@test.com").roles("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.available").exists());
+        }
     }
 }

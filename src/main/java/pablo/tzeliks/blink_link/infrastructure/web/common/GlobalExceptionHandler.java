@@ -3,6 +3,7 @@ package pablo.tzeliks.blink_link.infrastructure.web.common;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,13 +13,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import pablo.tzeliks.blink_link.application.url.exception.*;
 import pablo.tzeliks.blink_link.domain.common.exception.*;
-import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
-import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ErrorResponse;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ValidationError;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,39 +34,39 @@ public class GlobalExceptionHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex,
+                                                                HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.NOT_FOUND,
                 "Resource Not Found",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     @ExceptionHandler(InvalidResourceException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidResource(InvalidResourceException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleInvalidResource(InvalidResourceException ex,
+                                                               HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "Invalid Argument",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessRuleError(BusinessRuleException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleBusinessRuleError(BusinessRuleException ex,
+                                                                 HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.CONFLICT,
                 "Business Rule Error",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     @ExceptionHandler({AuthorizationException.class, AuthorizationDeniedException.class})
@@ -76,8 +77,7 @@ public class GlobalExceptionHandler {
                 "Access Denied",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     @ExceptionHandler(UrlExpiredException.class)
@@ -88,55 +88,109 @@ public class GlobalExceptionHandler {
                 "Url Expired",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
-        );
+                null);
+    }
+
+    @ExceptionHandler(InvalidCustomCodeException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCustomCode(InvalidCustomCodeException ex,
+                                                                 HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Invalid Custom Code",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null);
+    }
+
+    @ExceptionHandler(DuplicateCodeException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateCode(DuplicateCodeException ex,
+                                                             HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                "Duplicate Custom Code",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null);
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleAuthenticationError(AuthenticationException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleAuthenticationError(AuthenticationException ex,
+                                                                   HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "Invalid Credentials",
                 ex.getMessage(),
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex,
+                                                               HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.NOT_FOUND,
                 "Resource Not Found",
                 "The requested endpoint or resource does not exist.",
                 request.getRequestURI(),
-                null
-        );
+                null);
+    }
+
+    @ExceptionHandler(SequenceGenerationException.class)
+    public ResponseEntity<ErrorResponse> handleSequenceGenerationError(SequenceGenerationException ex,
+                                                                       HttpServletRequest request) {
+
+        return buildErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "ID Generation Failed",
+                "The service is temporarily unavailable and cannot generate a short URL.",
+                request.getRequestURI(),
+                null);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitExceeded(RateLimitExceededException ex,
+                                                                 HttpServletRequest request) {
+
+        ResponseEntity<ErrorResponse> base = buildErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "Too Many Requests",
+                ex.getMessage(),
+                request.getRequestURI(),
+                null);
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .header("X-RateLimit-Limit", String.valueOf(ex.getLimitApplied()))
+                .header("X-RateLimit-Remaining", String.valueOf(ex.getRemainingRequests()))
+                .header("X-RateLimit-Reset", String.valueOf(Instant.now().getEpochSecond() + ex.getRetryAfterSeconds()))
+                .body(base.getBody());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+                                                                  HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.METHOD_NOT_ALLOWED,
                 "Method Not Allowed",
-                String.format("The HTTP method '%s' is not supported for this endpoint.", ex.getMethod()),
+                String.format("The HTTP method '%s' is not supported for this endpoint.",
+                        ex.getMethod()),
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex,
+                                                                HttpServletRequest request) {
 
-        List<ValidationError> errors = ex.getBindingResult().getFieldErrors().
-                stream()
+        List<ValidationError> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> new ValidationError(
                         fieldError.getField(),
-                        fieldError.getDefaultMessage()
-                ))
+                        fieldError.getDefaultMessage()))
                 .toList();
 
         return buildErrorResponse(
@@ -144,20 +198,32 @@ public class GlobalExceptionHandler {
                 "Validation Failed",
                 "One or more validation errors occurred.",
                 request.getRequestURI(),
-                errors
-        );
+                errors);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleJsonError(HttpMessageNotReadableException ex, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleJsonError(HttpMessageNotReadableException ex,
+                                                         HttpServletRequest request) {
 
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 "Malformed JSON Request",
                 "The request body is invalid or malformed.",
                 request.getRequestURI(),
-                null
-        );
+                null);
+    }
+
+    @ExceptionHandler(OrphanedUrlException.class)
+    public ResponseEntity<ErrorResponse> handleOrphanedException(OrphanedUrlException ex, HttpServletRequest request) {
+
+        LOGGER.error("Unexpected error occurred at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal Server Error",
+                "An unexpected error occurred. Please try again later.",
+                request.getRequestURI(),
+                null);
     }
 
     @ExceptionHandler(Exception.class)
@@ -170,8 +236,7 @@ public class GlobalExceptionHandler {
                 "Internal Server Error",
                 "An unexpected error occurred. Please try again later.",
                 request.getRequestURI(),
-                null
-        );
+                null);
     }
 
     // Utility method for building error responses
@@ -182,8 +247,7 @@ public class GlobalExceptionHandler {
             String title,
             String detail,
             String instance,
-            List<ValidationError> errors
-    ) {
+            List<ValidationError> errors) {
 
         ErrorResponse response = new ErrorResponse(
 
@@ -193,8 +257,7 @@ public class GlobalExceptionHandler {
                 detail,
                 instance,
                 LocalDateTime.now(),
-                errors
-        );
+                errors);
 
         return ResponseEntity.status(status).body(response);
     }

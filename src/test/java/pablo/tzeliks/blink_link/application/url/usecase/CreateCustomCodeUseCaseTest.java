@@ -1,0 +1,166 @@
+package pablo.tzeliks.blink_link.application.url.usecase;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.util.ReflectionTestUtils;
+import pablo.tzeliks.blink_link.application.url.dto.CreateShortCodeRequest;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
+import pablo.tzeliks.blink_link.application.url.exception.DuplicateCodeException;
+import pablo.tzeliks.blink_link.application.url.exception.InvalidCustomCodeException;
+import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
+import pablo.tzeliks.blink_link.application.url.port.out.CachePort;
+import pablo.tzeliks.blink_link.application.url.port.out.SequencePort;
+import pablo.tzeliks.blink_link.application.url.port.out.UrlContext;
+import pablo.tzeliks.blink_link.application.url.validation.CustomCodeValidator;
+import pablo.tzeliks.blink_link.application.user.ports.CurrentUserProviderPort;
+import pablo.tzeliks.blink_link.domain.url.model.Url;
+import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
+import pablo.tzeliks.blink_link.domain.user.exception.InvalidPlanException;
+import pablo.tzeliks.blink_link.domain.user.model.Plan;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class CreateCustomCodeUseCaseTest {
+
+    @Mock
+    private UrlRepositoryPort repository;
+    @Mock
+    private CurrentUserProviderPort userProvider;
+    @Mock
+    private CachePort cache;
+    @Mock
+    private CustomCodeValidator validator;
+    @Mock
+    private SequencePort sequence;
+    @Mock
+    private UrlDtoMapper mapper;
+
+    private CreateCustomCodeUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        useCase = new CreateCustomCodeUseCase(repository, userProvider, cache, validator, sequence, mapper);
+        ReflectionTestUtils.setField(useCase, "maxCacheTtlSeconds", 604800L);
+    }
+
+    @Test
+    @DisplayName("Should create custom code successfully when user is VIP")
+    void shouldCreateSuccessfullyWhenPlanVIP() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
+
+        when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
+        when(userProvider.getCurrentUserId()).thenReturn(userId);
+        when(cache.exists("mycode")).thenReturn(false);
+        when(repository.existsByShortCode("mycode")).thenReturn(false);
+        doNothing().when(validator).validate("mycode");
+        when(sequence.nextId()).thenReturn(1L);
+        when(repository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode",
+                "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        when(mapper.toDto(any(Url.class))).thenReturn(responseDto);
+
+        // Act
+        UrlDetailsResponse response = useCase.execute(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(validator).validate("mycode");
+        verify(sequence).nextId();
+        verify(repository).save(any(Url.class));
+        verify(cache).put(eq("mycode"), eq(new UrlContext("https://google.com", userId.toString(), 500)), anyLong());
+    }
+
+    @Test
+    @DisplayName("Should create custom code successfully when user is ENTERPRISE")
+    void shouldCreateSuccessfullyWhenPlanEnterprise() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
+
+        when(userProvider.getCurrentUserPlan()).thenReturn(Plan.ENTERPRISE);
+        when(userProvider.getCurrentUserId()).thenReturn(userId);
+        when(cache.exists("mycode")).thenReturn(false);
+        when(repository.existsByShortCode("mycode")).thenReturn(false);
+        doNothing().when(validator).validate("mycode");
+        when(sequence.nextId()).thenReturn(1L);
+        when(repository.save(any(Url.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UrlDetailsResponse responseDto = new UrlDetailsResponse(userId, "https://google.com", "mycode",
+                "http://localhost/mycode", LocalDateTime.now(), LocalDateTime.now().plusDays(7));
+        when(mapper.toDto(any(Url.class))).thenReturn(responseDto);
+
+        // Act
+        UrlDetailsResponse response = useCase.execute(request);
+
+        // Assert
+        assertNotNull(response);
+        verify(validator).validate("mycode");
+        verify(sequence).nextId();
+        verify(repository).save(any(Url.class));
+        verify(cache).put(eq("mycode"), eq(new UrlContext("https://google.com", userId.toString(), 2000)), anyLong());
+    }
+
+    @Test
+    @DisplayName("Should throw InvalidPlanException when user is FREE")
+    void shouldThrowExceptionWhenPlanFree() {
+        // Arrange
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
+        when(userProvider.getCurrentUserPlan()).thenReturn(Plan.FREE);
+        when(userProvider.getCurrentUserId()).thenReturn(UUID.randomUUID());
+
+        // Act & Assert
+        assertThrows(InvalidPlanException.class, () -> useCase.execute(request));
+
+        verify(validator, never()).validate(any());
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should propagate InvalidCustomCodeException when validator fails")
+    void shouldPropagateExceptionWhenValidatorFails() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "invalid-");
+
+        when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
+        when(userProvider.getCurrentUserId()).thenReturn(userId);
+        doThrow(new InvalidCustomCodeException("Format error")).when(validator).validate("invalid-");
+
+        // Act & Assert
+        assertThrows(InvalidCustomCodeException.class, () -> useCase.execute(request));
+
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw DuplicateCodeException on database unique constraint violation")
+    void shouldThrowDuplicateCodeExceptionWhenUniqueViolation() {
+        // Arrange
+        UUID userId = UUID.randomUUID();
+        CreateShortCodeRequest request = new CreateShortCodeRequest("https://google.com", "mycode");
+
+        when(userProvider.getCurrentUserPlan()).thenReturn(Plan.VIP);
+        when(userProvider.getCurrentUserId()).thenReturn(userId);
+        when(cache.exists("mycode")).thenReturn(false);
+        when(repository.existsByShortCode("mycode")).thenReturn(false);
+        when(sequence.nextId()).thenReturn(1L);
+        when(repository.save(any(Url.class))).thenThrow(new DataIntegrityViolationException("Unique index violation"));
+
+        // Act & Assert
+        assertThrows(DuplicateCodeException.class, () -> useCase.execute(request));
+    }
+}

@@ -6,6 +6,7 @@ import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.entity.UrlEntity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,13 +29,15 @@ class UrlEntityMapperTest {
         // Arrange
         LocalDateTime createdAt = LocalDateTime.of(2026, 3, 1, 10, 0, 0);
         LocalDateTime expirationDate = LocalDateTime.of(2026, 3, 8, 10, 0, 0);
-        Url domain = Url.restore(1L, "https://example.com", "abc123", createdAt, expirationDate);
+        UUID userId = UUID.randomUUID();
+        Url domain = Url.restore(1L, userId, "https://example.com", "abc123", createdAt, expirationDate);
 
         // Act
         UrlEntity entity = mapper.toEntity(domain);
 
         // Assert
         assertThat(entity.getId()).isEqualTo(1L);
+        assertThat(entity.getUserId()).isEqualTo(userId);
         assertThat(entity.getOriginalUrl()).isEqualTo("https://example.com");
         assertThat(entity.getShortCode()).isEqualTo("abc123");
         assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
@@ -47,13 +50,15 @@ class UrlEntityMapperTest {
         // Arrange
         LocalDateTime createdAt = LocalDateTime.of(2026, 3, 1, 10, 0, 0);
         LocalDateTime expirationDate = LocalDateTime.of(2026, 3, 8, 10, 0, 0);
-        UrlEntity entity = new UrlEntity(2L, "https://github.com", "def456", createdAt, expirationDate);
+        UUID userId = UUID.randomUUID();
+        UrlEntity entity = new UrlEntity(2L, userId, "https://github.com", "def456", createdAt, expirationDate);
 
         // Act
         Url domain = mapper.toDomain(entity);
 
         // Assert
         assertThat(domain.getId()).isEqualTo(2L);
+        assertThat(domain.getUserId()).isEqualTo(userId);
         assertThat(domain.getOriginalUrl()).isEqualTo("https://github.com");
         assertThat(domain.getShortCode()).isEqualTo("def456");
         assertThat(domain.getCreatedAt()).isEqualTo(createdAt);
@@ -66,7 +71,7 @@ class UrlEntityMapperTest {
         // Arrange
         LocalDateTime createdAt = LocalDateTime.of(2026, 6, 15, 14, 30, 0);
         LocalDateTime expirationDate = LocalDateTime.of(2026, 6, 22, 14, 30, 0);
-        Url original = Url.restore(3L, "https://linkedin.com/profile", "ghi789", createdAt, expirationDate);
+        Url original = Url.restore(3L, UUID.randomUUID(),"https://linkedin.com/profile", "ghi789", createdAt, expirationDate);
 
         // Act
         UrlEntity entity = mapper.toEntity(original);
@@ -74,6 +79,7 @@ class UrlEntityMapperTest {
 
         // Assert
         assertThat(restored.getId()).isEqualTo(original.getId());
+        assertThat(restored.getUserId()).isEqualTo(original.getUserId());
         assertThat(restored.getOriginalUrl()).isEqualTo(original.getOriginalUrl());
         assertThat(restored.getShortCode()).isEqualTo(original.getShortCode());
         assertThat(restored.getCreatedAt()).isEqualTo(original.getCreatedAt());

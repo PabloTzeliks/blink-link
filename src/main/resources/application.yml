@@ -1,4 +1,12 @@
 spring:
+  application:
+    name: Blink Link
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      connect-timeout: 2s
+      timeout: 1s
   security:
     jwt:
       cookie-secure: false
@@ -13,8 +21,6 @@ spring:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
             scope: read:user,user:email
-  application:
-    name: Blink Link
 
   # PostgreSQL Configuration
   datasource:
@@ -47,6 +53,14 @@ app:
       batch-size: 5000
       sleep-millis: 100
       cron: "0 0 3 * * *"
+  cache:
+    max-ttl-seconds: 604800
+  sequence:
+    redis-key: sequence:url:id
+    fallback-start: 999999
+  url:
+    creation:
+      max-retries: 3
 
 server:
   port: 8080

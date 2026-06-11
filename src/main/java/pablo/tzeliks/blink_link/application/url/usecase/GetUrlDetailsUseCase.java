@@ -1,9 +1,8 @@
 package pablo.tzeliks.blink_link.application.url.usecase;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
@@ -11,26 +10,18 @@ import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
 import pablo.tzeliks.blink_link.domain.url.model.Url;
 import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
-/**
- *
- * @author Pablo Tzeliks
- * @version 3.0.0
- * @since 1.0.0
- * @see UrlRepositoryPort
- */
 @Service
-public class ResolveUrlUseCase {
+public class GetUrlDetailsUseCase {
 
     private final UrlRepositoryPort repository;
     private final UrlDtoMapper mapper;
 
-    public ResolveUrlUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper) {
+    public GetUrlDetailsUseCase(UrlRepositoryPort repository, UrlDtoMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }
 
-    @Transactional(readOnly = true)
-    public UrlResponse execute(ResolveUrlRequest request) {
+    public UrlDetailsResponse execute(ResolveShortCodeRequest request) {
 
         String shortCode = request.shortCode();
 

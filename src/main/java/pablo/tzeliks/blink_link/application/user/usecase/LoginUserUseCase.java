@@ -9,7 +9,7 @@ import pablo.tzeliks.blink_link.domain.user.exception.InvalidEmailException;
 import pablo.tzeliks.blink_link.domain.user.exception.InvalidPasswordException;
 import pablo.tzeliks.blink_link.domain.user.model.User;
 import pablo.tzeliks.blink_link.domain.user.model.valueobject.Email;
-import pablo.tzeliks.blink_link.domain.user.ports.TokenGenerationPort;
+import pablo.tzeliks.blink_link.application.user.ports.TokenGenerationPort;
 import pablo.tzeliks.blink_link.domain.user.ports.UserPasswordEncoderPort;
 import pablo.tzeliks.blink_link.domain.user.ports.UserRepositoryPort;
 

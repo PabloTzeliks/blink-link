@@ -4,8 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 import pablo.tzeliks.blink_link.infrastructure.url.encoding.Base62Encoder;
+import pablo.tzeliks.blink_link.infrastructure.url.exception.EncoderException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

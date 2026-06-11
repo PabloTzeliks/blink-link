@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
+import pablo.tzeliks.blink_link.application.url.dto.ResolveShortCodeRequest;
+import pablo.tzeliks.blink_link.application.url.dto.UrlDetailsResponse;
 import pablo.tzeliks.blink_link.application.url.mapper.UrlDtoMapper;
 import pablo.tzeliks.blink_link.domain.url.exception.InvalidUrlException;
 import pablo.tzeliks.blink_link.domain.url.exception.UrlNotFoundException;
@@ -16,10 +16,10 @@ import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Unit tests for the URL resolution use case.
@@ -56,10 +56,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
  * @author Pablo Tzeliks
  * @version 2.0.0
  * @since 1.0.0
- * @see ResolveUrlUseCase
+ * @see GetUrlDetailsUseCase
  */
 @ExtendWith(MockitoExtension.class)
-class ResolveUrlUseCaseTest {
+class GetUrlDetailsUseCaseTest {
 
     @Mock
     private UrlRepositoryPort repository;
@@ -68,48 +68,20 @@ class ResolveUrlUseCaseTest {
     private UrlDtoMapper mapper;
 
     @InjectMocks
-    private ResolveUrlUseCase useCase;
+    private GetUrlDetailsUseCase useCase;
 
-    /**
-     * Unit Test: Verifies successful URL resolution from short code.
-     * <p>
-     * <b>Scenario:</b> Happy Path - Short code exists in system
-     * <p>
-     * <b>Given:</b> A valid short code "HhqS" that exists in the repository
-     * <br><b>When:</b> execute() is called with this short code
-     * <br><b>Then:</b> The use case returns a complete UrlResponse with all details
-     * <p>
-     * <b>Mocked Behavior:</b>
-     * <ol>
-     *   <li>Repository returns the URL domain object for the given short code</li>
-     *   <li>Mapper converts the domain object to a DTO response</li>
-     * </ol>
-     * <p>
-     * <b>Assertions:</b>
-     * <ul>
-     *   <li>Response is not null</li>
-     *   <li>Response contains correct original URL</li>
-     *   <li>Response contains correct short URL</li>
-     *   <li>Response contains correct short code</li>
-     * </ul>
-     * <p>
-     * <b>Verification:</b>
-     * <ul>
-     *   <li>Repository's findByShortCode() was called once with correct parameter</li>
-     *   <li>Mapper's toDto() was called once with the domain object</li>
-     * </ul>
-     */
     @Test
-    @DisplayName("Should return UrlResponse when short code exists")
+    @DisplayName("Should return UrlDetailsResponse when short code exists")
     void shouldResolveUrlSuccessfully() {
         // Arrange
         String shortCode = "HhqS";
         String originalUrl = "https://github.com/PabloTzeliks";
         LocalDateTime now = LocalDateTime.now();
-        Url urlFound = Url.restore(1L, originalUrl, shortCode, now, now.plusDays(7));
+        UUID userId = UUID.randomUUID();
+        Url urlFound = Url.restore(1L, userId, originalUrl, shortCode, now, now.plusDays(7));
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
-        UrlResponse expectedResponse = new UrlResponse(originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
+        UrlDetailsResponse expectedResponse = new UrlDetailsResponse(userId, originalUrl, shortCode, "http://localhost:8080/" + shortCode, now, now.plusDays(7));
 
         // 1. Repository finds URL by short code
         when(repository.findByShortCode(shortCode)).thenReturn(Optional.of(urlFound));
@@ -118,7 +90,7 @@ class ResolveUrlUseCaseTest {
         when(mapper.toDto(urlFound)).thenReturn(expectedResponse);
 
         // Act
-        UrlResponse actualResponse = useCase.execute(request);
+        UrlDetailsResponse actualResponse = useCase.execute(request);
 
         // Assert
         assertNotNull(actualResponse);
@@ -158,7 +130,7 @@ class ResolveUrlUseCaseTest {
     void shouldThrowExceptionWhenRequestEmpty() {
         // Arrange
         String blankCode = "";
-        ResolveUrlRequest request = new ResolveUrlRequest(blankCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(blankCode);
 
         // Act & Assert
         assertThrows(InvalidUrlException.class,
@@ -203,7 +175,7 @@ class ResolveUrlUseCaseTest {
     void shouldThrowExceptionWhenUrlNotFound() {
         // Arrange
         String nonExistentCode = "ghost";
-        ResolveUrlRequest request = new ResolveUrlRequest(nonExistentCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(nonExistentCode);
 
         // 1. Repository returns empty when searching for non-existent short code
         when(repository.findByShortCode(nonExistentCode)).thenReturn(Optional.empty());

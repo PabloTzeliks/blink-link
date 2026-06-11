@@ -7,7 +7,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pablo.tzeliks.blink_link.domain.user.model.User;
-import pablo.tzeliks.blink_link.domain.user.ports.TokenGenerationPort;
+import pablo.tzeliks.blink_link.application.user.ports.TokenGenerationPort;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

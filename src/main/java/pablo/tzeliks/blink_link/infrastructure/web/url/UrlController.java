@@ -2,53 +2,73 @@ package pablo.tzeliks.blink_link.infrastructure.web.url;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-import pablo.tzeliks.blink_link.application.url.dto.CreateUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.ResolveUrlRequest;
-import pablo.tzeliks.blink_link.application.url.dto.UrlResponse;
-import pablo.tzeliks.blink_link.application.url.usecase.ResolveUrlUseCase;
+import pablo.tzeliks.blink_link.application.url.dto.*;
+import pablo.tzeliks.blink_link.application.url.usecase.CheckCodeAvailabilityUseCase;
+import pablo.tzeliks.blink_link.application.url.usecase.CreateCustomCodeUseCase;
+import pablo.tzeliks.blink_link.application.url.usecase.GetUrlDetailsUseCase;
 import pablo.tzeliks.blink_link.application.url.usecase.ShortenUrlUseCase;
 
 import java.net.URI;
 
 /**
  * @author Pablo Tzeliks
- * @version 2.0.0
+ * @version 4.0.0
  * @since 1.0.0
  */
+@Validated
 @RestController()
 @RequestMapping("api/v3/urls")
 public class UrlController {
 
     private final ShortenUrlUseCase shortenUrl;
-    private final ResolveUrlUseCase resolveUrl;
+    private final GetUrlDetailsUseCase urlDetailsUseCase;
+    private final CreateCustomCodeUseCase createCustomCode;
+    private final CheckCodeAvailabilityUseCase checkCodeUseCase;
 
-    public UrlController(ShortenUrlUseCase shortenUrl, ResolveUrlUseCase resolveUrl) {
+    public UrlController(ShortenUrlUseCase shortenUrl,
+                         GetUrlDetailsUseCase urlDetailsUseCase,
+                         CreateCustomCodeUseCase createCustomCode,
+                         CheckCodeAvailabilityUseCase checkCodeUseCase) {
+
         this.shortenUrl = shortenUrl;
-        this.resolveUrl = resolveUrl;
+        this.urlDetailsUseCase = urlDetailsUseCase;
+        this.createCustomCode = createCustomCode;
+        this.checkCodeUseCase = checkCodeUseCase;
     }
 
+
     @PostMapping("/shorten")
-    public ResponseEntity<UrlResponse> encode(@Valid @RequestBody CreateUrlRequest request, UriComponentsBuilder uriBuilder) {
+    public ResponseEntity<UrlDetailsResponse> encode(@Valid @RequestBody CreateShortCodeRequest request, UriComponentsBuilder uriBuilder) {
 
-        UrlResponse response = shortenUrl.execute(request);
+        UrlDetailsResponse response = request.customCode() != null
+                ? createCustomCode.execute(request)
+                : shortenUrl.execute(request);
 
-        URI pathLocation = uriBuilder.path("/api/v2/urls/{shortCode}")
+        URI location = uriBuilder
+                .path("/api/v3/urls/{shortCode}")
                 .buildAndExpand(response.shortCode())
                 .toUri();
 
-        return ResponseEntity
-                .created(pathLocation)
-                .body(response);
+        return ResponseEntity.created(location).body(response);
     }
 
     @GetMapping("/{shortCode}")
-    public ResponseEntity<UrlResponse> access(@PathVariable String shortCode) {
+    public ResponseEntity<UrlDetailsResponse> access(@PathVariable String shortCode) {
 
-        ResolveUrlRequest request = new ResolveUrlRequest(shortCode);
+        ResolveShortCodeRequest request = new ResolveShortCodeRequest(shortCode);
 
-        UrlResponse response = resolveUrl.execute(request);
+        UrlDetailsResponse response = urlDetailsUseCase.execute(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/codes/{code}/availability")
+    public ResponseEntity<CodeAvailabilityResponse> check(@PathVariable String code) {
+
+        CodeAvailabilityRequest request = new CodeAvailabilityRequest(code);
+
+        return ResponseEntity.ok(checkCodeUseCase.execute(request));
     }
 }

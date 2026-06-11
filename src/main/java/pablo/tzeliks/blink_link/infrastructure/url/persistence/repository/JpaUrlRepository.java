@@ -17,6 +17,8 @@ public interface JpaUrlRepository extends JpaRepository<UrlEntity, Long> {
 
     Optional<UrlEntity> findByShortCode(String shortCode);
 
+    boolean existsByShortCode(String shortCode);
+
     @Query(value = "SELECT nextval('urls_id_seq')", nativeQuery = true)
     Long nextId();
 }

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotBlank;
  * @version 2.0.0
  * @since 1.0.0
  */
-public record ResolveUrlRequest(
+public record ResolveShortCodeRequest(
 
         @JsonProperty("short_code")
         @NotBlank(message = "Short Code must not be blank")

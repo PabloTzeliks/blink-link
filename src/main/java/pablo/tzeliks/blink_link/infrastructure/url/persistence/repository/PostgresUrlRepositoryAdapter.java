@@ -9,6 +9,7 @@ import pablo.tzeliks.blink_link.domain.url.ports.UrlRepositoryPort;
 import pablo.tzeliks.blink_link.infrastructure.url.persistence.mapper.UrlEntityMapper;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,12 +34,6 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
-    public Long nextId() {
-
-        return repository.nextId();
-    }
-
-    @Override
     public Url save(Url url) {
 
         return mapper.toDomain(repository.save(mapper.toEntity(url)));
@@ -52,6 +47,7 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Url> findByShortCode(String shortCode) {
 
         return repository.findByShortCode(shortCode)
@@ -59,24 +55,41 @@ public class PostgresUrlRepositoryAdapter implements UrlRepositoryPort {
     }
 
     @Override
+    public boolean existsByShortCode(String shortCode) {
+
+        return repository.existsByShortCode(shortCode);
+    }
+
+    @Override
     @Transactional
-    public int deleteExpiredInBatch(LocalDateTime referenceTime, int batchSize) {
+    public List<String> deleteExpiredInBatchReturningCodes(LocalDateTime referenceTime, int batchSize) {
 
         String sql = """
-            DELETE FROM urls
-            WHERE id IN (
-                SELECT id FROM urls
-                WHERE expiration_date < :refTime
-                ORDER BY id
-                FOR UPDATE SKIP LOCKED
-                LIMIT :batchSize
-            )
-        """;
+        DELETE FROM urls
+        WHERE id IN (
+            SELECT id FROM urls
+            WHERE expiration_date < :now
+            ORDER BY id
+            FOR UPDATE SKIP LOCKED
+            LIMIT :batchSize
+        )
+        RETURNING short_code
+    """;
 
         Query query = entityManager.createNativeQuery(sql);
-        query.setParameter("refTime", referenceTime);
+        query.setParameter("now", referenceTime);
         query.setParameter("batchSize", batchSize);
 
-        return query.executeUpdate();
+        return query.getResultList();
+    }
+
+    @Override
+    public Long findMaxId() {
+
+        Object queryResult = entityManager
+                .createNativeQuery("SELECT COALESCE(MAX(id), 0) FROM urls")
+                .getSingleResult();
+
+        return ((Number) queryResult).longValue();
     }
 }
