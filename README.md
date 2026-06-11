@@ -140,14 +140,14 @@ sequenceDiagram
 
     alt Cache hit
         Cache-->>RUC: UrlContext
-    else Cache miss (or Redis down → silent fallback)
+    else Cache miss or Redis down, silent fallback
         RUC->>RepoP: findByShortCode + owner lookup
         RepoP-->>RUC: Url (or 404 / 410 if expired)
         RUC->>Cache: put(shortCode, UrlContext, ttl)
     end
 
     RUC->>RL: check(ownerId, limit)
-    Note over RL: sliding-window counter (Lua); fails open if Redis down
+    Note over RL: sliding-window counter via Lua, fails open if Redis down
 
     alt Within limit
         RUC-->>RCtrl: UrlResponse
