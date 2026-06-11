@@ -58,7 +58,8 @@ public class RedirectUrlUseCase {
         RateLimitResult result = rateLimit.check(context.ownerId(), context.rateLimit());
 
         if (!result.isAllowed()) {
-            throw new RateLimitExceededException("Rate limit exceeded", 60);
+            throw new RateLimitExceededException(
+                    "Rate limit exceeded", 60, result.limitApplied(), result.remainingRequests());
         }
 
         return new UrlResponse(context.destination());

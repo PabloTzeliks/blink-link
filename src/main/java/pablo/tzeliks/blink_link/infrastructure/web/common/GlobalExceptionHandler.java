@@ -19,6 +19,7 @@ import pablo.tzeliks.blink_link.domain.url.exception.UrlExpiredException;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ErrorResponse;
 import pablo.tzeliks.blink_link.infrastructure.web.dto.ValidationError;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -163,6 +164,9 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header(HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+                .header("X-RateLimit-Limit", String.valueOf(ex.getLimitApplied()))
+                .header("X-RateLimit-Remaining", String.valueOf(ex.getRemainingRequests()))
+                .header("X-RateLimit-Reset", String.valueOf(Instant.now().getEpochSecond() + ex.getRetryAfterSeconds()))
                 .body(base.getBody());
     }
 
